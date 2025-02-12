@@ -11,6 +11,7 @@ const LoginView = ({ navigation }) => {
 
     const authLogin = async () => {
         navigation.navigate("Chat");
+        
         // TODO: Implement mobile-friendly login popup
         // try {
         //     const results = await signInWithRedirect(auth, microsoftProvider);

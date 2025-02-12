@@ -26,6 +26,8 @@ const multer = require("multer");
 // importing mysql2
 const mysql = require('mysql2/promise')
 
+const middleware = require('./auth')
+
 // env variables
 require('dotenv').config()
 
@@ -124,14 +126,17 @@ async function queryDatabase(database, query) {
 /**
  * Returns back all chat history for a single chat
  */
-app.get('/chats/:chat_id', async (req, res) => {
+app.get('/chats/:chat_id', middleware, async (req, res) => {
   const id = req.params.chat_id
   const [results, fields] = await database.execute(
     'SELECT * FROM messages WHERE chat_id = ?', [id]);
   res.json(results)
 }); 
 
-app.get('/chats/:chat_id/users', async(req, res) => {
+/**
+ * Gets all the users in one specific chat. 
+ */
+app.get('/chats/:chat_id/users', middleware, async(req, res) => {
   const chat_id = req.params.chat_id
   const [results, fields] = await database.execute(
     'SELECT user_id FROM chatMembers WHERE chat_id = ?', [chat_id]);
@@ -297,6 +302,10 @@ app.post('/chats/addUser', async (req, res) => {
     res.type("text").status(500).send("Couldn't add a new user.");
   }
   
+})
+
+app.post('/addFriend/{id1}/{id2}/SendFriendRequest', async (req, res) => {
+
 })
 
 
