@@ -7,14 +7,37 @@ import { auth } from "../../server/firebase/firebase";
 import appColors from "../common/app-colors"; // Import your appColors
 import { GoogleSignin } from "@react-native-google-signin/google-signin"; 
 
-GoogleSignin.configure({
+/*GoogleSignin.configure({
     webClientId: "872954733121-96a6npm235ra74vnh8ktp1900q6tmbkg.apps.googleusercontent.com",
     scopes: ["email", "profile"], 
     forceCodeForRefreshToken: true
-})
+})*/
 
 const LoginView = ({ navigation }) => {
-    const authLogin = async() => {
+    const provider = new GoogleAuthProvider()
+    const authLogin = async () => {
+        try {
+            const results = await signInWithPopup(auth, provider);
+            try {
+                const response = await fetch("http://localhost:6262/api/auth", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ token: results.user.accessToken }),
+                });
+                const data = await response.json();
+                console.log("Auth response:", data);
+                console.log('Token: ', results.user.accessToken)
+                if (data) {
+                    navigation.navigate("Chat")
+                }
+            } catch (err) {
+                console.error("Error during authentication:", err);
+            }
+        } catch (err) {
+            throw err;
+        }
+    }
+    /*const authLogin = async() => {
         try {
             await GoogleSignin.hasPlayServices();
             const userInfo = await GoogleSignin.signIn();
@@ -66,7 +89,7 @@ const LoginView = ({ navigation }) => {
         }
     };*/
 
-    const checkRedirectResult = async () => {
+    /*const checkRedirectResult = async () => {
         try {
             console.log("Checking redirect result...");
             const result = await getRedirectResult(auth);
@@ -89,7 +112,7 @@ const LoginView = ({ navigation }) => {
                     //return data;
                 } catch (err) {
                     console.error("Error during authentication:", err);
-                }*/
+                }
                 console.log("User already signed in (fallback):", auth.currentUser);
             } else {
                 console.log("No user found.");
@@ -111,6 +134,8 @@ const LoginView = ({ navigation }) => {
 
         return () => unsubscribe();
     }, [])*/
+
+
 
     return (
         <SafeAreaView style={styles.container}>
