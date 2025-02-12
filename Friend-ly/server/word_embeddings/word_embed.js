@@ -66,8 +66,8 @@ async function compareSentences(text1, text2) {
     }
 }
 
-const sentence1 = ["", "lakers", "biking", "road tripping"];
-const sentence2 = ["cycling", "luka doncic", "freestyle", "travel"];
+const sentence1 = ["wrestling", "swimming", "biking", "road tripping"];
+const sentence2 = ["cycling", "ball games", "boxing", "travel"];
 
 async function runComparisons() {
     await loadModel(); // Load model once
