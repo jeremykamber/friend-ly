@@ -121,12 +121,139 @@ async function queryDatabase(database, query) {
   return results;
 }
 
+/**
+ * Returns back all chat history for a single chat
+ */
 app.get('/chats/:chat_id', async (req, res) => {
   const id = req.params.chat_id
-  const [results, fields] = await database.execute('SELECT * FROM messages WHERE chat_id = ?', [id]);
+  const [results, fields] = await database.execute(
+    'SELECT * FROM messages WHERE chat_id = ?', [id]);
   res.json(results)
+}); 
+
+app.get('/chats/:chat_id/users', async(req, res) => {
+  const chat_id = req.params.chat_id
+  const [results, fields] = await database.execute(
+    'SELECT user_id FROM chatMembers WHERE chat_id = ?', [chat_id]);
+  res.json(results);
 })
 
+
+
+// Gets a single users information
+app.get('/users/:id', async function(req, res) {
+  let userId = req.params.id;
+  let query = "SELECT * FROM users WHERE user_id = ?;";
+
+  try {
+    const resultArr = await database.execute(query, [userId]);
+    /**
+     * This is the actual result set of the query.
+     *     If the query is a SELECT, rows will be an array of objects where
+     * each object represents a row.
+     * If the query is an INSERT, UPDATE, or DELETE, rows will contain
+     * metadata, such as affectedRows and insertId.
+     */
+    const records = resultArr[0];
+    const metaData = resultArr[1];
+
+    // Send back users information to frontend
+    res.json(records);
+  } catch (error) {
+    res.type("text").status(SERVER_ERROR_CODE)
+      .send("An error occurred on the server. Try again later.");
+  }
+});
+
+/**
+ * Sets the most recent message seen by the specified user in a particular
+ * conversation.
+ */
+app.post('/seen/updateSeen', async function (req, res) {
+  let message_id = req.body.message_id;
+  let user = req.body.user_id;
+  let chat = req.body.chat_id;
+  let query = "UPDATE seen SET message_id = ? WHERE user_id = ? AND chat_id = ?;";
+
+  if (message_id && user && chat) {
+    try {
+      const resultArr = await database.execute(query, [message_id, user, chat]);
+      const records = resultArr[0];
+      const metaData = resultArr[1];
+
+      // Later write code that sends back correct part of the metaData.
+      res.type("text").status(SUCCESS_CODE)
+          .send("Successfully set the most recent message for specified user");
+    } catch (error) {
+
+    }
+  } else {
+    res.type("text").status(USER_ERROR_CODE)
+      .send("The username, ")
+  }
+});
+
+// Posts new message into user chat
+app.post('/users/:id/:chat_id/newMessage', async function (req, res) {
+  let userID = req.params.id
+  let chatID = req.params.chat_id
+  let messageText = req.body.messageText
+  let query = 'INSERT INTO messages(chat_id, sender_id, message_text) VALUES (?, ?, ?)'
+  try {
+    const resultArr = await database.execute(query, [chatID, userID, messageText]);
+    const records = resultArr[0];
+    const metaData = resultArr[1];
+
+    // Later write code that sends back correct part of the metaData.
+    res.type("text").status(SUCCESS_CODE)
+        .send("Successfully posted a new message into user chat.");
+  } catch (error) {
+    res.type("text").status(USER_ERROR_CODE).send("Post new message failed.")
+  }
+
+})
+
+/**
+ * Post a new chat/conversation to chats table and
+ * add users to chatMembers table
+ */
+app.post('/chats/newConversation', async (req, res) => {
+  let chat_name = req.body.chat_name
+  let profile_pic = req.body.profile_pic
+  let user_ids = req.body.user_ids
+  let insertChatsQuery = 'INSERT INTO chats(chat_name, profile_picture) VALUES (?, ?)'
+  let insertMembersQuery = 'INSERT INTO chatMembers (chat_id, user_id) VALUES (?, ?)'
+
+  try {
+    // add to chats table
+    const resultArr = await database.execute(insertChatsQuery, [chat_name, profile_pic])
+    const records = resultArr[0];
+    const metaData = resultArr[1];
+    // get the new chat id
+    let chat_id = records.insertId;
+  
+    
+    // add to chatMembers table
+    for (let i = 0; i < user_ids.length; i++) {
+      let user_id = user_ids[i]
+      const resultArr = await database.execute(insertMembersQuery, [chat_id, user_id]);
+      const records = resultArr[0];
+      const metaData = resultArr[1];
+
+      // note: cannot put try catch for some reason here
+      // reason: got this error: Cannot set headers after they are sent to the client
+    }
+
+    res.type("text").status(SUCCESS_CODE)
+        .send("Successfully posted a new chat in chats table and chatMembers table");
+  } catch (error) {
+    res.type("text").status(USER_ERROR_CODE).send("Post new chat failed.")
+  }
+})  
+
+/**
+ * Gets the last message for every chat a certain user is in. 
+ */
 app.get('/users/:user_id/getLastMessageHistory', async (req, res) => {
   const user_id = req.params.user_id
   const [results, fields] = await database.execute(
@@ -151,6 +278,47 @@ app.get('/users', async (req, res) => {
   const [results, fields] = await database.execute('SELECT * FROM users');
   res.json(results);
 })
+
+
+/**
+ * Adds a new user (or a list of users) to a given chat. 
+ * User ids must be Strings. 
+ */
+app.post('/chats/addUser', async (req, res) => {
+  const { chat_id, user_ids } = req.body
+  try {
+    const result = await addUser(chat_id, user_ids);
+    if (result.success) {
+      res.type("text").status(200).send(result.message);
+    } else {
+      res.type("text").status(400).send(result.message);
+    }
+  } catch (error) {
+    res.type("text").status(500).send("Couldn't add a new user.");
+  }
+  
+})
+
+
+async function addUser(chat_id, user_ids) {
+  /*if (!user_ids.every(item => typeof item === "number")) {
+    return { success: false, message: "Not all user_ids are integers." };
+  }*/
+
+  let query = 'INSERT INTO chatMembers (chat_id, user_id) VALUES (?, ?)'
+  for (let i = 0; i < user_ids.length; i++) {
+    let user_id = user_ids[i]
+    try {
+      const resultArr = await database.execute(query, [chat_id, user_id]);
+      const records = resultArr[0];
+      const metaData = resultArr[1];
+      // Later write code that sends back correct part of the metaData.
+    } catch (error) {
+      return { success: false, message: "Adding a new user failed"}
+    }
+  }
+  return { success: true, message: "Successfully posted new users to the chat."}
+}
 
 
 // Allows us to change the port easily by setting an environment

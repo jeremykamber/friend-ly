@@ -1,6 +1,27 @@
-//GET http://localhost:8000/chats/2
+//GET http://localhost:8000/chats/1
 
 
 //GET http://localhost:8000/users/1/getLastMessageHistory
 
-GET http://localhost:8000/users
+//GET http://localhost:8000/users/1
+
+//GET http://localhost:8000/chats/2
+
+
+//POST http://localhost:8000/users/1/2/newMessage
+//Content-Type: application/json
+
+//{
+//    "messageText": "I'll meet you at the door in 5!"
+//}
+
+//GET http://localhost:8000/chats/1/users
+
+POST http://localhost:8000/chats/addUser
+Content-Type: application/json
+
+{
+    "chat_id": 18,
+    "user_ids": [3]
+}
+
