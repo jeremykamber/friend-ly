@@ -8,12 +8,12 @@ import appColors from "../common/app-colors";
  */
 const SettingsSection = ({ title, children }) => {
   const childArray = React.Children.toArray(children);
-  
+
   return (
     <View style={styles.section}>
       <Text style={styles.title}>{title}</Text>
       <View style={styles.container}>
-        {React.Children.map(children, (child, index) => 
+        {React.Children.map(children, (child, index) =>
           React.cloneElement(child, {
             isLast: index === childArray.length - 1
           })

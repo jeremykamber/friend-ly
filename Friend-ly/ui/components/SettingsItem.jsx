@@ -37,12 +37,12 @@ const SettingsItem = ({ label, type, value, onToggle, options, onPress, isLast }
           <Switch
             value={value === 'dark'}
             onValueChange={onToggle}
-            trackColor={{ 
-              false: Platform.select({ 
-                ios: appColors.Grey_100, 
+            trackColor={{
+              false: Platform.select({
+                ios: appColors.Grey_100,
                 android: `${appColors.Grey_600}40`
-              }), 
-              true: `${appColors.UW_Purple}80` 
+              }),
+              true: `${appColors.UW_Purple}80`
             }}
             thumbColor={Platform.select({
               ios: '#fff',
@@ -55,25 +55,25 @@ const SettingsItem = ({ label, type, value, onToggle, options, onPress, isLast }
         return (
           <View style={styles.dropdownContainer}>
             <Text style={styles.dropdownValue}>{value}</Text>
-            <Ionicons 
+            <Ionicons
               name={Platform.select({
                 ios: "chevron-forward",
                 android: "chevron-down"
-              })} 
-              size={20} 
-              color={appColors.Grey_600} 
+              })}
+              size={20}
+              color={appColors.Grey_600}
             />
           </View>
         );
       case "navigate":
         return (
-          <Ionicons 
+          <Ionicons
             name={Platform.select({
               ios: "chevron-forward",
               android: "arrow-forward"
-            })} 
-            size={20} 
-            color={appColors.Grey_600} 
+            })}
+            size={20}
+            color={appColors.Grey_600}
           />
         );
       default:

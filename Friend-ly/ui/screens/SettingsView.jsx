@@ -8,7 +8,7 @@ import appColors from "../common/app-colors";
 const SettingsView = ({ navigation }) => {
   const [theme, setTheme] = useState('light');
   const [language, setLanguage] = useState('English');
-  
+
   useLayoutEffect(() => {
     navigation.setOptions({
       title: "Settings",
@@ -39,36 +39,36 @@ const SettingsView = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
         <SettingsSection title="Account">
-          <SettingsItem 
-            label="Username" 
-            type="navigate" 
-            onPress={() => navigation.navigate('EditUsername')} 
+          <SettingsItem
+            label="Username"
+            type="navigate"
+            onPress={() => navigation.navigate('EditUsername')}
           />
-          <SettingsItem 
-            label="Email" 
-            type="navigate" 
-            onPress={() => navigation.navigate('EditEmail')} 
+          <SettingsItem
+            label="Email"
+            type="navigate"
+            onPress={() => navigation.navigate('EditEmail')}
           />
         </SettingsSection>
 
         <SettingsSection title="Preferences">
-          <SettingsItem 
-            label="Dark Mode" 
-            type="toggle" 
-            value={theme} 
-            onToggle={toggleTheme} 
+          <SettingsItem
+            label="Dark Mode"
+            type="toggle"
+            value={theme}
+            onToggle={toggleTheme}
           />
-          <SettingsItem 
-            label="Language" 
-            type="dropdown" 
+          <SettingsItem
+            label="Language"
+            type="dropdown"
             value={language}
             onPress={handleLanguageChange}
-            options={["English", "French", "Spanish"]} 
+            options={["English", "French", "Spanish"]}
           />
         </SettingsSection>
       </ScrollView>
