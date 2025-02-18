@@ -13,7 +13,11 @@ const ChatView = () => {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.title}>Messages</Text>
+                <Text style={{
+                    fontSize: 17,
+                    fontWeight: '600',
+                    color: appColors.Dark_Grey,
+                }}>Messages</Text>
                 <PlusButton
                     color={appColors.UW_Purple}
                     style={styles.plusButton}
