@@ -49,11 +49,6 @@ const SettingsView = ({ navigation }) => {
             type="navigate"
             onPress={() => navigation.navigate('EditUsername')}
           />
-          <SettingsItem
-            label="Email"
-            type="navigate"
-            onPress={() => navigation.navigate('EditEmail')}
-          />
         </SettingsSection>
 
         <SettingsSection title="Preferences">
