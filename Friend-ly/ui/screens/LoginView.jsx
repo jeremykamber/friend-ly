@@ -5,19 +5,31 @@ import { GoogleAuthProvider, signInWithRedirect, getRedirectResult, signInWithCr
 import { signIn, signInWithPopup } from "firebase/auth";
 import { auth } from "../../server/firebase/firebase";
 import appColors from "../common/app-colors"; // Import your appColors
-import { GoogleSignin } from "@react-native-google-signin/google-signin"; 
-
-/*GoogleSignin.configure({
-    webClientId: "872954733121-96a6npm235ra74vnh8ktp1900q6tmbkg.apps.googleusercontent.com",
-    scopes: ["email", "profile"], 
-    forceCodeForRefreshToken: true
-})*/
+import GoogleLogin from "./GoogleLogin";
 
 const LoginView = ({ navigation }) => {
-    const provider = new GoogleAuthProvider()
+
+    /*useEffect(() => {
+        GoogleSignin.configure({
+            webClientId: "872954733121-ll542sg47ekvh3pcaka3gf8105bk4vt0.apps.googleusercontent.com"
+        })
+    })*/
+
+    /*const signin = async () => {
+        try {
+            await GoogleSignin.hasPlayServices();
+            const user = await GoogleSignin.signIn()
+            console.log(user)
+        } catch (error) {
+            throw error
+        }
+    }*/
+
+    //const provider = new GoogleAuthProvider()
+    /*
     const authLogin = async () => {
         try {
-            const results = await signInWithPopup(auth, provider);
+            //const results = await signInWithPopup(auth, provider);
             try {
                 const response = await fetch("http://localhost:6262/api/auth", {
                     method: "POST",
@@ -141,9 +153,10 @@ const LoginView = ({ navigation }) => {
         <SafeAreaView style={styles.container}>
             <Text style={styles.title}>Welcome Back!</Text>
             <View style={{ height: 40 }} />
-            <LoginForm onSubmit={authLogin} />
+            <GoogleLogin></GoogleLogin>
         </SafeAreaView>
     );
+    // <LoginForm onSubmit={signin} />
 };
 
 const styles = StyleSheet.create({

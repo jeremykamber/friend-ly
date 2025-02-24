@@ -2,6 +2,11 @@
   "expo": {
     "name": "Friend-ly",
     "slug": "Friend-ly",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "ios": {
+    "supportsTablet": true,
+    "bundleIdentifier": "com.hcp.friendly",
+    "googleServicesFile": "./ios/GoogleService-Info.plist"
+    }
   }
 }
