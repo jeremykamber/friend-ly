@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import { View, Text, StyleSheet, SafeAreaView } from "react-native";
 import LoginForm from "../forms/LoginForm";
 import { GoogleAuthProvider } from "firebase/auth";
@@ -8,27 +8,24 @@ import appColors from "../common/app-colors"; // Import your appColors
 
 const LoginView = ({ navigation }) => {
     const microsoftProvider = new GoogleAuthProvider();
+    const [token, setToken] = useState(null)
 
-    const authLogin = async () => {
-        navigation.navigate("Chat");
+    const authLogin = async (email) => {
+        try {
+            //const results = await signInWithRedirect(auth, microsoftProvider);
+            const response = await fetch("http://localhost:6262/api/auth", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: email }),
+            });
+            const data = await response.json();
+            console.log("Auth response:", data);
+            navigation.navigate("Chat");
+        } catch (err) {
+            throw err;
+        }
         // TODO: Implement mobile-friendly login popup
-        // try {
-        //     const results = await signInWithRedirect(auth, microsoftProvider);
-        //     try {
-        //         const response = await fetch("http://localhost:6262/api/auth", {
-        //             method: "POST",
-        //             headers: { "Content-Type": "application/json" },
-        //             body: JSON.stringify({ token: results.user.accessToken }),
-        //         });
-        //         const data = await response.json();
-        //         console.log("Auth response:", data);
-        //         return data;
-        //     } catch (err) {
-        //         console.error("Error during authentication:", err);
-        //     }
-        // } catch (err) {
-        //     throw err;
-        // }
+        
     };
 
     return (
