@@ -129,7 +129,7 @@ app.get('/chats/:chat_id', async (req, res) => {
   const [results, fields] = await database.execute(
     'SELECT * FROM messages WHERE chat_id = ?', [id]);
   res.json(results)
-}); 
+});
 
 app.get('/chats/:chat_id/users', async(req, res) => {
   const chat_id = req.params.chat_id
@@ -231,8 +231,8 @@ app.post('/chats/newConversation', async (req, res) => {
     const metaData = resultArr[1];
     // get the new chat id
     let chat_id = records.insertId;
-  
-    
+
+
     // add to chatMembers table
     for (let i = 0; i < user_ids.length; i++) {
       let user_id = user_ids[i]
@@ -249,40 +249,42 @@ app.post('/chats/newConversation', async (req, res) => {
   } catch (error) {
     res.type("text").status(USER_ERROR_CODE).send("Post new chat failed.")
   }
-})  
+})
 
 /**
- * Gets the last message for every chat a certain user is in. 
+ * Gets the last message for every chat a certain user is in.
  */
 app.get('/users/:user_id/getLastMessageHistory', async (req, res) => {
   const user_id = req.params.user_id
   const [results, fields] = await database.execute(
-    'SELECT m.chat_id, m.message_text, m.sent_at, m.sender_id ' + 
-    'FROM messages m ' + 
-    'WHERE m.message_id IN ( ' + 
-    '   SELECT MAX(sub_m.message_id) ' + 
-    '   FROM messages sub_m ' + 
-    '   GROUP BY sub_m.chat_id ' + 
-    ')' + 
-    'AND m.chat_id IN ( ' + 
-    '   SELECT c.chat_id ' + 
-    '   FROM chatMembers c ' + 
-    '   WHERE c.user_id = ? ' + 
-    ')' + 
+    'SELECT m.chat_id, m.message_text, m.sent_at, m.sender_id ' +
+    'FROM messages m ' +
+    'WHERE m.message_id IN ( ' +
+    '   SELECT MAX(sub_m.message_id) ' +
+    '   FROM messages sub_m ' +
+    '   GROUP BY sub_m.chat_id ' +
+    ')' +
+    'AND m.chat_id IN ( ' +
+    '   SELECT c.chat_id ' +
+    '   FROM chatMembers c ' +
+    '   WHERE c.user_id = ? ' +
+    ')' +
     'ORDER BY m.sent_at DESC', [user_id]
   )
   res.json(results)
 })
 
-app.get('/users', async (req, res) => {
-  const [results, fields] = await database.execute('SELECT * FROM users');
+app.get('/users/:chat_id', async (req, res) => {
+  const chat_id = req.params.chat_id;
+  const query = "SELECT m.message_text FROM message AS m WHERE m.chat_id = ? AND m.sent_at = ( SELECT MAX(m2.sent_at) FROM message AS m2 WHERE m2.chat_id = ?);"
+  const [results, fields] = await database.execute(query, [chat_id, chat_id]);
   res.json(results);
 })
 
 
 /**
- * Adds a new user (or a list of users) to a given chat. 
- * User ids must be Strings. 
+ * Adds a new user (or a list of users) to a given chat.
+ * User ids must be Strings.
  */
 app.post('/chats/addUser', async (req, res) => {
   const { chat_id, user_ids } = req.body
@@ -296,7 +298,7 @@ app.post('/chats/addUser', async (req, res) => {
   } catch (error) {
     res.type("text").status(500).send("Couldn't add a new user.");
   }
-  
+
 })
 
 
@@ -319,6 +321,27 @@ async function addUser(chat_id, user_ids) {
   }
   return { success: true, message: "Successfully posted new users to the chat."}
 }
+
+// Above were endpoint pertaining the chatbox features. Below are endpoints
+// regarding the following feature
+
+// Set friendship state when a request is initally sent
+app.post('addfriend/:user_id1/:user_id2/sendFriendRequest', async (req, res) => {
+  const user_id1 = req.body.user_id1;
+  const user_id2 = req.body.user_id2;
+
+  try {
+    const query = "INSERT INTO addFriend (friend1, friend2, accepted) VALUES (?, ?, false)"
+
+    // Perform the async process
+    await database.execute(query, [user_id1, user_id2]);
+
+    res.type("text").status(200).send("Successfully made the relationship");
+  } catch (error) {
+    console.log("Something wrong occurred when sending a friend request");
+    console.error(error);
+  }
+});
 
 
 // Allows us to change the port easily by setting an environment
