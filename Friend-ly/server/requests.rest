@@ -17,11 +17,18 @@
 
 //GET http://localhost:8000/chats/1/users
 
-POST http://localhost:8000/chats/addUser
-Content-Type: application/json
+//POST http://localhost:8000/chats/addUser
+//Content-Type: application/json
 
-{
-    "chat_id": 18,
-    "user_ids": [3]
-}
+//{
+//    "chat_id": 18,
+//    "user_ids": [3]
+//}
+GET http://localhost:8000/users/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImxlYnJvbjIzQHV3LmVkdSIsInVzZXJfaWQiOlt7InVzZXJfaWQiOjJ9XSwiaWF0IjoxNzQwNDM3OTkxfQ.XBVve-Fwd9EKv_0jyQHfHHgO5pO_V7UgV0NdtR1z2F0/getLastMessageHistory
+
+
+
+
+
+
 
