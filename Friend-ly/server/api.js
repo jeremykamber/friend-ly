@@ -343,6 +343,24 @@ app.post('addfriend/:user_id1/:user_id2/sendFriendRequest', async (req, res) => 
   }
 });
 
+app.post('users/login', async (req, res) => {
+  const email = req.body.email
+
+  try {
+    const query = "SELECT * FROM users WHERE email = ?"
+    const results = await database.execute(query, [email])
+    if (results.length == 0) {
+      // add the user
+      console.log("Placeholder")
+    } else {
+      // return the id
+      console.log("Placeholder")
+    }
+  } catch (err) {
+    throw (err)
+  }
+})
+
 
 // Allows us to change the port easily by setting an environment
 // variable. If no environment variable is set, the port will default to 8000

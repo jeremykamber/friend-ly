@@ -1,11 +1,17 @@
 const express = require('express')
 const cors = require('cors')
 const { admin } = require('./firebase/firebase_admin.js')
+const jwt = require('jsonwebtoken')
 
 // Initializing express app
 const app = express()
 app.use(express.json());
 app.use(cors());
+
+// this will need to be changed and placed in a secure file
+// but for now it's fine
+const secretKey = '12345' 
+
 
 /*
     Function takes in an access token from a firebase
@@ -16,12 +22,15 @@ app.use(cors());
     @Return: If both checks are met, return true.
             Otherwise false. 
 */
-async function authUser(token) {
+async function authUser(email) {
     try {
-        const decodedToken = await admin.auth().verifyIdToken(token)
-        let email = decodedToken['email']
+        // const decodedToken = await admin.auth().verifyIdToken(token)
+        //let email = decodedToken['email']
         if (email.endsWith("@uw.edu")) {
-            return decodedToken
+            const payload = { email: email }
+            // TODO: Need to connect with the login token check. 
+            const token = jwt.sign(payload, secretKey)
+            return token
         } else {
             return false
         }
@@ -38,7 +47,6 @@ async function authUser(token) {
 */
 app.post('/api/auth', async (req, res) => {
     const { token } = req.body;
-    console.log(token)
     try {
         const result = await authUser(token);
         res.status(200).json(result);
