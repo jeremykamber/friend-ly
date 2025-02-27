@@ -17,6 +17,8 @@ const secretKey = process.env.SECRET_KEY
 
 
 /*
+    NOTE: This is a comment for the old authUser. Will probably
+    use this later. 
     Function takes in an access token from a firebase
     signup and does 2 things:
         1. Authenticates the token
@@ -24,6 +26,12 @@ const secretKey = process.env.SECRET_KEY
     
     @Return: If both checks are met, return true.
             Otherwise false. 
+*/
+
+/*
+    authUser takes in an email and verifies that it is a uw email. 
+    It then returns a signed jwt token that can be used with
+    other endpoint calls in place of the user id. 
 */
 async function authUser(email) {
     try {

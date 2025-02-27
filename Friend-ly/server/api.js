@@ -23,7 +23,9 @@ const multer = require("multer");
 const jwt = require("jsonwebtoken")
 
 // importing mysql2
-const mysql = require('mysql2/promise')
+const mysql = require('mysql2/promise');
+const { getIdToken } = require("firebase/auth");
+const authMiddleware = require('./tokenMiddleware')
 
 // env variables
 require('dotenv').config()
@@ -193,10 +195,8 @@ app.post('/seen/updateSeen', async function (req, res) {
 });
 
 // Posts new message into user chat
-app.post('/users/:chat_id/newMessage', async function (req, res) {
-  let token = req.body.token
-  let creator_id = jwt.verify(token, process.env.SECRET_KEY)
-  let user_id = creator_id.user_id[0].user_id
+app.post('/users/:chat_id/newMessage', authMiddleware, async function (req, res) {
+  let user_id = req.user_id
   let chatID = req.params.chat_id
   let messageText = req.body.messageText
   let query = 'INSERT INTO messages(chat_id, sender_id, message_text) VALUES (?, ?, ?)'
@@ -218,14 +218,11 @@ app.post('/users/:chat_id/newMessage', async function (req, res) {
  * Post a new chat/conversation to chats table and
  * add users to chatMembers table
  */
-app.post('/chats/newConversation', async (req, res) => {
-  console.log(req.body)
+app.post('/chats/newConversation', authMiddleware, async (req, res) => {
   let chat_name = req.body.chat_name
   let profile_pic = req.body.profile_pic
-  let token = req.body.token
-  let creator_id = jwt.verify(token, process.env.SECRET_KEY)
   let user_ids = req.body.user_ids
-  user_ids.push(creator_id.user_id[0].user_id)
+  user_ids.push(req.user_id)
   let insertChatsQuery = 'INSERT INTO chats(chat_name, profile_picture) VALUES (?, ?)'
   let insertMembersQuery = 'INSERT INTO chatMembers (chat_id, user_id) VALUES (?, ?)'
 
@@ -259,12 +256,8 @@ app.post('/chats/newConversation', async (req, res) => {
 /**
  * Gets the last message for every chat a certain user is in.
  */
-app.get('/users/:token/getLastMessageHistory', async (req, res) => {
-  console.log(req.params.token)
-  const token = req.params.token
-  const decodedToken = jwt.verify(token, process.env.SECRET_KEY)
-  const user_id = decodedToken.user_id[0].user_id
-  console.log(user_id)
+app.get('/users/getLastMessageHistory', authMiddleware, async (req, res) => {
+  const user_id = req.user_id
   try {
     const [results, fields] = await database.execute(
       'SELECT m.chat_id, m.message_text, m.sent_at, m.sender_id ' +
@@ -287,6 +280,10 @@ app.get('/users/:token/getLastMessageHistory', async (req, res) => {
   }
 })
 
+/*
+  Gets all the messages from one chat.
+  Requires a chat id in the URL. 
+*/
 app.get('/users/:chat_id', async (req, res) => {
   const chat_id = req.params.chat_id;
   const query = "SELECT m.message_text FROM message AS m WHERE m.chat_id = ? AND m.sent_at = ( SELECT MAX(m2.sent_at) FROM message AS m2 WHERE m2.chat_id = ?);"
@@ -356,6 +353,11 @@ app.post('addfriend/:user_id1/:user_id2/sendFriendRequest', async (req, res) => 
   }
 });
 
+/*
+Endpoint for logging in a user. Checks to see if user is already
+in the database. If not, adds user to database. 
+@return: Returns the id of the user
+*/
 app.post('/users/login', async (req, res) => {
   const email = req.body.email
 
@@ -367,7 +369,6 @@ app.post('/users/login', async (req, res) => {
       const profile_picture = null
       const addUserQuery = "INSERT INTO users (bio, email, profile_picture, username) VALUES (?, ?, ?, ?)"
       await database.execute(addUserQuery, ["Hi, I am " + email, email, profile_picture, email])
-      //res.type("text").status(200).send("Successfully added a user into the database!")
     } 
     const getIDQuery = "SELECT user_id FROM users WHERE email = ?"
     const result = await database.execute(getIDQuery, [email])

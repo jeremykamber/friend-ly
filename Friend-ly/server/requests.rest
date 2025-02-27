@@ -24,9 +24,13 @@
 //    "chat_id": 18,
 //    "user_ids": [3]
 //}
-GET http://localhost:8000/users/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImxlYnJvbjIzQHV3LmVkdSIsInVzZXJfaWQiOlt7InVzZXJfaWQiOjJ9XSwiaWF0IjoxNzQwNDM3OTkxfQ.XBVve-Fwd9EKv_0jyQHfHHgO5pO_V7UgV0NdtR1z2F0/getLastMessageHistory
+POST http://localhost:8000/users/1/newMessage
+Content-Type: application/json
 
-
+{
+    "messageText": "Today's game day!",
+    "token": "add a tokens string here."
+}
 
 
 
