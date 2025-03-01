@@ -9,7 +9,8 @@ import { useSettingsStore } from "../stores/settingsStore";
 const SettingsView = ({ navigation }) => {
   const [theme, setTheme] = useState('light');
   const [language, setLanguage] = useState('English');
-  const [darkMode, toggleDarkMode] = useSettingsStore(state => [state.darkMode, state.toggleDarkMode]);
+  const darkMode = useSettingsStore(state => state.darkMode);
+  const toggleDarkMode = useSettingsStore(state => state.toggleDarkMode);
 
   useLayoutEffect(() => {
     navigation.setOptions({
