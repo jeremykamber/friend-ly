@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text, StyleSheet, TouchableOpacity } from 'react-native';
 import appColors from '../common/app-colors';
 
 const InterestSubmitButton = ({text, onPress}) => {

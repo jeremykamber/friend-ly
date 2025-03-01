@@ -92,13 +92,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 30,
   },
-  profilePicture: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    marginBottom: 16,
-    marginTop: 50,
-  },
   name: {
     fontSize: 24,
     fontWeight: 'bold',

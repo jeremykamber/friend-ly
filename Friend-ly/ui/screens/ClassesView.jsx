@@ -7,7 +7,7 @@ import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import { useNavigation } from '@react-navigation/native';
 
 const ClassInput = () => {
-    const {currentClasses, setCurrentClasses, hasPreviousScreen, setHasPreviousScreen} = useProfileViewStore();
+    const {currentClasses, setCurrentClasses, hasPreviousScreen} = useProfileViewStore();
     const navigation = useNavigation();
 
     const [classes, setClasses] = useState(currentClasses);
@@ -19,10 +19,9 @@ const ClassInput = () => {
     const handleSubmit = () => {
         setCurrentClasses(classes);
         if (hasPreviousScreen) {
-            navigation.navigate('ProfileViewEditMode')
+            navigation.navigate('ProfileViewEditMode');
         }
         else {
-            setHasPreviousScreen(true);
             navigation.navigate('InterestSelectionView');
         }
     };
@@ -179,9 +178,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#c23b22',
         padding: 5,
         borderRadius: 5,
-    },
-    removeButtonText: {
-        color: 'white',
     },
     cancelButton: {
         backgroundColor: 'gray',

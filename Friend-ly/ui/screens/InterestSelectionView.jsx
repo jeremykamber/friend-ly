@@ -10,7 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 
 
 const InterestSelectionView = () => {
-  const {interests, setInterests} = useProfileViewStore();
+  const {interests, setInterests, hasPreviousScreen, setHasPreviousScreen} = useProfileViewStore();
 
   //const [value, setValue] = useState(''); // Stores current interest
   const [submittedValues, setSubmittedValues] = useState(interests); // Stores all interests
@@ -28,7 +28,13 @@ const InterestSelectionView = () => {
       //setSliderValue(1); // reset the slider
     //}
     setInterests(submittedValues);
-    navigation.navigate('SelfProfileView');
+    if (hasPreviousScreen) {
+        navigation.navigate('ProfileViewEditMode');
+    }
+    else {
+        setHasPreviousScreen(true);
+        navigation.navigate('SelfProfileView');
+    }
   };
 
   // Remove an interest (based on its index)

@@ -37,7 +37,7 @@ const MultiSelectDropdown = ({ onSelectionChange }) => {
 
     const handleOutsidePress = () => {
         setShowPicker(false);
-        Keyboard.dismiss();  // Dismiss the keyboard
+        Keyboard.dismiss();
         setIsFocused(false);
     };
 
@@ -51,7 +51,6 @@ const MultiSelectDropdown = ({ onSelectionChange }) => {
                         onChangeText={setSearchText}
                         style={[styles.input, { borderColor: isFocused ? appColors.UW_Purple : appColors.Black }]}
                         onFocus={() => { setShowPicker(true); setIsFocused(true); }}
-                        //onBlur={() => setIsFocused(false)}
                     />
 
                     {showPicker && (
