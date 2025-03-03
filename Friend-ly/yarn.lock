@@ -4034,6 +4034,11 @@ expo-modules-core@2.0.6:
   dependencies:
     invariant "^2.2.4"
 
+expo-secure-store@^14.0.1:
+  version "14.0.1"
+  resolved "https://registry.npmjs.org/expo-secure-store/-/expo-secure-store-14.0.1.tgz"
+  integrity sha512-QUS+j4+UG4jRQalgnpmTvvrFnMVLqPiUZRzYPnG3+JrZ5kwVW2w6YS3WWerPoR7C6g3y/a2htRxRSylsDs+TaQ==
+
 expo-status-bar@~2.0.0:
   version "2.0.0"
   resolved "https://registry.npmjs.org/expo-status-bar/-/expo-status-bar-2.0.0.tgz"
