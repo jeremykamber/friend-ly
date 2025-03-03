@@ -19,12 +19,13 @@ const app = express();
 // Importing the body-parser module
 const multer = require("multer");
 
-// Importing the sqlite module (if we decide to use it later)
-//const sqlite = require("sqlite");
-//const sqlite3 = require("sqlite3");
+// importing the jwt token module
+const jwt = require("jsonwebtoken")
 
 // importing mysql2
-const mysql = require('mysql2/promise')
+const mysql = require('mysql2/promise');
+const { getIdToken } = require("firebase/auth");
+const authMiddleware = require('./tokenMiddleware')
 
 // env variables
 require('dotenv').config()
@@ -194,13 +195,13 @@ app.post('/seen/updateSeen', async function (req, res) {
 });
 
 // Posts new message into user chat
-app.post('/users/:id/:chat_id/newMessage', async function (req, res) {
-  let userID = req.params.id
+app.post('/users/:chat_id/newMessage', authMiddleware, async function (req, res) {
+  let user_id = req.user_id
   let chatID = req.params.chat_id
   let messageText = req.body.messageText
   let query = 'INSERT INTO messages(chat_id, sender_id, message_text) VALUES (?, ?, ?)'
   try {
-    const resultArr = await database.execute(query, [chatID, userID, messageText]);
+    const resultArr = await database.execute(query, [chatID, user_id, messageText]);
     const records = resultArr[0];
     const metaData = resultArr[1];
 
@@ -217,10 +218,11 @@ app.post('/users/:id/:chat_id/newMessage', async function (req, res) {
  * Post a new chat/conversation to chats table and
  * add users to chatMembers table
  */
-app.post('/chats/newConversation', async (req, res) => {
+app.post('/chats/newConversation', authMiddleware, async (req, res) => {
   let chat_name = req.body.chat_name
   let profile_pic = req.body.profile_pic
   let user_ids = req.body.user_ids
+  user_ids.push(req.user_id)
   let insertChatsQuery = 'INSERT INTO chats(chat_name, profile_picture) VALUES (?, ?)'
   let insertMembersQuery = 'INSERT INTO chatMembers (chat_id, user_id) VALUES (?, ?)'
 
@@ -254,26 +256,34 @@ app.post('/chats/newConversation', async (req, res) => {
 /**
  * Gets the last message for every chat a certain user is in.
  */
-app.get('/users/:user_id/getLastMessageHistory', async (req, res) => {
-  const user_id = req.params.user_id
-  const [results, fields] = await database.execute(
-    'SELECT m.chat_id, m.message_text, m.sent_at, m.sender_id ' +
-    'FROM messages m ' +
-    'WHERE m.message_id IN ( ' +
-    '   SELECT MAX(sub_m.message_id) ' +
-    '   FROM messages sub_m ' +
-    '   GROUP BY sub_m.chat_id ' +
-    ')' +
-    'AND m.chat_id IN ( ' +
-    '   SELECT c.chat_id ' +
-    '   FROM chatMembers c ' +
-    '   WHERE c.user_id = ? ' +
-    ')' +
-    'ORDER BY m.sent_at DESC', [user_id]
-  )
-  res.json(results)
+app.get('/users/getLastMessageHistory', authMiddleware, async (req, res) => {
+  const user_id = req.user_id
+  try {
+    const [results, fields] = await database.execute(
+      'SELECT m.chat_id, m.message_text, m.sent_at, m.sender_id ' +
+      'FROM messages m ' +
+      'WHERE m.message_id IN ( ' +
+      '   SELECT MAX(sub_m.message_id) ' +
+      '   FROM messages sub_m ' +
+      '   GROUP BY sub_m.chat_id ' +
+      ')' +
+      'AND m.chat_id IN ( ' +
+      '   SELECT c.chat_id ' +
+      '   FROM chatMembers c ' +
+      '   WHERE c.user_id = ? ' +
+      ')' +
+      'ORDER BY m.sent_at DESC', [user_id]
+    )
+    res.type("text").status(200).send(results);
+  } catch (err) {
+    res.type("text").status(USER_ERROR_CODE).send("Getting last message of all chats failed.")
+  }
 })
 
+/*
+  Gets all the messages from one chat.
+  Requires a chat id in the URL. 
+*/
 app.get('/users/:chat_id', async (req, res) => {
   const chat_id = req.params.chat_id;
   const query = "SELECT m.message_text FROM message AS m WHERE m.chat_id = ? AND m.sent_at = ( SELECT MAX(m2.sent_at) FROM message AS m2 WHERE m2.chat_id = ?);"
@@ -343,19 +353,28 @@ app.post('addfriend/:user_id1/:user_id2/sendFriendRequest', async (req, res) => 
   }
 });
 
-app.post('users/login', async (req, res) => {
+/*
+Endpoint for logging in a user. Checks to see if user is already
+in the database. If not, adds user to database. 
+@return: Returns the id of the user
+*/
+app.post('/users/login', async (req, res) => {
   const email = req.body.email
 
   try {
-    const query = "SELECT * FROM users WHERE email = ?"
-    const results = await database.execute(query, [email])
-    if (results.length == 0) {
+    const findUserQuery = "SELECT * FROM users WHERE email = ?"
+    const results = await database.execute(findUserQuery, [email])
+    if (results[0].length == 0) {
       // add the user
-      console.log("Placeholder")
-    } else {
-      // return the id
-      console.log("Placeholder")
-    }
+      const profile_picture = null
+      const addUserQuery = "INSERT INTO users (bio, email, profile_picture, username) VALUES (?, ?, ?, ?)"
+      await database.execute(addUserQuery, ["Hi, I am " + email, email, profile_picture, email])
+    } 
+    const getIDQuery = "SELECT user_id FROM users WHERE email = ?"
+    const result = await database.execute(getIDQuery, [email])
+    console.log(result)
+    res.type("text").status(200).send(result[0])
+    
   } catch (err) {
     throw (err)
   }

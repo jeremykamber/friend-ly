@@ -17,11 +17,22 @@
 
 //GET http://localhost:8000/chats/1/users
 
-POST http://localhost:8000/chats/addUser
+//POST http://localhost:8000/chats/addUser
+//Content-Type: application/json
+
+//{
+//    "chat_id": 18,
+//    "user_ids": [3]
+//}
+POST http://localhost:8000/users/1/newMessage
 Content-Type: application/json
 
 {
-    "chat_id": 18,
-    "user_ids": [3]
+    "messageText": "Today's game day!",
+    "token": "add a tokens string here."
 }
+
+
+
+
 
