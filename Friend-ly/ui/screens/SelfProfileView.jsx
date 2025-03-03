@@ -4,16 +4,17 @@ import ProfileButton from '../components/ProfileButton';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import { useNavigation } from '@react-navigation/native';
 import DisplayProfilePhoto from '../components/DisplayProfilePhoto';
+import PostCard from '../components/PostCard';
 
 
 const SelfProfileView = () => {
-  const {imageUri, name, majorAndYear, aboutMe, interests, currentClasses} = useProfileViewStore();
+  const {imageUri, name, majorAndYear, aboutMe, interests, currentClasses, posts} = useProfileViewStore();
 
   const navigation = useNavigation();
 
   const handleEdit = () => {
     navigation.navigate('ProfileViewEditMode');
-};
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -70,6 +71,22 @@ const SelfProfileView = () => {
         {/* Create Posts section */}
         <View style={styles.section}>
             <Text style={styles.sectionTitle}>Posts</Text>
+            { posts.map((item, index) => (
+                <View key={index}>
+                  <PostCard
+                      user={{
+                          username: name,
+                          profilePic: imageUri,
+                      }}
+                      timestamp={item.timestamp}
+                      image={item.image}
+                      caption={item.caption}
+                      likes={item.likes}
+                      comments={item.comments}
+                  />
+                </View>
+            ))}
+            
         </View>
     </ScrollView>
   );

@@ -1,22 +1,27 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Modal } from 'react-native';
 import ProfileButton from '../components/ProfileButton';
 import InputProfilePhotoButton from '../components/InputProfilePhotoButton';
 import EditInterestsButton from '../components/EditInterestsButton';
 import EditClassesButton from '../components/EditClassesButton';
 import DisplayProfilePhoto from '../components/DisplayProfilePhoto';
+import PostCard from '../components/PostCard';
 import { useNavigation } from '@react-navigation/native';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
+import appColors from '../common/app-colors';
 
 
 const ProfileViewEditMode = () => {
 
-    const {imageUri, setImageUri, name, setName, majorAndYear, setMajorAndYear, aboutMe, setAboutMe, interests, currentClasses} = useProfileViewStore();
+    const {imageUri, setImageUri, name, setName, majorAndYear, setMajorAndYear, aboutMe, setAboutMe, interests, currentClasses, posts, setPosts} = useProfileViewStore();
     const [tempName, setTempName] = useState(name);
     const [tempMajorAndYear, setTempMajorAndYear] = useState(majorAndYear);
     const [tempAboutMe, setTempAboutMe] = useState(aboutMe);
+    const [tempPosts, setTempPosts] = useState(posts);
 
     const navigation = useNavigation();
+    const [modalVisible, setModalVisible] = useState(false);
+    const [postIndex, setPostIndex] = useState(null);
 
     const handleImageSelected = (uri) => {
         setImageUri(uri);
@@ -27,6 +32,7 @@ const ProfileViewEditMode = () => {
         setName(tempName);
         setMajorAndYear(tempMajorAndYear);
         setAboutMe(tempAboutMe);
+        setPosts(tempPosts);
         
         navigation.navigate('SelfProfileView');
     };
@@ -37,6 +43,16 @@ const ProfileViewEditMode = () => {
 
     const handleEditClasses = () => {
         navigation.navigate('ClassesView');
+    };
+
+    const confirmDelete = (index) => {
+        setModalVisible(true);
+        setPostIndex(index)
+    };
+
+    const handleRemovePost = () => {
+        setTempPosts((tempPosts) => tempPosts.filter((_, i) => i !== postIndex));
+        setModalVisible(false);
     };
 
     return (
@@ -100,6 +116,50 @@ const ProfileViewEditMode = () => {
             {/* Create Posts section */}
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Posts</Text>
+                { tempPosts.map((item, index) => (
+                    <View key={index} style={styles.postsContainer}>
+                      <PostCard
+                          user={{
+                              username: name,
+                              profilePic: imageUri,
+                          }}
+                          timestamp={item.timestamp}
+                          image={item.image}
+                          caption={item.caption}
+                          likes={item.likes}
+                          comments={item.comments}
+                      />
+                      <TouchableOpacity onPress={() => confirmDelete(index)} style={styles.removeButton}>
+                          <Text style={styles.removeButtonText}>Delete</Text>
+                      </TouchableOpacity>
+                    </View>
+                ))}
+
+                <Modal
+                    visible={modalVisible}
+                    transparent={true}
+                    animationType="slide"
+                    onRequestClose={() => setModalVisible(false)} >
+                    <View style={styles.modalContainer}>
+                        <View style={styles.modalContent}>
+                            <Text style={styles.modalText}>Are you sure you want to delete this post?</Text>
+                            <View style={styles.confirmationButtonRow}>
+                                <TouchableOpacity
+                                    style={[styles.modalButton, styles.cancelButton]}
+                                    onPress={() => setModalVisible(false)} >
+                                    <Text style={styles.confirmationButtonText}>Cancel</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.modalButton, styles.deleteButton]}
+                                    onPress={() => handleRemovePost()} >
+                                    <Text style={styles.confirmationButtonText}>Delete</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
+            
+
             </View>
         </ScrollView>
     );
@@ -191,6 +251,70 @@ const styles = StyleSheet.create({
     borderBottomColor: '#DEDEDE', // Light gray color for the border
     marginTop: 5,
     marginBottom: 8,
+  },
+  removeButton: {
+    backgroundColor: '#c0392b',
+    paddingHorizontal: 8,
+    borderRadius: 30,
+    alignItems: 'center',
+    position: 'absolute',
+    top: 30,
+    right: 35,
+  },
+  removeButtonText: {
+    color: appColors.White,
+    fontSize: 16,
+    fontWeight: '80%',
+  },
+  postsContainer: {
+    marginBottom: 20,
+    padding: 10,
+    borderRadius: 5,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+  },
+  modalContent: {
+      width: 300,
+      padding: 20,
+      backgroundColor: 'white',
+      borderRadius: 10,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 5, // For Android shadow
+  },
+  modalText: {
+      fontSize: 18,
+      marginBottom: 20,
+      textAlign: 'center',
+  },
+  confirmationButtonRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      width: '100%',
+  },
+  modalButton: {
+      flex: 1,
+      paddingVertical: 10,
+      marginHorizontal: 5,
+      borderRadius: 5,
+      alignItems: 'center',
+  },
+  cancelButton: {
+      backgroundColor: '#aaa', // Grey color for cancel button
+  },
+  deleteButton: {
+      backgroundColor: '#C0392B', // Muted red for delete button
+  },
+  comfirmationButtonText: {
+      color: 'white',
+      fontWeight: 'bold',
   },
 });
 

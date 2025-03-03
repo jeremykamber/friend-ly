@@ -23,7 +23,6 @@ const styles = StyleSheet.create({
     buttonText: {
         color: appColors.White,
         fontSize: 20,
-
     },
 });
 

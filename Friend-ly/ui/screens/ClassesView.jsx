@@ -112,7 +112,7 @@ const ClassInput = () => {
                 </View>
             </Modal>
 
-            <View styles={styles.buttonContainer}>
+            <View styles={styles.doneButtonContainer}>
                 <InterestSubmitButton text='Done!' onPress={handleSubmit}/>
             </View>
         </View>
@@ -124,6 +124,7 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 20,
         backgroundColor: '#f5f5f5',
+        marginTop: 30,
     },
     classItem: {
         flexDirection: 'row',
@@ -191,6 +192,9 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         flexDirection: 'row',
+    },
+    doneButtonContainer: {
+        justifyContent: 'flex-end',
     },
 });
 

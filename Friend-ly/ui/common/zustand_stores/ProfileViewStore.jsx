@@ -21,6 +21,9 @@ const useProfileViewStore = create((set) => ({
 
     hasPreviousScreen: false,
     setHasPreviousScreen: (screen) => set({ hasPreviousScreen: screen }),
+
+    posts: [{timestamp:"2 hours ago", image:"https://placehold.co/600x300/png", caption:"This is an example post with all props provided.", likes:34, comments:12}, {timestamp:"3 hours ago", image:"https://placehold.co/600x300/png", caption:"This is an example post with all props provided.", likes:34, comments:12}, {timestamp:"5 days ago", image:"https://placehold.co/600x300/png", caption:"This is an example post with all props provided.", likes:34, comments:12}],
+    setPosts: (postList) => set({ posts: postList }),
 }));
 
 export default useProfileViewStore;

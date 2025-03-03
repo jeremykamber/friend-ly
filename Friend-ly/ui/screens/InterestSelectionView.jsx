@@ -33,7 +33,7 @@ const InterestSelectionView = () => {
     }
     else {
         setHasPreviousScreen(true);
-        navigation.navigate('SelfProfileView');
+        navigation.navigate('TabNavigator');
     }
   };
 
@@ -120,6 +120,7 @@ const styles = StyleSheet.create({
   broadContainer: {
     flex: 1,
     backgroundColor: appColors.White,
+    marginTop: 30,
   },
   container: {
     flex: 1,
