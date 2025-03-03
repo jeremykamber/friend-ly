@@ -1,15 +1,48 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, SafeAreaView } from "react-native";
 import appColors from "../common/app-colors";
 import ChatConversationCard from "../components/ChatConversationCard";
 import MinimalPlusButton from "../components/MinimalPlusButton";
 import PlusButton from "../components/PlusButton";
 import PrimaryButton from "../components/PrimaryButton";
+import * as SecureStore from 'expo-secure-store'
 
 const ChatView = () => {
+
+    const [token, setToken] = useState(null)
+
+    /*
+        This useEffect runs upon load up of chat.
+        This loads in the token from secure storage
+        and sets the useState token variable to the result
+        of the token, or keeps it as null.
+    */
+    useEffect(() => {
+        const getToken = async() => {
+            try {
+                const result = await SecureStore.getItemAsync("JWT") // jwt token
+                result ? setToken(result) : console.log("No token found!")
+            } catch (err) {
+                throw err
+            }
+        }
+        getToken()
+    }, [])
+
     let addConversation = () => {
         // TODO: Implement addConversation functionality
     };
+
+    /*
+        If the token hasn't been retrieved yet, just show a loading screen
+    */
+    if (token === null) {
+        return (
+        <SafeAreaView style={styles.container}>
+            <Text>Loading...</Text>
+        </SafeAreaView>
+        );
+    }
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>

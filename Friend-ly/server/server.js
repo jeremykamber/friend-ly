@@ -8,12 +8,17 @@ const app = express()
 app.use(express.json());
 app.use(cors());
 
+// env variables
+require('dotenv').config()
+
 // this will need to be changed and placed in a secure file
 // but for now it's fine
-const secretKey = '12345' 
+const secretKey = process.env.SECRET_KEY
 
 
 /*
+    NOTE: This is a comment for the old authUser. Will probably
+    use this later. 
     Function takes in an access token from a firebase
     signup and does 2 things:
         1. Authenticates the token
@@ -22,15 +27,30 @@ const secretKey = '12345'
     @Return: If both checks are met, return true.
             Otherwise false. 
 */
+
+/*
+    authUser takes in an email and verifies that it is a uw email. 
+    It then returns a signed jwt token that can be used with
+    other endpoint calls in place of the user id. 
+*/
 async function authUser(email) {
     try {
         // const decodedToken = await admin.auth().verifyIdToken(token)
         //let email = decodedToken['email']
         if (email.endsWith("@uw.edu")) {
-            const payload = { email: email }
-            // TODO: Need to connect with the login token check. 
-            const token = jwt.sign(payload, secretKey)
-            return token
+            try {
+                const results = await fetch("http://localhost:8000/users/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: email }),
+                })
+                const user_id = await results.json()
+                const payload = { email: email, user_id: user_id}
+                const token = jwt.sign(payload, secretKey)
+                return token
+            } catch (err) {
+                throw (err)
+            }
         } else {
             return false
         }
@@ -46,9 +66,9 @@ async function authUser(email) {
         400: Auth failed
 */
 app.post('/api/auth', async (req, res) => {
-    const { token } = req.body;
+    const email = req.body.email;
     try {
-        const result = await authUser(token);
+        const result = await authUser(email);
         res.status(200).json(result);
     } catch (error) {
         console.error(error);
