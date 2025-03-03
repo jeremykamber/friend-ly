@@ -10,6 +10,7 @@ import * as SecureStore from 'expo-secure-store'
 const ChatView = () => {
 
     const [token, setToken] = useState(null)
+    const [lastMessages, setLastMessages] = useState([])
 
     /*
         This useEffect runs upon load up of chat.
@@ -29,6 +30,27 @@ const ChatView = () => {
         getToken()
     }, [])
 
+    useEffect(() => {
+        const getChats = async() => {
+            try {
+                console.log("Here?")
+                const response = await fetch("http://localhost:8000/users/getLastMessageHistory", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ token: token })
+                })
+                const data = await response.json()
+                setLastMessages(data)
+            } catch (err) {
+                throw (err);
+            }
+        }
+        if (token) {
+            getChats();
+        }
+    }, [token, render])
+
+
     let addConversation = () => {
         // TODO: Implement addConversation functionality
     };
@@ -36,7 +58,7 @@ const ChatView = () => {
     /*
         If the token hasn't been retrieved yet, just show a loading screen
     */
-    if (token === null) {
+    if (token === null || lastMessages.length == 0) {
         return (
         <SafeAreaView style={styles.container}>
             <Text>Loading...</Text>
@@ -58,9 +80,17 @@ const ChatView = () => {
                 />
             </View>
             <ScrollView contentContainerStyle={styles.scrollContainer}>
+                {lastMessages.map((message, index) => (
+                    <ChatConversationCard 
+                        key={index}
+                        senderName={message.chat_name}
+                        lastMessage={message.sender_name + ": " + message.message_text}
+                        timestamp={message.sent_at.toString().substring(12, 16)}
+                    />
+                ))}
                 <ChatConversationCard
                     senderName="Jeremy"
-                    lastMessage="Hey, how are things?"
+                    lastMessage={lastMessages[0].message_text}
                     timestamp="2:45 PM"
                 />
                 <ChatConversationCard

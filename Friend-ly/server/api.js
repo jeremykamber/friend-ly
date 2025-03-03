@@ -139,6 +139,13 @@ app.get('/chats/:chat_id/users', async(req, res) => {
   res.json(results);
 })
 
+app.get('/users/chats', authMiddleware, async(req, res) => {
+  const user_id = req.user_id
+  const [results, fields] = await database.execute(
+    'SELECT chat_id FROM chatMembers WHERE user_id = ?', [user_id])
+  res.json(results);
+})
+
 
 
 // Gets a single users information
@@ -256,23 +263,37 @@ app.post('/chats/newConversation', authMiddleware, async (req, res) => {
 /**
  * Gets the last message for every chat a certain user is in.
  */
-app.get('/users/getLastMessageHistory', authMiddleware, async (req, res) => {
+app.post('/users/getLastMessageHistory', authMiddleware, async (req, res) => {
   const user_id = req.user_id
   try {
     const [results, fields] = await database.execute(
-      'SELECT m.chat_id, m.message_text, m.sent_at, m.sender_id ' +
-      'FROM messages m ' +
-      'WHERE m.message_id IN ( ' +
-      '   SELECT MAX(sub_m.message_id) ' +
-      '   FROM messages sub_m ' +
-      '   GROUP BY sub_m.chat_id ' +
-      ')' +
-      'AND m.chat_id IN ( ' +
-      '   SELECT c.chat_id ' +
-      '   FROM chatMembers c ' +
-      '   WHERE c.user_id = ? ' +
-      ')' +
-      'ORDER BY m.sent_at DESC', [user_id]
+      `SELECT 
+          m.chat_id, 
+          m.message_text, 
+          m.sent_at, 
+          m.sender_id,
+          u.username AS sender_name,          
+          c.chat_name AS chat_name            
+      FROM 
+          messages m
+      JOIN 
+          users u ON m.sender_id = u.user_id   
+      JOIN 
+          chats c ON m.chat_id = c.chat_id     
+      WHERE 
+          m.message_id IN ( 
+              SELECT MAX(sub_m.message_id) 
+              FROM messages sub_m 
+              GROUP BY sub_m.chat_id 
+          ) 
+      AND 
+          m.chat_id IN ( 
+              SELECT c.chat_id 
+              FROM chatMembers c 
+              WHERE c.user_id = ?
+          ) 
+      ORDER BY 
+          m.sent_at DESC;`, [user_id]
     )
     res.type("text").status(200).send(results);
   } catch (err) {
@@ -289,6 +310,17 @@ app.get('/users/:chat_id', async (req, res) => {
   const query = "SELECT m.message_text FROM message AS m WHERE m.chat_id = ? AND m.sent_at = ( SELECT MAX(m2.sent_at) FROM message AS m2 WHERE m2.chat_id = ?);"
   const [results, fields] = await database.execute(query, [chat_id, chat_id]);
   res.json(results);
+})
+
+app.post('/users/editUName', authMiddleware, async (req, res) => {
+  console.log("EDIT USERNAME")
+  const user_id = req.user_id
+  const new_username = req.body.username
+  const query = "UPDATE users SET username = ? WHERE user_id = ?"
+  const [results, fields] = await database.execute(query, [new_username, user_id])
+  console.log("EDIT USERNAME")
+  console.log(results)
+  res.json(results)
 })
 
 
