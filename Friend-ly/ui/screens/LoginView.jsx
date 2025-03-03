@@ -5,29 +5,11 @@ import { GoogleAuthProvider } from "firebase/auth";
 import { signIn } from "firebase/auth";
 import { auth } from "../../server/firebase/firebase";
 import appColors from "../common/app-colors"; // Import your appColors
-import * as SecureStore from 'expo-secure-store'
 
 const LoginView = ({ navigation }) => {
     const microsoftProvider = new GoogleAuthProvider();
+    const [token, setToken] = useState(null)
 
-    /*
-        This function stores a JWT token in secure store.
-        The key used is "JWT", this key must be used
-        to retrieve the token elsewhere in the program.
-    */
-    const storeToken = async (token) => {
-        try {
-            await SecureStore.setItemAsync("JWT", token)
-        } catch (err) {
-            throw (err)
-        }
-    }
-
-    /*
-        This function authenticates an email. 
-        It retrieves a token and stores it in 
-        secure storage, and then navigates to chat.
-    */
     const authLogin = async (email) => {
         try {
             //const results = await signInWithRedirect(auth, microsoftProvider);
@@ -36,11 +18,9 @@ const LoginView = ({ navigation }) => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: "lebron23@uw.edu" }),
             });
-            if (response.ok) {
-                const data = await response.json();
-                await storeToken(data)
-                navigation.navigate("Chat");
-            }
+            const data = await response.json();
+            console.log("Auth response:", data);
+            navigation.navigate("Chat");
         } catch (err) {
             throw err;
         }
