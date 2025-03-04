@@ -2,9 +2,10 @@ import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import LoginView from "../screens/LoginView";
-import ChatView from "../screens/ChatView";
+import ChatView from "../screens/ChatsView";
 import SettingsNavigator from "./SettingsNavigator";
 import RecommendationView from "../screens/RecommendationView";
+import ChatsNavigator from "./ChatsNavigator";
 
 const Tab = createBottomTabNavigator();
 
@@ -23,7 +24,7 @@ function TabNavigator() {
             />
             <Tab.Screen
                 name="Chat"
-                component={ChatView}
+                component={ChatsNavigator}
                 options={{
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="chatbubble" size={size} color={color} />
