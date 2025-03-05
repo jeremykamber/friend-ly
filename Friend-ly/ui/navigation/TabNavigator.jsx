@@ -5,6 +5,8 @@ import LoginView from "../screens/LoginView";
 import ChatView from "../screens/ChatView";
 import SettingsNavigator from "./SettingsNavigator";
 import RecommendationView from "../screens/RecommendationView";
+import HomeView from "../screens/HomeView";
+import ProfileNavigator from "./ProfileNavigator";
 
 const Tab = createBottomTabNavigator();
 
@@ -32,8 +34,30 @@ function TabNavigator() {
                 }}
             />
             <Tab.Screen
+                name="Home"
+                component={HomeView}
+                options={{
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="home-outline" size={size} color={color} />
+                    ),
+                    headerShown: false,
+                }}
+            />
+            {/*
+            <Tab.Screen
                 name="Login"
                 component={LoginView}
+                options={{
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="person" size={size} color={color} />
+                    ),
+                    headerShown: false,
+                }}
+            />
+            */}
+            <Tab.Screen
+                name="Profile"
+                component={ProfileNavigator}
                 options={{
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="person" size={size} color={color} />
