@@ -335,23 +335,125 @@ async function addUser(chat_id, user_ids) {
 // Above were endpoint pertaining the chatbox features. Below are endpoints
 // regarding the following feature
 
-// Set friendship state when a request is initally sent
-app.post('addfriend/:user_id1/:user_id2/sendFriendRequest', async (req, res) => {
+/**
+ * GET friend lists for one user
+ * Select the rows that includes the user
+ */
+app.get('/friends/:user_id', async (req, res) => {
+  const user_id = req.params.user_id;
+  const query = `
+    SELECT 
+        CASE 
+            WHEN user_id1 < user_id2 THEN user_id1 
+            ELSE user_id2 
+        END AS user_id1,
+        CASE 
+            WHEN user_id1 < user_id2 THEN user_id2 
+            ELSE user_id1 
+        END AS user_id2,
+        created_at
+    FROM friends
+    WHERE user_id1 = ? OR user_id2 = ?
+    ORDER BY created_at ASC;
+`;
+  const [results, fields] = await database.execute(query, [user_id, user_id]);
+  res.json(results);
+})
+
+/**
+ * Sends a new friend request.
+ * Adds two users with the default `added` status set to `false`.
+ * Constraint: Ensure the request does not already exist in the table.
+ */
+app.post('/friends/sendFriendRequest', async (req, res) => {
+  // the person that sends the friend request
   const user_id1 = req.body.user_id1;
+  // the person that accepts the friend request
   const user_id2 = req.body.user_id2;
 
   try {
-    const query = "INSERT INTO addFriend (friend1, friend2, accepted) VALUES (?, ?, false)"
+    const checkQuery = `
+      SELECT * FROM friends 
+      WHERE (user_id1 = ? AND user_id2 = ?) 
+         OR (user_id1 = ? AND user_id2 = ?) 
+      LIMIT 1
+    `;
+
+    const [rows] = await database.execute(checkQuery, [user_id1, user_id2, user_id2, user_id1]);
+    
+
+    if (rows.length > 0) {
+      return res.type("text").status(400).send("Friend request already exists / added.");
+    }
+
+    
+    const query = "INSERT INTO friends (user_id1, user_id2) VALUES (?, ?)"
 
     // Perform the async process
     await database.execute(query, [user_id1, user_id2]);
 
-    res.type("text").status(200).send("Successfully made the relationship");
+    res.type("text").status(200).send("Successfully send friend request");
+    
   } catch (error) {
-    console.log("Something wrong occurred when sending a friend request");
-    console.error(error);
+    res.type("text").status(500).send("Couldn't send friend request.");
   }
 });
+
+/**
+ * Accepted friend request.
+ * Set status to true.
+ */
+
+app.post('/friends/acceptFriendRequest', async (req, res) => {
+  // the person that sends the friend request
+  const user_id1 = req.body.user_id1;
+  // the person that accepts the friend request
+  const user_id2 = req.body.user_id2;
+
+  try {   
+    const query = "UPDATE friends SET added = true WHERE user_id1 = ? and user_id2 = ?"
+
+    // Perform the async process
+    await database.execute(query, [user_id1, user_id2]);
+
+    res.type("text").status(200).send("Successfully accept friend request");
+    
+  } catch (error) {
+    res.type("text").status(500).send("Couldn't accept friend request.");
+  }
+});
+
+/**
+ * Remove from friends list
+ * Delete the row of the 2 users
+ */
+app.post('/friends/deleteFriend', async (req, res) => {
+  // the person that sends the friend request
+  const user_id1 = req.body.user_id1;
+  // the person that accepts the friend request
+  const user_id2 = req.body.user_id2;
+
+  try {   
+    const query = `
+      DELETE FROM friends 
+      WHERE (user_id1 = ? AND user_id2 = ?) 
+         OR (user_id1 = ? AND user_id2 = ?)
+    `;
+
+    // Perform the async process
+    const [result] = await database.execute(query, [user_id1, user_id2, user_id2, user_id1]);
+
+    if (result.affectedRows > 0) {
+      return res.type("text").status(200).send("Successfully deleted friend.");
+    } else {
+      return res.type("text").status(404).send("Friendship not found.");
+    }
+    
+  } catch (error) {
+    res.type("text").status(500).send("Couldn't delete friend.");
+  }
+});
+
 
 /*
 Endpoint for logging in a user. Checks to see if user is already
@@ -379,6 +481,12 @@ app.post('/users/login', async (req, res) => {
     throw (err)
   }
 })
+
+// Note to Elise: 
+// when add new user, check if user_id1 = 1 user_id2 = 2 and user_id1 = 2 user_id2 = 1 exist
+// if exist, dont add
+
+// delete also find both ways
 
 
 // Allows us to change the port easily by setting an environment

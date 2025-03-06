@@ -1,0 +1,48 @@
+USE <db_name>;
+CREATE TABLE users (
+  user_id int NOT NULL AUTO_INCREMENT,
+  username varchar(255) NOT NULL,
+  email varchar(255) NOT NULL,
+  bio text,
+  profile_picture blob,
+  created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id),
+  UNIQUE KEY username (username),
+  UNIQUE KEY email (email)
+);
+CREATE TABLE chats (
+  chat_id int NOT NULL AUTO_INCREMENT,
+  chat_name varchar(255) DEFAULT NULL,
+  profile_picture blob,
+  PRIMARY KEY (chat_id)
+);
+CREATE TABLE chatMembers (
+  chat_id int NOT NULL,
+  user_id int NOT NULL,
+  PRIMARY KEY (chat_id,user_id),
+  KEY user_id (user_id),
+  CONSTRAINT chatmembers_ibfk_1 FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
+);
+CREATE TABLE messages (
+  message_id int NOT NULL AUTO_INCREMENT,
+  chat_id int NOT NULL,
+  sender_id int NOT NULL,
+  message_text text,
+  sent_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (message_id),
+  KEY sender_id (sender_id),
+  KEY chat_id (chat_id,sender_id),
+  CONSTRAINT messages_ibfk_1 FOREIGN KEY (sender_id) REFERENCES users (user_id) ON DELETE CASCADE,
+  CONSTRAINT messages_ibfk_2 FOREIGN KEY (chat_id, sender_id) REFERENCES chatMembers (chat_id, user_id) ON DELETE CASCADE
+);
+
+CREATE TABLE `friends` (
+  `user_id1` int NOT NULL,
+  `user_id2` int NOT NULL,
+  `added` tinyint(1) DEFAULT ''0'',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id1`,`user_id2`),
+  KEY `user_id2` (`user_id2`),
+  CONSTRAINT `friends_ibfk_1` FOREIGN KEY (`user_id1`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
+  CONSTRAINT `friends_ibfk_2` FOREIGN KEY (`user_id2`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) 
