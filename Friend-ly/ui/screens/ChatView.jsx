@@ -58,7 +58,7 @@ const ChatView = () => {
     /*
         If the token hasn't been retrieved yet, just show a loading screen
     */
-    if (token === null) {
+    if (token === null || lastMessages.length == 0) {
         return (
         <SafeAreaView style={styles.container}>
             <Text>Loading...</Text>
