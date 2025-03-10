@@ -335,23 +335,235 @@ async function addUser(chat_id, user_ids) {
 // Above were endpoint pertaining the chatbox features. Below are endpoints
 // regarding the following feature
 
-// Set friendship state when a request is initally sent
-app.post('addfriend/:user_id1/:user_id2/sendFriendRequest', async (req, res) => {
+/**
+ * GET friend lists for one user
+ * Select the rows that includes the user
+ */
+app.get('/friends/:user_id', async (req, res) => {
+  const user_id = req.params.user_id;
+  const query = `
+    SELECT 
+        CASE 
+            WHEN user_id1 < user_id2 THEN user_id1 
+            ELSE user_id2 
+        END AS user_id1,
+        CASE 
+            WHEN user_id1 < user_id2 THEN user_id2 
+            ELSE user_id1 
+        END AS user_id2,
+        created_at
+    FROM friends
+    WHERE user_id1 = ? OR user_id2 = ?
+    ORDER BY created_at ASC;
+`;
+  const [results, fields] = await database.execute(query, [user_id, user_id]);
+  res.json(results);
+})
+
+/**
+ * Sends a new friend request.
+ * Adds two users with the default `added` status set to `false`.
+ * Constraint: Ensure the request does not already exist in the table.
+ */
+app.post('/friends/sendFriendRequest', async (req, res) => {
+  // the person that sends the friend request
   const user_id1 = req.body.user_id1;
+  // the person that accepts the friend request
   const user_id2 = req.body.user_id2;
 
   try {
-    const query = "INSERT INTO addFriend (friend1, friend2, accepted) VALUES (?, ?, false)"
+    const checkQuery = `
+      SELECT * FROM friends 
+      WHERE (user_id1 = ? AND user_id2 = ?) 
+         OR (user_id1 = ? AND user_id2 = ?) 
+      LIMIT 1
+    `;
+
+    const [rows] = await database.execute(checkQuery, [user_id1, user_id2, user_id2, user_id1]);
+    
+
+    if (rows.length > 0) {
+      return res.type("text").status(400).send("Friend request already exists / added.");
+    }
+
+    
+    const query = "INSERT INTO friends (user_id1, user_id2) VALUES (?, ?)"
 
     // Perform the async process
     await database.execute(query, [user_id1, user_id2]);
 
-    res.type("text").status(200).send("Successfully made the relationship");
+    res.type("text").status(200).send("Successfully send friend request");
+    
   } catch (error) {
-    console.log("Something wrong occurred when sending a friend request");
-    console.error(error);
+    res.type("text").status(500).send("Couldn't send friend request.");
   }
 });
+
+/**
+ * Accepted friend request.
+ * Set status to true.
+ */
+
+app.post('/friends/acceptFriendRequest', async (req, res) => {
+  // the person that sends the friend request
+  const user_id1 = req.body.user_id1;
+  // the person that accepts the friend request
+  const user_id2 = req.body.user_id2;
+
+  try {   
+    const query = "UPDATE friends SET added = true WHERE user_id1 = ? and user_id2 = ?"
+
+    // Perform the async process
+    await database.execute(query, [user_id1, user_id2]);
+
+    res.type("text").status(200).send("Successfully accept friend request");
+    
+  } catch (error) {
+    res.type("text").status(500).send("Couldn't accept friend request.");
+  }
+});
+
+/**
+ * Remove from friends list
+ * Delete the row of the 2 users
+ */
+app.post('/friends/deleteFriend', async (req, res) => {
+  // the person that sends the friend request
+  const user_id1 = req.body.user_id1;
+  // the person that accepts the friend request
+  const user_id2 = req.body.user_id2;
+
+  try {   
+    const query = `
+      DELETE FROM friends 
+      WHERE (user_id1 = ? AND user_id2 = ?) 
+         OR (user_id1 = ? AND user_id2 = ?)
+    `;
+
+    // Perform the async process
+    const [result] = await database.execute(query, [user_id1, user_id2, user_id2, user_id1]);
+
+    if (result.affectedRows > 0) {
+      return res.type("text").status(200).send("Successfully deleted friend.");
+    } else {
+      return res.type("text").status(404).send("Friendship not found.");
+    }
+    
+  } catch (error) {
+    res.type("text").status(500).send("Couldn't delete friend.");
+  }
+});
+
+/**
+ * NOTE: Add to interestCategory and interestDetails before 
+ * inserting into userInterests due to foreign keys
+ */
+
+/**
+ * Add one user's interest / multiple interests at once 
+ * Param:
+ * user_id int
+ * interest_ids array[int]
+ */
+
+app.post("/addUserInterests", (req, res) => {
+  const { user_id, interest_ids } = req.body;
+
+  if (!user_id || !Array.isArray(interest_ids) || interest_ids.length === 0) {
+      return res.status(400).json({ error: 'Invalid input' });
+  }
+
+  // Normal for loop to insert each interest
+  for (let i = 0; i < interest_ids.length; i++) {
+      const addQuery = 'INSERT INTO userInterest (user_id, interest_id) VALUES (?, ?)';
+      database.query(addQuery, [user_id, interest_ids[i]], (err) => {
+          if (err) {
+              console.error("Database Error:", err);
+          }
+      });
+  }
+
+  res.status(201).json({ message: 'User interests added successfully' });
+});
+
+/**
+ * Delete one user's interest
+ * Param:
+ * user_id int
+ * interest_ids array[int]
+ */
+app.post("/deleteUserInterests", (req, res) => {
+  const { user_id, interest_ids } = req.body;
+
+  if (!user_id || !Array.isArray(interest_ids) || interest_ids.length === 0) {
+      return res.status(400).json({ error: 'Invalid input' });
+  }
+
+  // Normal for loop to delete each interest
+  for (let i = 0; i < interest_ids.length; i++) {
+      const deleteQuery = 'DELETE FROM userInterest WHERE user_id = ? AND interest_id = ?';
+      database.query(deleteQuery, [user_id, interest_ids[i]], (err) => {
+          if (err) {
+              console.error("Database Error:", err);
+          }
+      });
+  }
+
+  res.status(200).json({ message: 'User interests deleted successfully' });
+});
+
+
+
+
+
+
+
+// For adding interest and interestCategory from the server side
+/**
+ * Add interest category (one at a time)
+ */
+app.post("/addInterestCategory", (req, res) => {
+  const { category_name } = req.body;
+
+  if (!category_name) {
+    return res.type("text").status(400).send("Invalid input.");
+  }
+ 
+  const addQuery = 'INSERT INTO interestCategory (category_name) VALUES (?)';
+
+  database.query(addQuery, [category_name], (err, result) => {
+    if (err) {
+      console.error("Database Error:", err);
+      return res.type("text").status(500).send("Couldn't add interest category.");
+    }
+  });
+
+  res.status(201).json({ message: 'Interest category added successfully' });
+  
+});
+
+/**
+ * Add interest detail (one at a time)
+ */
+app.post("/addInterestDetails", async (req, res) => {
+  const { interest_name, interest_category_id } = req.body;
+
+  if (!interest_name || !interest_category_id) {
+    return res.type("text").status(400).send("Invalid input.");
+  }
+
+  const addQuery = 'INSERT INTO interestDetails (interest_name, interest_category_id) VALUES (?, ?)';
+
+  database.query(addQuery, [interest_name, interest_category_id], (err, result) => {
+    if (err) {
+      console.error("Database Error:", err);
+      return res.type("text").status(500).send("Couldn't add interest detail.");
+    }
+    res.type("text").status(201).send("Interest details added successfully.");
+  });
+});
+
+
 
 /*
 Endpoint for logging in a user. Checks to see if user is already
