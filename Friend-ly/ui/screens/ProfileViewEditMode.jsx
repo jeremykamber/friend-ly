@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Modal } from 'react-native';
 import ProfileButton from '../components/ProfileButton';
 import InputProfilePhotoButton from '../components/InputProfilePhotoButton';
@@ -9,6 +9,7 @@ import PostCard from '../components/PostCard';
 import { useNavigation } from '@react-navigation/native';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import appColors from '../common/app-colors';
+import * as SecureStore from 'expo-secure-store'
 
 
 const ProfileViewEditMode = () => {
@@ -22,6 +23,18 @@ const ProfileViewEditMode = () => {
     const navigation = useNavigation();
     const [modalVisible, setModalVisible] = useState(false);
     const [postIndex, setPostIndex] = useState(null);
+
+    useEffect(() => {
+        const getToken = async() => {
+            try {
+                const result = await SecureStore.getItemAsync("JWT") // jwt token
+                result ? setToken(result) : console.log("No token found!")
+            } catch (err) {
+                throw err
+            }
+        }
+        getToken()
+    }, [])
 
     const handleImageSelected = (uri) => {
         setImageUri(uri);
@@ -66,7 +79,7 @@ const ProfileViewEditMode = () => {
             </View>
 
             <View style={styles.profileInfoHeader}>
-                <TextInput style={styles.name} onChangeText={setTempName}>{tempName}</TextInput>
+                <TextInput editable={false} style={styles.name} onChangeText={setTempName}>{tempName}</TextInput>
                 <TextInput style={styles.major} onChangeText={setTempMajorAndYear}>{tempMajorAndYear}</TextInput>
 
                 <View style={styles.buttonContainer}>

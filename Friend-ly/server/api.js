@@ -392,12 +392,14 @@ in the database. If not, adds user to database.
 */
 app.post('/users/login', async (req, res) => {
   const email = req.body.email
+  let newUser = false
 
   try {
     const findUserQuery = "SELECT * FROM users WHERE email = ?"
     const results = await database.execute(findUserQuery, [email])
     if (results[0].length == 0) {
       // add the user
+      newUser = true
       const profile_picture = null
       const addUserQuery = "INSERT INTO users (bio, email, profile_picture, username) VALUES (?, ?, ?, ?)"
       await database.execute(addUserQuery, ["Hi, I am " + email, email, profile_picture, email])
@@ -405,7 +407,7 @@ app.post('/users/login', async (req, res) => {
     const getIDQuery = "SELECT user_id FROM users WHERE email = ?"
     const result = await database.execute(getIDQuery, [email])
     console.log(result)
-    res.type("text").status(200).send(result[0])
+    res.type("text").status(200).send({"user_id": result[0], "new_user": newUser})
     
   } catch (err) {
     throw (err)

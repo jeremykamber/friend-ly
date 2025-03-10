@@ -5,6 +5,7 @@ import backendMock from '../mocks/backendMock';
 import UserAvatar2 from '../components/UserAvatar2';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import PostCard from '../components/PostCard';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const HomeView = () => {
 
@@ -67,6 +68,7 @@ const HomeView = () => {
     }
 
     return (
+        <SafeAreaView>
         <ScrollView style={styles.container}>
 
             <View style={styles.header}>
@@ -121,6 +123,7 @@ const HomeView = () => {
 
             
         </ScrollView>
+        </SafeAreaView>
     );
 };
 

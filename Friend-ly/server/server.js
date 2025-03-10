@@ -44,10 +44,11 @@ async function authUser(email) {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email: email }),
                 })
-                const user_id = await results.json()
-                const payload = { email: email, user_id: user_id}
+                const result = await results.json()
+                const payload = { email: email, user_id: result["user_id"]}
                 const token = jwt.sign(payload, secretKey)
-                return token
+                console.log(result)
+                return {"token": token, "new_user": result["new_user"]}
             } catch (err) {
                 throw (err)
             }

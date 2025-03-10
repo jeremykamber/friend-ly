@@ -48,7 +48,7 @@ const ChatView = () => {
         if (token) {
             getChats();
         }
-    }, [token, render])
+    }, [token])
 
 
     let addConversation = () => {
@@ -58,7 +58,7 @@ const ChatView = () => {
     /*
         If the token hasn't been retrieved yet, just show a loading screen
     */
-    if (token === null || lastMessages.length == 0) {
+    if (token === null) {
         return (
         <SafeAreaView style={styles.container}>
             <Text>Loading...</Text>
@@ -90,7 +90,7 @@ const ChatView = () => {
                 ))}
                 <ChatConversationCard
                     senderName="Jeremy"
-                    lastMessage={lastMessages[0].message_text}
+                    lastMessage={"Well hello there"}
                     timestamp="2:45 PM"
                 />
                 <ChatConversationCard

@@ -1,14 +1,22 @@
-import React, {useState} from "react";
+import React from "react";
 import { View, Text, StyleSheet, SafeAreaView } from "react-native";
 import LoginForm from "../forms/LoginForm";
 import { GoogleAuthProvider } from "firebase/auth";
 import { signIn } from "firebase/auth";
 import { auth } from "../../server/firebase/firebase";
 import appColors from "../common/app-colors"; // Import your appColors
+import * as SecureStore from 'expo-secure-store'
 
 const LoginView = ({ navigation }) => {
     const microsoftProvider = new GoogleAuthProvider();
-    const [token, setToken] = useState(null)
+
+    const setToken = async (token) => {
+        try {
+            await SecureStore.setItemAsync("JWT", token)
+        } catch (err) {
+            throw (err)
+        }
+    }
 
     const authLogin = async (email) => {
         try {
@@ -19,8 +27,13 @@ const LoginView = ({ navigation }) => {
                 body: JSON.stringify({ email: "lebron23@uw.edu" }),
             });
             const data = await response.json();
+            await setToken(data["token"])
             console.log("Auth response:", data);
-            navigation.navigate("Chat");
+            if (data["new_user"]) {
+                navigation.navigate("ClassesView")
+            } else {
+                navigation.navigate("TabNavigator");
+            }
         } catch (err) {
             throw err;
         }
