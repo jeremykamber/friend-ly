@@ -6,10 +6,10 @@ import MinimalPlusButton from "../components/MinimalPlusButton";
 import PlusButton from "../components/PlusButton";
 import PrimaryButton from "../components/PrimaryButton";
 import * as SecureStore from 'expo-secure-store'
+import {createNewConversation} from '../mocks/backendMock';
+const ChatsView = ({navigation}) => {
 
-const ChatView = () => {
-
-    const [token, setToken] = useState(null)
+    const [token, setToken] = useState('test')
 
     /*
         This useEffect runs upon load up of chat.
@@ -29,8 +29,8 @@ const ChatView = () => {
         getToken()
     }, [])
 
-    let addConversation = () => {
-        // TODO: Implement addConversation functionality
+    let addConversation = async () => {
+        await createNewConversation('test', 'test', [1, 2, 3]);
     };
 
     /*
@@ -62,26 +62,31 @@ const ChatView = () => {
                     senderName="Jeremy"
                     lastMessage="Hey, how are things?"
                     timestamp="2:45 PM"
+                    onPress={() => navigation.navigate('ChatMessagesView', { chatId: 1, userId: 1 })}
                 />
                 <ChatConversationCard
                     senderName="Alex"
                     lastMessage="Can we reschedule our meeting?"
                     timestamp="1:15 PM"
+                    onPress={() => navigation.navigate('ChatMessagesView', { chatId: 2, userId: 1 })}
                 />
                 <ChatConversationCard
                     senderName="Mia"
                     lastMessage="Don't forget to bring the documents!"
                     timestamp="12:30 PM"
+                    onPress={() => navigation.navigate('ChatMessagesView', { chatId: 3, userId: 1 })}
                 />
                 <ChatConversationCard
                     senderName="Sophia"
                     lastMessage="Thanks for your help yesterday!"
                     timestamp="Yesterday"
+                    onPress={() => navigation.navigate('ChatMessagesView', { chatId: 4, userId: 1 })}
                 />
                 <ChatConversationCard
                     senderName="Liam"
                     lastMessage="What's your plan for the weekend?"
                     timestamp="Sunday"
+                    onPress={() => navigation.navigate('ChatMessagesView', { chatId: 5, userId: 1 })}
                 />
             </ScrollView>
         </SafeAreaView>
@@ -114,4 +119,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default ChatView;
+export default ChatsView;

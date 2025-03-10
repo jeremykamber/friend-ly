@@ -125,7 +125,7 @@ export const postNewMessage = (userId, chatId, messageText) => {
     };
 
     mockMessages[chatId] = [...(mockMessages[chatId] || []), newMessage]; // update mock messages
-    return simulateDelay("Successfully posted a new message into user chat.");
+    return simulateDelay(newMessage);
 };
 
 /**
