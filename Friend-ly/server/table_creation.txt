@@ -46,3 +46,24 @@ CREATE TABLE `friends` (
   CONSTRAINT `friends_ibfk_1` FOREIGN KEY (`user_id1`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
   CONSTRAINT `friends_ibfk_2` FOREIGN KEY (`user_id2`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
 ) 
+
+CREATE TABLE interestCategory (
+    interest_category_id INT PRIMARY KEY AUTO_INCREMENT,
+    category_name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE interestDetails (
+    interest_id INT PRIMARY KEY AUTO_INCREMENT,
+    interest_name VARCHAR(255) NOT NULL,
+    interest_category_id INT,
+    FOREIGN KEY (interest_category_id) REFERENCES interestCategory(interest_category_id) ON DELETE CASCADE
+);
+
+CREATE TABLE userInterest (
+    user_id INT,
+    interest_id INT,
+    PRIMARY KEY (user_id, interest_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (interest_id) REFERENCES interestDetails(interest_id) ON DELETE CASCADE
+);
+

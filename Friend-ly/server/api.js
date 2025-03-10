@@ -454,6 +454,116 @@ app.post('/friends/deleteFriend', async (req, res) => {
   }
 });
 
+/**
+ * NOTE: Add to interestCategory and interestDetails before 
+ * inserting into userInterests due to foreign keys
+ */
+
+/**
+ * Add one user's interest / multiple interests at once 
+ * Param:
+ * user_id int
+ * interest_ids array[int]
+ */
+
+app.post("/addUserInterests", (req, res) => {
+  const { user_id, interest_ids } = req.body;
+
+  if (!user_id || !Array.isArray(interest_ids) || interest_ids.length === 0) {
+      return res.status(400).json({ error: 'Invalid input' });
+  }
+
+  // Normal for loop to insert each interest
+  for (let i = 0; i < interest_ids.length; i++) {
+      const addQuery = 'INSERT INTO userInterest (user_id, interest_id) VALUES (?, ?)';
+      database.query(addQuery, [user_id, interest_ids[i]], (err) => {
+          if (err) {
+              console.error("Database Error:", err);
+          }
+      });
+  }
+
+  res.status(201).json({ message: 'User interests added successfully' });
+});
+
+/**
+ * Delete one user's interest
+ * Param:
+ * user_id int
+ * interest_ids array[int]
+ */
+app.post("/deleteUserInterests", (req, res) => {
+  const { user_id, interest_ids } = req.body;
+
+  if (!user_id || !Array.isArray(interest_ids) || interest_ids.length === 0) {
+      return res.status(400).json({ error: 'Invalid input' });
+  }
+
+  // Normal for loop to delete each interest
+  for (let i = 0; i < interest_ids.length; i++) {
+      const deleteQuery = 'DELETE FROM userInterest WHERE user_id = ? AND interest_id = ?';
+      database.query(deleteQuery, [user_id, interest_ids[i]], (err) => {
+          if (err) {
+              console.error("Database Error:", err);
+          }
+      });
+  }
+
+  res.status(200).json({ message: 'User interests deleted successfully' });
+});
+
+
+
+
+
+
+
+// For adding interest and interestCategory from the server side
+/**
+ * Add interest category (one at a time)
+ */
+app.post("/addInterestCategory", (req, res) => {
+  const { category_name } = req.body;
+
+  if (!category_name) {
+    return res.type("text").status(400).send("Invalid input.");
+  }
+ 
+  const addQuery = 'INSERT INTO interestCategory (category_name) VALUES (?)';
+
+  database.query(addQuery, [category_name], (err, result) => {
+    if (err) {
+      console.error("Database Error:", err);
+      return res.type("text").status(500).send("Couldn't add interest category.");
+    }
+  });
+
+  res.status(201).json({ message: 'Interest category added successfully' });
+  
+});
+
+/**
+ * Add interest detail (one at a time)
+ */
+app.post("/addInterestDetails", async (req, res) => {
+  const { interest_name, interest_category_id } = req.body;
+
+  if (!interest_name || !interest_category_id) {
+    return res.type("text").status(400).send("Invalid input.");
+  }
+
+  const addQuery = 'INSERT INTO interestDetails (interest_name, interest_category_id) VALUES (?, ?)';
+
+  database.query(addQuery, [interest_name, interest_category_id], (err, result) => {
+    if (err) {
+      console.error("Database Error:", err);
+      return res.type("text").status(500).send("Couldn't add interest detail.");
+    }
+    res.type("text").status(201).send("Interest details added successfully.");
+  });
+});
+
+
 
 /*
 Endpoint for logging in a user. Checks to see if user is already
@@ -481,12 +591,6 @@ app.post('/users/login', async (req, res) => {
     throw (err)
   }
 })
-
-// Note to Elise: 
-// when add new user, check if user_id1 = 1 user_id2 = 2 and user_id1 = 2 user_id2 = 1 exist
-// if exist, dont add
-
-// delete also find both ways
 
 
 // Allows us to change the port easily by setting an environment
