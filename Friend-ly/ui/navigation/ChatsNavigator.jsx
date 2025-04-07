@@ -2,6 +2,7 @@ import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 import ChatsView from "../screens/ChatsView";
 import ChatMessagesView from "../screens/ChatMessagesView";
+import ChatMessagesViewDB from "../screens/ChatMessagesViewDB";
 
 const Stack = createStackNavigator();
 
@@ -18,6 +19,14 @@ function ChatsNavigator() {
                 component={ChatMessagesView}
                 options={({ route }) => ({ 
                     title: `Chat #${route.params.chatId}`,
+                    headerShown: true,
+                })}
+            />
+            <Stack.Screen 
+                name="ChatMessagesViewDB" 
+                component={ChatMessagesViewDB}
+                options={({ route }) => ({ 
+                    title: `${route.params.chatName}`,
                     headerShown: true,
                 })}
             />

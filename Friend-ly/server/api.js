@@ -149,8 +149,8 @@ app.get('/users/chats', authMiddleware, async(req, res) => {
 
 
 // Gets a single users information
-app.get('/users/:id', async function(req, res) {
-  let userId = req.params.id;
+app.post('/users/info', authMiddleware, async function(req, res) {
+  let userId = req.user_id;
   let query = "SELECT * FROM users WHERE user_id = ?;";
 
   try {
@@ -166,12 +166,36 @@ app.get('/users/:id', async function(req, res) {
     const metaData = resultArr[1];
 
     // Send back users information to frontend
+    console.log(records)
     res.json(records);
   } catch (error) {
     res.type("text").status(SERVER_ERROR_CODE)
       .send("An error occurred on the server. Try again later.");
   }
 });
+
+app.post('/users/getUserID', authMiddleware, async function(req, res) {
+  res.json(req.user_id)
+})
+
+/*
+  Updates the user's profile with a new username and bio. 
+  Takes in a body that has a token, and a user_info body with
+  a username and bio. 
+*/
+app.post('/users/updateInfo', authMiddleware, async function(req, res){
+  let userID = req.user_id
+  let username = req.body.user_info.name 
+  let bio = req.body.user_info.bio
+  let query = "UPDATE users SET username = ?, bio = ? WHERE user_id = ?"
+
+  try {
+    const result = await database.execute(query, [username, bio, userID])
+    res.type("text").status(SUCCESS_CODE).send("Successfully updated user profile.")
+  } catch (err) {
+    throw (err)
+  }
+})
 
 /**
  * Sets the most recent message seen by the specified user in a particular
@@ -203,6 +227,7 @@ app.post('/seen/updateSeen', async function (req, res) {
 
 // Posts new message into user chat
 app.post('/users/:chat_id/newMessage', authMiddleware, async function (req, res) {
+  console.log("inside here?")
   let user_id = req.user_id
   let chatID = req.params.chat_id
   let messageText = req.body.messageText
@@ -435,7 +460,6 @@ app.post('/friends/sendFriendRequest', async (req, res) => {
  * Accepted friend request.
  * Set status to true.
  */
-
 app.post('/friends/acceptFriendRequest', async (req, res) => {
   // the person that sends the friend request
   const user_id1 = req.body.user_id1;
@@ -497,7 +521,6 @@ app.post('/friends/deleteFriend', async (req, res) => {
  * user_id int
  * interest_ids array[int]
  */
-
 app.post("/addUserInterests", (req, res) => {
   const { user_id, interest_ids } = req.body;
 
@@ -543,12 +566,6 @@ app.post("/deleteUserInterests", (req, res) => {
 
   res.status(200).json({ message: 'User interests deleted successfully' });
 });
-
-
-
-
-
-
 
 // For adding interest and interestCategory from the server side
 /**

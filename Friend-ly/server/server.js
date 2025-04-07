@@ -11,10 +11,6 @@ app.use(cors());
 // env variables
 require('dotenv').config()
 
-// this will need to be changed and placed in a secure file
-// but for now it's fine
-const secretKey = process.env.SECRET_KEY
-
 
 /*
     NOTE: This is a comment for the old authUser. Will probably
@@ -46,7 +42,7 @@ async function authUser(email) {
                 })
                 const result = await results.json()
                 const payload = { email: email, user_id: result["user_id"]}
-                const token = jwt.sign(payload, secretKey)
+                const token = jwt.sign(payload, process.env.SECRET_KEY)
                 console.log(result)
                 return {"token": token, "new_user": result["new_user"]}
             } catch (err) {

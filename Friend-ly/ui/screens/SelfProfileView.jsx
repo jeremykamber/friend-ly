@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import { View, Text, StyleSheet, ScrollView} from 'react-native';
 import ProfileButton from '../components/ProfileButton';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
@@ -8,7 +8,13 @@ import PostCard from '../components/PostCard';
 
 
 const SelfProfileView = () => {
-  const {imageUri, name, majorAndYear, aboutMe, interests, currentClasses, posts} = useProfileViewStore();
+  const fetchData = useProfileViewStore(state => state.fetchData);
+
+  useEffect(() => {
+      fetchData(); // Fetch profile data every time this screen mounts
+  }, [fetchData]);
+
+  const {name, imageUri, majorAndYear, aboutMe, interests, currentClasses, posts} = useProfileViewStore();
 
   const navigation = useNavigation();
 
