@@ -704,28 +704,45 @@ app.post('/similar-users', async (req, res) => {
       });
     }
 
-    if (candidates.size < 2) {
-      console.log("Too few candidates, checking all users");
-      Object.keys(userInterests).forEach(u => {
-        if (u !== targetUserId && userInterests[u] && userInterests[u].length > 0) {
-          candidates.add(u);
+    if (candidates.size <= 6) {
+      console.log(`LSH returned only ${candidates.size} users. Adding 10 unique random users.`);
+    
+      const alreadyIncluded = new Set(candidates);
+      alreadyIncluded.add(targetUserId);
+    
+      const eligibleUsers = Object.keys(userInterests).filter(u =>
+        !alreadyIncluded.has(u) &&
+        userInterests[u] &&
+        userInterests[u].length > 0
+      );
+    
+      console.log(`Found ${eligibleUsers.length} eligible users to randomly select from.`);
+    
+      let added = 0;
+      while (added < 7 && eligibleUsers.length > 0) {
+        const randomIndex = Math.floor(Math.random() * eligibleUsers.length);
+        const randomUser = eligibleUsers.splice(randomIndex, 1)[0];
+        if (!candidates.has(randomUser)) {
+          candidates.add(randomUser);
+          added++;
         }
-      });
+      }
+    
+      console.log(`Successfully added ${added} random users. Total candidates now: ${candidates.size}`);
     }
 
     const results = [...candidates]
-    .filter(u => parseInt(u) !== parseInt(targetUserId))
-    .map(u => {
-      const similarity = calculateSimilarity(targetUserId, u);
-      return {
-        user_id: parseInt(u),
-        score: parseFloat(similarity.score.toFixed(2)),
-        interest_jaccard: parseFloat(similarity.interestJaccard.toFixed(2)),
-        category_jaccard: parseFloat(similarity.categoryJaccard.toFixed(2)),
-        common_interests: similarity.common
-      };
-    });
-
+      .filter(u => parseInt(u) !== parseInt(targetUserId))
+      .map(u => {
+        const similarity = calculateSimilarity(targetUserId, u);
+        return {
+          user_id: parseInt(u),
+          score: parseFloat(similarity.score.toFixed(2)),
+          interest_jaccard: parseFloat(similarity.interestJaccard.toFixed(2)),
+          category_jaccard: parseFloat(similarity.categoryJaccard.toFixed(2)),
+          common_interests: similarity.common
+        };
+      });
 
     console.log(`Returning ${results.length} similar users`);
     res.status(200).json(results);
