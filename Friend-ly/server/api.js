@@ -564,33 +564,194 @@ app.post("/addInterestDetails", async (req, res) => {
 });
 
 
+// import
+const crypto = require('crypto');
 
-/*
-Endpoint for logging in a user. Checks to see if user is already
-in the database. If not, adds user to database. 
-@return: Returns the id of the user
-*/
-app.post('/users/login', async (req, res) => {
-  const email = req.body.email
-
+app.post('/similar-users', async (req, res) => {
   try {
-    const findUserQuery = "SELECT * FROM users WHERE email = ?"
-    const results = await database.execute(findUserQuery, [email])
-    if (results[0].length == 0) {
-      // add the user
-      const profile_picture = null
-      const addUserQuery = "INSERT INTO users (bio, email, profile_picture, username) VALUES (?, ?, ?, ?)"
-      await database.execute(addUserQuery, ["Hi, I am " + email, email, profile_picture, email])
-    } 
-    const getIDQuery = "SELECT user_id FROM users WHERE email = ?"
-    const result = await database.execute(getIDQuery, [email])
-    console.log(result)
-    res.type("text").status(200).send(result[0])
+    const targetUserId = req.body.userId;
+
+    if (!targetUserId) {
+      return res.status(400).send("User ID is required");
+    }
+
+    console.log(`Finding similar users for user ID: ${targetUserId}`);
+
+    const [userCheck] = await database.execute(
+      'SELECT COUNT(*) as count FROM userinterest WHERE user_id = ?', 
+      [targetUserId]
+    );
+
+    if (!userCheck[0] || userCheck[0].count === 0) {
+      return res.status(404).send("User not found or has no interests");
+    }
+
+    const [userInterestRows] = await database.execute(
+      'SELECT ui.user_id, i.interest_name, c.category_name ' +
+      'FROM userinterest ui ' +
+      'JOIN interestdetails i ON ui.interest_id = i.interest_id ' +
+      'JOIN interestcategory c ON i.interest_category_id = c.interest_category_id'
+    );
+
+    const userInterests = {};
+    const interestToCategory = {};
+
+    userInterestRows.forEach(row => {
+      if (!userInterests[row.user_id]) {
+        userInterests[row.user_id] = [];
+      }
+      userInterests[row.user_id].push(row.interest_name);
+      interestToCategory[row.interest_name] = row.category_name;
+    });
+
+    if (!userInterests[targetUserId] || userInterests[targetUserId].length === 0) {
+      return res.status(404).send("Target user has no interests");
+    }
+
+    // LSH params
+    const numHashes = 10;
+    const bands = 5;
+    const rowsPerBand = numHashes / bands;
+
+    function hash(i, val) {
+      return parseInt(crypto.createHash('md5').update(`${i}:${val}`).digest('hex').slice(0, 8), 16);
+    }
+
+    function minHash(interests) {
+      const augmentedSet = [...interests];
+      interests.forEach(interest => {
+        const category = interestToCategory[interest];
+        if (category) {
+          augmentedSet.push(`cat:${category}`);
+        }
+      });
+
+      const sig = [];
+      for (let i = 0; i < numHashes; i++) {
+        let min = Infinity;
+        for (let val of augmentedSet) {
+          min = Math.min(min, hash(i, val));
+        }
+        sig.push(min);
+      }
+      return sig;
+    }
+
+    function getBuckets(userSigs) {
+      const buckets = {};
+      for (let [userId, sig] of Object.entries(userSigs)) {
+        for (let b = 0; b < bands; b++) {
+          const band = sig.slice(b * rowsPerBand, (b + 1) * rowsPerBand).join("-");
+          const key = `${b}:${band}`;
+          if (!buckets[key]) buckets[key] = [];
+          buckets[key].push(userId);
+        }
+      }
+      return buckets;
+    }
+
+    function jaccard(a, b) {
+      if (!a || !b || a.length === 0 || b.length === 0) return 0;
+      const setA = new Set(a);
+      const setB = new Set(b);
+      const inter = [...setA].filter(x => setB.has(x));
+      const union = new Set([...setA, ...setB]);
+      return union.size > 0 ? inter.length / union.size : 0;
+    }
+
+    function calculateSimilarity(userA, userB) {
+      const interestsA = userInterests[userA] || [];
+      const interestsB = userInterests[userB] || [];
+
+      const directJaccard = jaccard(interestsA, interestsB);
+
+      const categoriesA = interestsA.map(i => interestToCategory[i]).filter(Boolean);
+      const categoriesB = interestsB.map(i => interestToCategory[i]).filter(Boolean);
+
+      const categoryJaccard = jaccard(categoriesA, categoriesB);
+
+      const INTEREST_WEIGHT = 0.5;
+      const CATEGORY_WEIGHT = 0.5;
+
+      const score = (INTEREST_WEIGHT * directJaccard) + (CATEGORY_WEIGHT * categoryJaccard);
+
+      return {
+        score,
+        interestJaccard: directJaccard,
+        categoryJaccard: categoryJaccard,
+        common: interestsA.filter(i => interestsB.includes(i))
+      };
+    }
+
+    console.log("Building signatures...");
+    const userSigs = {};
+    for (const [userId, interests] of Object.entries(userInterests)) {
+      userSigs[userId] = minHash(interests);
+    }
+
+    console.log("Creating LSH buckets...");
+    const buckets = getBuckets(userSigs);
+
+    console.log("Finding candidates...");
+    const candidates = new Set();
+    for (let b = 0; b < bands; b++) {
+      const band = userSigs[targetUserId].slice(b * rowsPerBand, (b + 1) * rowsPerBand).join("-");
+      const key = `${b}:${band}`;
+      (buckets[key] || []).forEach(u => {
+        if (u !== targetUserId && userInterests[u] && userInterests[u].length > 0) {
+          candidates.add(u);
+        }
+      });
+    }
+
+    if (candidates.size <= 6) {
+      console.log(`LSH returned only ${candidates.size} users. Adding 10 unique random users.`);
     
+      const alreadyIncluded = new Set(candidates);
+      alreadyIncluded.add(targetUserId);
+    
+      const eligibleUsers = Object.keys(userInterests).filter(u =>
+        !alreadyIncluded.has(u) &&
+        userInterests[u] &&
+        userInterests[u].length > 0
+      );
+    
+      console.log(`Found ${eligibleUsers.length} eligible users to randomly select from.`);
+    
+      let added = 0;
+      while (added < 7 && eligibleUsers.length > 0) {
+        const randomIndex = Math.floor(Math.random() * eligibleUsers.length);
+        const randomUser = eligibleUsers.splice(randomIndex, 1)[0];
+        if (!candidates.has(randomUser)) {
+          candidates.add(randomUser);
+          added++;
+        }
+      }
+    
+      console.log(`Successfully added ${added} random users. Total candidates now: ${candidates.size}`);
+    }
+
+    const results = [...candidates]
+      .filter(u => parseInt(u) !== parseInt(targetUserId))
+      .map(u => {
+        const similarity = calculateSimilarity(targetUserId, u);
+        return {
+          user_id: parseInt(u),
+          score: parseFloat(similarity.score.toFixed(2)),
+          interest_jaccard: parseFloat(similarity.interestJaccard.toFixed(2)),
+          category_jaccard: parseFloat(similarity.categoryJaccard.toFixed(2)),
+          common_interests: similarity.common
+        };
+      });
+
+    console.log(`Returning ${results.length} similar users`);
+    res.status(200).json(results);
+
   } catch (err) {
-    throw (err)
+    console.error("Error finding similar users:", err);
+    res.status(500).send("Getting similar users failed.");
   }
-})
+});
 
 
 // Allows us to change the port easily by setting an environment
