@@ -24,11 +24,10 @@ const LoginView = ({ navigation }) => {
             const response = await fetch("http://localhost:6262/api/auth", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: "lebron23@uw.edu" }),
+                body: JSON.stringify({ email: "messi@uw.edu" }),
             });
             const data = await response.json();
             await setToken(data["token"])
-            console.log("Auth response:", data);
             if (data["new_user"]) {
                 navigation.navigate("ClassesView")
             } else {

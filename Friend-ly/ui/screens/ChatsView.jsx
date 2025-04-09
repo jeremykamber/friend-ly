@@ -9,7 +9,8 @@ import PlusButton from "../components/PlusButton";
 import PrimaryButton from "../components/PrimaryButton";
 import * as SecureStore from 'expo-secure-store'
 import {createNewConversation} from '../mocks/backendMock';
-import { utcToZonedTime, format } from 'date-fns';
+import formatMessageTime from "./timeFormat";
+
 
 const ChatsView = ({navigation}) => {
 
@@ -22,7 +23,7 @@ const ChatsView = ({navigation}) => {
                             dateStyle: 'full',
                             timeStyle: 'long',
                         })
-
+    
     /*
         This useFocusEffect runs upon load up of chat.
         This loads in the token from secure storage
@@ -100,24 +101,12 @@ const ChatsView = ({navigation}) => {
             </View>
             <ScrollView contentContainerStyle={styles.scrollContainer}>
                 {lastMessages.map((message, index) => {
-                    const utcDate = new Date(message.sent_at);
-                    const pacificDate = utcToZonedTime(utcDate, 'America/Los_Angeles');
-                    const formatted = format(pacificDate, 'yyyy-MM-dd HH:mm:ssXXX', { timeZone: 'America/Los_Angeles' });
-                    /*const date = dateFormat.format(new Date(message.sent_at))
-                    let endIndex = 29;
-                    let gap = " ";
-                    if (date.substring(30,31) === ':') {
-                        endIndex = 30
-                        gap = ""
-                    }
-                    
-                    const timestamp = date.substring(25, endIndex) + gap + date.substring(33, 36)*/
                     return (
                         <ChatConversationCard 
                             key={index}
                             senderName={message.chat_name}
                             lastMessage={message.sender_name + ": " + message.message_text}
-                            timestamp={formatted}
+                            timestamp={formatMessageTime(message.sent_at)}
                             onPress={() => navigation.navigate('ChatMessagesViewDB', { chatId: message.chat_id, 
                                                                                     userId: userID, chatName: message.chat_name })}
                         />

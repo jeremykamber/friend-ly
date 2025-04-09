@@ -128,7 +128,7 @@ async function queryDatabase(database, query) {
 app.get('/chats/:chat_id', async (req, res) => {
   const id = req.params.chat_id
   const [results, fields] = await database.execute(
-    'SELECT * FROM messages WHERE chat_id = ?', [id]);
+    'SELECT * FROM messages WHERE chat_id = ? ORDER BY sent_at ASC', [id]);
   res.json(results)
 });
 
@@ -139,12 +139,22 @@ app.get('/chats/:chat_id/users', async(req, res) => {
   res.json(results);
 })
 
+app.get('/chats/usernames/:chat_id', async (req, res) => {
+  const chat_id = req.params.chat_id
+  const [results, fields] = await database.execute(
+    `SELECT username FROM users ORDER BY user_id ASC`
+  )
+  const usernames = results.map(row => row.username)
+  res.json(usernames)
+})
+
 app.get('/users/chats', authMiddleware, async(req, res) => {
   const user_id = req.user_id
   const [results, fields] = await database.execute(
     'SELECT chat_id FROM chatMembers WHERE user_id = ?', [user_id])
   res.json(results);
 })
+
 
 
 

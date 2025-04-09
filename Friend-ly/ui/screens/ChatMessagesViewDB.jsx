@@ -5,8 +5,6 @@ import MessageBubble from '../components/MessageBubble';
 import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import * as SecureStore from 'expo-secure-store'
-//import { utcToZonedTime, format } from 'date-fns-tz';
-
 
 // Change the function signature to receive route and navigation
 const ChatMessagesViewDB = ({ route, navigation }) => {
@@ -16,13 +14,9 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
 
     const [messages, setMessages] = useState([]);
     const [users, setUsers] = useState([]);
+    const [usernames, setUsernames] = useState([])
     const [newMessage, setNewMessage] = useState('');
     const scrollViewRef = useRef();
-    const dateFormat = new Intl.DateTimeFormat('en-US', {
-                            timeZone: 'America/Los_Angeles',
-                            dateStyle: 'full',
-                            timeStyle: 'long',
-                        })
 
     /*  
         Gets the token from SecureStore
@@ -46,8 +40,6 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
         to the database.
     */
     const messageToDB = async (messageText) => {
-        console.log("inside function")
-        console.log(token)
         body = {
             token: token, 
             messageText: messageText
@@ -75,6 +67,19 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
             })
             const chatUsers = await response.json()
             return chatUsers
+        } catch (err) {
+            throw (err)
+        }
+    }
+
+    const getUsernames = async () => {
+        try {
+            const response = await fetch(`http://localhost:8000/chats/usernames/${chatId}`, {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+            })
+            const chatUsernames = await response.json()
+            setUsernames(chatUsernames)
         } catch (err) {
             throw (err)
         }
@@ -113,6 +118,7 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
         getToken()
         fetchMessages();
         getChatUsers().then(setUsers);
+        getUsernames()
 
         // Set up polling for new messages and status updates
         const intervalId = setInterval(fetchMessages, 5000);
@@ -182,7 +188,6 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
     const formatMessageTime = (timestamp) => {
         // Guard against invalid timestamps
         if (!timestamp) return '';
-
 
         let date;
         try {
@@ -259,8 +264,8 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
                             key={message.id || `msg-${Math.random()}`}
                             message={message.message_text}
                             isCurrentUser={message.sender_id === userId}
-                            timestamp={formatMessageTime(dateFormat.format(new Date(message.sent_at)))}
-                            username=''
+                            timestamp={formatMessageTime(message.sent_at)}
+                            username={usernames[message.sender_id - 1]} // ids are 1 indexed. 
                             status={message.sender_id === userId ? getMessageStatus(message) : null}
                         />
                     );
@@ -271,7 +276,7 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
                     style={styles.input}
                     value={newMessage}
                     onChangeText={setNewMessage}
-                    placeholder="Type a message..."
+                    placeholder="Type a message here..."
                 />
                 <TouchableOpacity onPress={handleSendMessage} disabled={!newMessage.trim()} style={styles.sendButton}>
                     <Ionicons name="send" size={20} color={newMessage.trim() ? "#007AFF" : "#ccc"} />
