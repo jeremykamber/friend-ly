@@ -4,6 +4,7 @@ import ChatsView from "../screens/ChatsView";
 import ChatMessagesView from "../screens/ChatMessagesView";
 import AddChatView from "../screens/AddChatView";
 import AddPeopleView from "../screens/AddPeopleView";
+import ChatMessagesViewDB from "../screens/ChatMessagesViewDB";
 
 const Stack = createStackNavigator();
 
@@ -38,6 +39,14 @@ function ChatsNavigator() {
                     title: "Add People",
                     headerShown: true
                 }}
+            />
+            <Stack.Screen 
+                name="ChatMessagesViewDB" 
+                component={ChatMessagesViewDB}
+                options={({ route }) => ({ 
+                    title: `${route.params.chatName}`,
+                    headerShown: true,
+                })}
             />
         </Stack.Navigator>
     );

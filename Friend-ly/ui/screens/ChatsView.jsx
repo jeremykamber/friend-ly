@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView } from "react-native";
 import appColors from "../common/app-colors";
 import ChatConversationCard from "../components/ChatConversationCard";
@@ -6,51 +8,68 @@ import MinimalPlusButton from "../components/MinimalPlusButton";
 import PlusButton from "../components/PlusButton";
 import PrimaryButton from "../components/PrimaryButton";
 import * as SecureStore from 'expo-secure-store'
-import { createNewConversation } from '../mocks/backendMock';
-const ChatsView = ({ navigation }) => {
+import {createNewConversation} from '../mocks/backendMock';
+import formatMessageTime from "./timeFormat";
+
+
+const ChatsView = ({navigation}) => {
 
 
     const [lastMessages, setLastMessages] = useState([])
-    const [token, setToken] = useState('test')
-
+    const [token, setToken] = useState(null)
+    const [userID, setUserID] = useState(null)
+    const dateFormat = new Intl.DateTimeFormat('en-US', {
+                            timeZone: 'America/Los_Angeles',
+                            dateStyle: 'full',
+                            timeStyle: 'long',
+                        })
+    
     /*
-        This useEffect runs upon load up of chat.
+        This useFocusEffect runs upon load up of chat.
         This loads in the token from secure storage
         and sets the useState token variable to the result
-        of the token, or keeps it as null.
+        of the token, or keeps it as null. It additionally 
+        gets the user id and the messages from each chat. 
     */
-    useEffect(() => {
-        const getToken = async () => {
-            try {
-                const result = await SecureStore.getItemAsync("JWT") // jwt token
-                result ? setToken(result) : console.log("No token found!")
-            } catch (err) {
-                throw err
+    useFocusEffect(
+        useCallback(() => {
+            const getInfo = async() => {
+                try {
+                    const result = await SecureStore.getItemAsync("JWT") // jwt token
+                    if (!result) {
+                        console.log("No token found.")
+                        return
+                    }
+                    setToken(result)
+                    const response = await fetch("http://localhost:8000/users/getUserID", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ token: result})
+                    })
+                    if (!response.ok) {
+                        console.log("Getting User ID failed. ")
+                        return
+                    }
+                    const user_id = await response.json()
+                    setUserID(user_id)
+                    const messages = await fetch("http://localhost:8000/users/getLastMessageHistory", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ token: result })
+                    })
+                    if (!messages.ok) {
+                        console.log("Getting messages failed.")
+                        return
+                    }
+                    const messageData = await messages.json()
+                    setLastMessages(messageData)
+                } catch (err) {
+                    throw err
+                }
             }
-        }
-        getToken()
-    }, [])
-
-    useEffect(() => {
-        const getChats = async () => {
-            try {
-                console.log("Here?")
-                const response = await fetch("http://localhost:8000/users/getLastMessageHistory", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ token: token })
-                })
-                const data = await response.json()
-                setLastMessages(data)
-            } catch (err) {
-                throw (err);
-            }
-        }
-        if (token) {
-            getChats();
-        }
-    }, [token])
-
+            getInfo()
+        }, [])
+    )
 
     let addConversation = async () => {
         navigation.navigate('AddChatView');
@@ -60,13 +79,13 @@ const ChatsView = ({ navigation }) => {
     /*
         If the token hasn't been retrieved yet, just show a loading screen
     */
-    //if (token === null || lastMessages.length == 0) {
-    //    return (
-    //        <SafeAreaView style={styles.container}>
-    //            <Text>Loading...</Text>
-    //        </SafeAreaView>
-    //    );
-    //}
+    if (token === null) {
+        return (
+        <SafeAreaView style={styles.container}>
+            <Text>Loading...</Text>
+        </SafeAreaView>
+        );
+    }
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
@@ -82,14 +101,18 @@ const ChatsView = ({ navigation }) => {
                 />
             </View>
             <ScrollView contentContainerStyle={styles.scrollContainer}>
-                {lastMessages.map((message, index) => (
-                    <ChatConversationCard
-                        key={index}
-                        senderName={message.chat_name}
-                        lastMessage={message.sender_name + ": " + message.message_text}
-                        timestamp={message.sent_at.toString().substring(12, 16)}
-                    />
-                ))}
+                {lastMessages.map((message, index) => {
+                    return (
+                        <ChatConversationCard 
+                            key={index}
+                            senderName={message.chat_name}
+                            lastMessage={message.sender_name + ": " + message.message_text}
+                            timestamp={formatMessageTime(message.sent_at)}
+                            onPress={() => navigation.navigate('ChatMessagesViewDB', { chatId: message.chat_id, 
+                                                                                    userId: userID, chatName: message.chat_name })}
+                        />
+                    )
+                })}
                 <ChatConversationCard
                     senderName="Jeremy"
                     lastMessage={"Well hello there"}
