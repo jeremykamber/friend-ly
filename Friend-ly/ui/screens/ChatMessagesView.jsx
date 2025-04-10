@@ -8,7 +8,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 // Change the function signature to receive route and navigation
 const ChatMessagesView = ({ route, navigation }) => {
     // Extract parameters from route.params
-    const { chatId, userId } = route.params;
+    const { chatId, userId, chatName } = route.params;
 
     console.log("Chat ID:", chatId);
     console.log("User ID:", userId);
@@ -17,6 +17,20 @@ const ChatMessagesView = ({ route, navigation }) => {
     const [users, setUsers] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const scrollViewRef = useRef();
+
+    // Set up header right button for adding people to chat
+    useEffect(() => {
+        navigation.setOptions({
+            headerRight: () => (
+                <TouchableOpacity
+                    onPress={() => handleAddPeople()}
+                    style={{ marginRight: 15 }}
+                >
+                    <Ionicons name="person-add" size={24} color="#007AFF" />
+                </TouchableOpacity>
+            )
+        });
+    }, [navigation, users]);
 
     // Fetch messages and mark them as seen
     const fetchMessages = async () => {
@@ -31,6 +45,17 @@ const ChatMessagesView = ({ route, navigation }) => {
                 await updateMessageSeen(true, message.id, userId, chatId);
             }
         }
+    };
+
+    // Handle navigation to Add People view
+    const handleAddPeople = () => {
+        // Extract just the user_ids from the users object
+        const existingMemberIds = users.map(user => user.user_id);
+
+        navigation.navigate('AddPeopleView', {
+            chatId: chatId,
+            existingMembers: existingMemberIds
+        });
     };
 
     useEffect(() => {

@@ -195,6 +195,15 @@ export const acceptFriendRequest = (userId1, userId2) => {
     return simulateDelay("Successfully accepted the friend request");
 }
 
+export const getUserFriends = (userId) => {
+    const friends = mockFriendships
+        .filter(f => (f.friend1 === userId || f.friend2 === userId) && f.accepted)
+        .map(f => f.friend1 === userId ? f.friend2 : f.friend1);
+    console.log(friends);
+
+    return simulateDelay(friends ?? []);
+}
+
 /**
  * Login user
  * @param {string} email - User's email address
@@ -219,5 +228,7 @@ export default {
     getLastMessageHistory,
     addUsersToChat,
     sendFriendRequest,
+    acceptFriendRequest,
+    getUserFriends,
     loginUser
 };

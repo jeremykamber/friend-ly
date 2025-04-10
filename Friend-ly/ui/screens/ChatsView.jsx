@@ -6,8 +6,8 @@ import MinimalPlusButton from "../components/MinimalPlusButton";
 import PlusButton from "../components/PlusButton";
 import PrimaryButton from "../components/PrimaryButton";
 import * as SecureStore from 'expo-secure-store'
-import {createNewConversation} from '../mocks/backendMock';
-const ChatsView = ({navigation}) => {
+import { createNewConversation } from '../mocks/backendMock';
+const ChatsView = ({ navigation }) => {
 
 
     const [lastMessages, setLastMessages] = useState([])
@@ -20,7 +20,7 @@ const ChatsView = ({navigation}) => {
         of the token, or keeps it as null.
     */
     useEffect(() => {
-        const getToken = async() => {
+        const getToken = async () => {
             try {
                 const result = await SecureStore.getItemAsync("JWT") // jwt token
                 result ? setToken(result) : console.log("No token found!")
@@ -32,7 +32,7 @@ const ChatsView = ({navigation}) => {
     }, [])
 
     useEffect(() => {
-        const getChats = async() => {
+        const getChats = async () => {
             try {
                 console.log("Here?")
                 const response = await fetch("http://localhost:8000/users/getLastMessageHistory", {
@@ -53,19 +53,20 @@ const ChatsView = ({navigation}) => {
 
 
     let addConversation = async () => {
-        await createNewConversation('test', 'test', [1, 2, 3]);
+        navigation.navigate('AddChatView');
+
     };
 
     /*
         If the token hasn't been retrieved yet, just show a loading screen
     */
-    if (token === null || lastMessages.length == 0) {
-        return (
-        <SafeAreaView style={styles.container}>
-            <Text>Loading...</Text>
-        </SafeAreaView>
-        );
-    }
+    //if (token === null || lastMessages.length == 0) {
+    //    return (
+    //        <SafeAreaView style={styles.container}>
+    //            <Text>Loading...</Text>
+    //        </SafeAreaView>
+    //    );
+    //}
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
@@ -82,7 +83,7 @@ const ChatsView = ({navigation}) => {
             </View>
             <ScrollView contentContainerStyle={styles.scrollContainer}>
                 {lastMessages.map((message, index) => (
-                    <ChatConversationCard 
+                    <ChatConversationCard
                         key={index}
                         senderName={message.chat_name}
                         lastMessage={message.sender_name + ": " + message.message_text}

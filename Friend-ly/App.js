@@ -18,22 +18,24 @@ export default App;
 // App.js
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
-import TabNavigator from "./ui/navigation/TabNavigator"; // Import the TabNavigator
 import { createStackNavigator } from '@react-navigation/stack';
+import TabNavigator from "./ui/navigation/TabNavigator";
 import InterestSelectionView from './ui/screens/InterestSelectionView';
 import ClassesView from './ui/screens/ClassesView';
 import LoginView from './ui/screens/LoginView';
+import AddChatView from './ui/screens/AddChatView'; // Import the AddChatView
 
 const Stack = createStackNavigator();
 
 const App = () => {
     return (
         <NavigationContainer>
-            <Stack.Navigator initialRouteName="LoginView">
-                <Stack.Screen name="LoginView" component={LoginView} options={{headerShown: false}} />
-                <Stack.Screen name="ClassesView" component={ClassesView} options={{headerShown: false}} />
-                <Stack.Screen name="InterestSelectionView" component={InterestSelectionView} options={{headerShown: false}} />
-                <Stack.Screen name="TabNavigator" component={TabNavigator} options={{headerShown: false}} />
+            <Stack.Navigator initialRouteName="TabNavigator">
+                <Stack.Screen name="LoginView" component={LoginView} options={{ headerShown: false }} />
+                <Stack.Screen name="ClassesView" component={ClassesView} options={{ headerShown: false }} />
+                <Stack.Screen name="InterestSelectionView" component={InterestSelectionView} options={{ headerShown: false }} />
+                <Stack.Screen name="TabNavigator" component={TabNavigator} options={{ headerShown: false }} />
+                <Stack.Screen name="AddChatView" component={AddChatView} options={{ headerShown: false }} />
             </Stack.Navigator>
         </NavigationContainer>
     );
