@@ -1,14 +1,28 @@
-import React, { useState, useLayoutEffect } from "react";
+import React, { useState, useLayoutEffect, useEffect } from "react";
 import { View, StyleSheet, Text, Keyboard } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import InputField from "../components/InputField";
 import PrimaryButton from "../components/PrimaryButton";
 import appColors from "../common/app-colors";
+import * as SecureStore from 'expo-secure-store'
 
 const MIN_USERNAME_LENGTH = 3;
 
 const EditUsernameView = ({ navigation }) => {
   const [username, setUsername] = useState("");
+  const [token, setToken] = useState(null)
+
+  useEffect(() => {
+      const getToken = async() => {
+          try {
+              const result = await SecureStore.getItemAsync("JWT") // jwt token
+              result ? setToken(result) : console.log("No token found!")
+          } catch (err) {
+              throw err
+          }
+      }
+      getToken()
+  }, [])
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -29,12 +43,31 @@ const EditUsernameView = ({ navigation }) => {
     if (username.trim().length < MIN_USERNAME_LENGTH) {
       return;
     }
+
+    try {
+      console.log("HI?: " + token)
+      const results = await fetch("http://localhost:8000/users/editUName", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: token, username: username.trim()})
+      })
+      console.log(results)
+    } catch (err) {
+      throw (err);
+    }
+
     // TODO: Implement username update logic
     navigation.goBack();
   };
 
   const isValid = username.trim().length >= MIN_USERNAME_LENGTH;
-
+  if (token === null) {
+    return (
+            <SafeAreaView style={styles.container}>
+                <Text>Loading...</Text>
+            </SafeAreaView>
+            );
+  }
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <View style={styles.content}>

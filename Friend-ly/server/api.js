@@ -128,7 +128,7 @@ async function queryDatabase(database, query) {
 app.get('/chats/:chat_id', async (req, res) => {
   const id = req.params.chat_id
   const [results, fields] = await database.execute(
-    'SELECT * FROM messages WHERE chat_id = ?', [id]);
+    'SELECT * FROM messages WHERE chat_id = ? ORDER BY sent_at ASC', [id]);
   res.json(results)
 });
 
@@ -139,11 +139,28 @@ app.get('/chats/:chat_id/users', async(req, res) => {
   res.json(results);
 })
 
+app.get('/chats/usernames/:chat_id', async (req, res) => {
+  const chat_id = req.params.chat_id
+  const [results, fields] = await database.execute(
+    `SELECT username FROM users ORDER BY user_id ASC`
+  )
+  const usernames = results.map(row => row.username)
+  res.json(usernames)
+})
+
+app.get('/users/chats', authMiddleware, async(req, res) => {
+  const user_id = req.user_id
+  const [results, fields] = await database.execute(
+    'SELECT chat_id FROM chatMembers WHERE user_id = ?', [user_id])
+  res.json(results);
+})
+
+
 
 
 // Gets a single users information
-app.get('/users/:id', async function(req, res) {
-  let userId = req.params.id;
+app.post('/users/info', authMiddleware, async function(req, res) {
+  let userId = req.user_id;
   let query = "SELECT * FROM users WHERE user_id = ?;";
 
   try {
@@ -159,12 +176,36 @@ app.get('/users/:id', async function(req, res) {
     const metaData = resultArr[1];
 
     // Send back users information to frontend
+    console.log(records)
     res.json(records);
   } catch (error) {
     res.type("text").status(SERVER_ERROR_CODE)
       .send("An error occurred on the server. Try again later.");
   }
 });
+
+app.post('/users/getUserID', authMiddleware, async function(req, res) {
+  res.json(req.user_id)
+})
+
+/*
+  Updates the user's profile with a new username and bio. 
+  Takes in a body that has a token, and a user_info body with
+  a username and bio. 
+*/
+app.post('/users/updateInfo', authMiddleware, async function(req, res){
+  let userID = req.user_id
+  let username = req.body.user_info.name 
+  let bio = req.body.user_info.bio
+  let query = "UPDATE users SET username = ?, bio = ? WHERE user_id = ?"
+
+  try {
+    const result = await database.execute(query, [username, bio, userID])
+    res.type("text").status(SUCCESS_CODE).send("Successfully updated user profile.")
+  } catch (err) {
+    throw (err)
+  }
+})
 
 /**
  * Sets the most recent message seen by the specified user in a particular
@@ -196,6 +237,7 @@ app.post('/seen/updateSeen', async function (req, res) {
 
 // Posts new message into user chat
 app.post('/users/:chat_id/newMessage', authMiddleware, async function (req, res) {
+  console.log("inside here?")
   let user_id = req.user_id
   let chatID = req.params.chat_id
   let messageText = req.body.messageText
@@ -256,23 +298,37 @@ app.post('/chats/newConversation', authMiddleware, async (req, res) => {
 /**
  * Gets the last message for every chat a certain user is in.
  */
-app.get('/users/getLastMessageHistory', authMiddleware, async (req, res) => {
+app.post('/users/getLastMessageHistory', authMiddleware, async (req, res) => {
   const user_id = req.user_id
   try {
     const [results, fields] = await database.execute(
-      'SELECT m.chat_id, m.message_text, m.sent_at, m.sender_id ' +
-      'FROM messages m ' +
-      'WHERE m.message_id IN ( ' +
-      '   SELECT MAX(sub_m.message_id) ' +
-      '   FROM messages sub_m ' +
-      '   GROUP BY sub_m.chat_id ' +
-      ')' +
-      'AND m.chat_id IN ( ' +
-      '   SELECT c.chat_id ' +
-      '   FROM chatMembers c ' +
-      '   WHERE c.user_id = ? ' +
-      ')' +
-      'ORDER BY m.sent_at DESC', [user_id]
+      `SELECT 
+          m.chat_id, 
+          m.message_text, 
+          m.sent_at, 
+          m.sender_id,
+          u.username AS sender_name,          
+          c.chat_name AS chat_name            
+      FROM 
+          messages m
+      JOIN 
+          users u ON m.sender_id = u.user_id   
+      JOIN 
+          chats c ON m.chat_id = c.chat_id     
+      WHERE 
+          m.message_id IN ( 
+              SELECT MAX(sub_m.message_id) 
+              FROM messages sub_m 
+              GROUP BY sub_m.chat_id 
+          ) 
+      AND 
+          m.chat_id IN ( 
+              SELECT c.chat_id 
+              FROM chatMembers c 
+              WHERE c.user_id = ?
+          ) 
+      ORDER BY 
+          m.sent_at DESC;`, [user_id]
     )
     res.type("text").status(200).send(results);
   } catch (err) {
@@ -289,6 +345,17 @@ app.get('/users/:chat_id', async (req, res) => {
   const query = "SELECT m.message_text FROM message AS m WHERE m.chat_id = ? AND m.sent_at = ( SELECT MAX(m2.sent_at) FROM message AS m2 WHERE m2.chat_id = ?);"
   const [results, fields] = await database.execute(query, [chat_id, chat_id]);
   res.json(results);
+})
+
+app.post('/users/editUName', authMiddleware, async (req, res) => {
+  console.log("EDIT USERNAME")
+  const user_id = req.user_id
+  const new_username = req.body.username
+  const query = "UPDATE users SET username = ? WHERE user_id = ?"
+  const [results, fields] = await database.execute(query, [new_username, user_id])
+  console.log("EDIT USERNAME")
+  console.log(results)
+  res.json(results)
 })
 
 
@@ -403,7 +470,6 @@ app.post('/friends/sendFriendRequest', async (req, res) => {
  * Accepted friend request.
  * Set status to true.
  */
-
 app.post('/friends/acceptFriendRequest', async (req, res) => {
   // the person that sends the friend request
   const user_id1 = req.body.user_id1;
@@ -465,7 +531,6 @@ app.post('/friends/deleteFriend', async (req, res) => {
  * user_id int
  * interest_ids array[int]
  */
-
 app.post("/addUserInterests", (req, res) => {
   const { user_id, interest_ids } = req.body;
 
@@ -512,12 +577,6 @@ app.post("/deleteUserInterests", (req, res) => {
   res.status(200).json({ message: 'User interests deleted successfully' });
 });
 
-
-
-
-
-
-
 // For adding interest and interestCategory from the server side
 /**
  * Add interest category (one at a time)
@@ -562,7 +621,6 @@ app.post("/addInterestDetails", async (req, res) => {
     res.type("text").status(201).send("Interest details added successfully.");
   });
 });
-
 
 // import
 const crypto = require('crypto');
@@ -752,6 +810,37 @@ app.post('/similar-users', async (req, res) => {
     res.status(500).send("Getting similar users failed.");
   }
 });
+
+
+
+
+/*
+Endpoint for logging in a user. Checks to see if user is already
+in the database. If not, adds user to database. 
+@return: Returns the id of the user
+*/
+app.post('/users/login', async (req, res) => {
+  const email = req.body.email
+  let newUser = false
+
+  try {
+    const findUserQuery = "SELECT * FROM users WHERE email = ?"
+    const results = await database.execute(findUserQuery, [email])
+    if (results[0].length == 0) {
+      // add the user
+      newUser = true
+      const profile_picture = null
+      const addUserQuery = "INSERT INTO users (bio, email, profile_picture, username) VALUES (?, ?, ?, ?)"
+      await database.execute(addUserQuery, ["Hi, I am " + email, email, profile_picture, email])
+    } 
+    const getIDQuery = "SELECT user_id FROM users WHERE email = ?"
+    const result = await database.execute(getIDQuery, [email])
+    console.log(result)
+    res.type("text").status(200).send({"user_id": result[0], "new_user": newUser})
+  } catch (err) {
+    throw (err)
+  }
+})
 
 
 // Allows us to change the port easily by setting an environment

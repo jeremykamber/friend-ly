@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Modal } from 'react-native';
 import ProfileButton from '../components/ProfileButton';
 import InputProfilePhotoButton from '../components/InputProfilePhotoButton';
@@ -9,9 +9,17 @@ import PostCard from '../components/PostCard';
 import { useNavigation } from '@react-navigation/native';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import appColors from '../common/app-colors';
+import * as SecureStore from 'expo-secure-store'
 
 
 const ProfileViewEditMode = () => {
+    const fetchData = useProfileViewStore(state => state.fetchData);
+
+    useEffect(() => {
+        fetchData(); // Fetch profile data every time this screen mounts
+    }, [fetchData]);
+
+    //const {name, imageUri, majorAndYear, aboutMe, interests, currentClasses, posts} = useProfileViewStore();
 
     const {imageUri, setImageUri, name, setName, majorAndYear, setMajorAndYear, aboutMe, setAboutMe, interests, currentClasses, posts, setPosts} = useProfileViewStore();
     const [tempName, setTempName] = useState(name);
@@ -23,18 +31,49 @@ const ProfileViewEditMode = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [postIndex, setPostIndex] = useState(null);
 
+    useEffect(() => {
+        const getToken = async() => {
+            try {
+                const result = await SecureStore.getItemAsync("JWT") // jwt token
+                result ? setToken(result) : console.log("No token found!")
+            } catch (err) {
+                throw err
+            }
+        }
+        getToken()
+    }, [])
+
     const handleImageSelected = (uri) => {
         setImageUri(uri);
     };
 
     // save all information
-    const handleSave = () => {
+    const handleSave = async () => {
         setName(tempName);
         setMajorAndYear(tempMajorAndYear);
         setAboutMe(tempAboutMe);
         setPosts(tempPosts);
-        
-        navigation.navigate('SelfProfileView');
+
+        body = {
+          name: tempName,
+          bio: tempAboutMe
+        }
+
+        try {
+            const token = await SecureStore.getItemAsync("JWT") // jwt token
+            if (!token) {
+                console.log("No token found!");
+                return;
+            }
+            const response = await fetch("http://localhost:8000/users/updateInfo", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token: token, user_info: body })
+            });
+            navigation.navigate('SelfProfileView');
+        } catch (err) {
+            throw(err);
+        }
     };
 
     const handleEditInterests = () => {

@@ -1,42 +1,109 @@
-import { getChatHistory, getChatUsers, addUsersToChat, postNewMessage, updateMessageSeen, getUserInfo } from '../mocks/backendMock';
+import { getChatUsers, addUsersToChat, postNewMessage, updateMessageSeen, getUserInfo } from '../mocks/backendMock';
 import { View, Text, ScrollView, StyleSheet, TextInput, Button, TouchableOpacity } from 'react-native';
 import React, { useEffect, useState, useRef } from 'react';
 import MessageBubble from '../components/MessageBubble';
 import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import * as SecureStore from 'expo-secure-store'
 
 // Change the function signature to receive route and navigation
-const ChatMessagesView = ({ route, navigation }) => {
+const ChatMessagesViewDB = ({ route, navigation }) => {
     // Extract parameters from route.params
-    const { chatId, userId, chatName } = route.params;
-
-    console.log("Chat ID:", chatId);
-    console.log("User ID:", userId);
+    const { chatId, userId } = route.params;
+    const [token, setToken] = useState(null)
 
     const [messages, setMessages] = useState([]);
     const [users, setUsers] = useState([]);
+    const [usernames, setUsernames] = useState([])
     const [newMessage, setNewMessage] = useState('');
     const scrollViewRef = useRef();
 
-    // Set up header right button for adding people to chat
-    useEffect(() => {
-        navigation.setOptions({
-            headerRight: () => (
-                <TouchableOpacity
-                    onPress={() => handleAddPeople()}
-                    style={{ marginRight: 15 }}
-                >
-                    <Ionicons name="person-add" size={24} color="#007AFF" />
-                </TouchableOpacity>
-            )
-        });
-    }, [navigation, users]);
+    /*  
+        Gets the token from SecureStore
+        and sets the state variable.
+    */
+    const getToken = async() => {
+        try {
+            const result = await SecureStore.getItemAsync("JWT") // jwt token
+            if (!result) {
+                console.log("No token found.")
+                return
+            }
+            setToken(result)
+        } catch (err) {
+            throw (err)
+        }
+    }
+
+    /*
+        Sends the recently sent message
+        to the database.
+    */
+    const messageToDB = async (messageText) => {
+        body = {
+            token: token, 
+            messageText: messageText
+        }
+        try {
+            const response = await fetch(`http://localhost:8000/users/${chatId}/newMessage`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            })
+            return response.ok
+        } catch (err) {
+            throw (err)
+        }
+    }
+
+    /*  
+        Gets all the users for the current chat.
+    */
+    const getChatUsers = async () => {
+        try {
+            const response = await fetch(`http://localhost:8000/chats/${chatId}/users`, {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+            })
+            const chatUsers = await response.json()
+            return chatUsers
+        } catch (err) {
+            throw (err)
+        }
+    }
+
+    const getUsernames = async () => {
+        try {
+            const response = await fetch(`http://localhost:8000/chats/usernames/${chatId}`, {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+            })
+            const chatUsernames = await response.json()
+            setUsernames(chatUsernames)
+        } catch (err) {
+            throw (err)
+        }
+    }
+    
+    /*
+        Gets all the messages in the chat.
+    */
+    const getChatHistory = async () => {
+        try {
+            const response = await fetch(`http://localhost:8000/chats/${chatId}`, {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+            })
+            const messages = await response.json()
+            return messages
+        } catch (err) {
+            throw (err)
+        }
+    }
 
     // Fetch messages and mark them as seen
     const fetchMessages = async () => {
-        const fetchedMessages = await getChatHistory(chatId);
-        console.log(fetchedMessages
-        );
+        const fetchedMessages = await getChatHistory();
         setMessages(fetchedMessages);
 
         // Mark messages as seen
@@ -47,20 +114,11 @@ const ChatMessagesView = ({ route, navigation }) => {
         }
     };
 
-    // Handle navigation to Add People view
-    const handleAddPeople = () => {
-        // Extract just the user_ids from the users object
-        const existingMemberIds = users.map(user => user.user_id);
-
-        navigation.navigate('AddPeopleView', {
-            chatId: chatId,
-            existingMembers: existingMemberIds
-        });
-    };
-
     useEffect(() => {
+        getToken()
         fetchMessages();
-        getChatUsers(chatId).then(setUsers);
+        getChatUsers().then(setUsers);
+        getUsernames()
 
         // Set up polling for new messages and status updates
         const intervalId = setInterval(fetchMessages, 5000);
@@ -89,10 +147,11 @@ const ChatMessagesView = ({ route, navigation }) => {
 
         try {
             // Send the message to the backend
+            const sentToDatabase = messageToDB(newMessage)
             const messageData = await postNewMessage(userId, chatId, newMessage);
 
             // Check if messageData is a valid message object
-            if (typeof messageData === 'string' || !messageData.message_id) {
+            if (typeof messageData === 'string' || !messageData.message_id || !sentToDatabase) {
                 console.warn('Backend returned invalid message data:', messageData);
 
                 // Keep the temp message with updated status instead of replacing it
@@ -206,7 +265,7 @@ const ChatMessagesView = ({ route, navigation }) => {
                             message={message.message_text}
                             isCurrentUser={message.sender_id === userId}
                             timestamp={formatMessageTime(message.sent_at)}
-                            username=''
+                            username={usernames[message.sender_id - 1]} // ids are 1 indexed. 
                             status={message.sender_id === userId ? getMessageStatus(message) : null}
                         />
                     );
@@ -217,7 +276,7 @@ const ChatMessagesView = ({ route, navigation }) => {
                     style={styles.input}
                     value={newMessage}
                     onChangeText={setNewMessage}
-                    placeholder="Type a message..."
+                    placeholder="Type a message here..."
                 />
                 <TouchableOpacity onPress={handleSendMessage} disabled={!newMessage.trim()} style={styles.sendButton}>
                     <Ionicons name="send" size={20} color={newMessage.trim() ? "#007AFF" : "#ccc"} />
@@ -259,4 +318,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default ChatMessagesView;
+export default ChatMessagesViewDB;
