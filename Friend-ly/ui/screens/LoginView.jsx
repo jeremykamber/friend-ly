@@ -6,6 +6,12 @@ import { signIn } from "firebase/auth";
 import { auth } from "../../server/firebase/firebase";
 import appColors from "../common/app-colors"; // Import your appColors
 import * as SecureStore from "expo-secure-store"
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+
+GoogleSignin.configure({
+    webClientId: process.env.EXPO_PUBLIC_FIREBASE_WEB_CLIENT_ID, // From Firebase Console
+    offlineAccess: true,
+});
 
 const LoginView = ({ navigation }) => {
     const microsoftProvider = new GoogleAuthProvider();
@@ -16,6 +22,20 @@ const LoginView = ({ navigation }) => {
         } catch (err) {
             throw (err)
         }
+    }
+
+    async function onGoogleButtonPress() {
+        // 1. Check Play Services
+        await GoogleSignin.hasPlayServices();
+
+        // 2. Get ID Token
+        const { idToken } = await GoogleSignin.signIn();
+
+        // 3. Create Firebase Credential
+        const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+
+        // 4. Sign-In with Credential
+        return auth().signInWithCredential(googleCredential);
     }
 
     const authLogin = async (email) => {
@@ -37,14 +57,14 @@ const LoginView = ({ navigation }) => {
             throw err;
         }
         // TODO: Implement mobile-friendly login popup
-        
+
     };
 
     return (
         <SafeAreaView style={styles.container}>
             <Text style={styles.title}>Welcome Back!</Text>
             <View style={{ height: 40 }} />
-            <LoginForm onSubmit={authLogin} />
+            <LoginForm onSubmit={onGoogleButtonPress} />
         </SafeAreaView>
     );
 };
