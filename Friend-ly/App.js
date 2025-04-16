@@ -30,7 +30,7 @@ const Stack = createStackNavigator();
 const App = () => {
     return (
         <NavigationContainer>
-            <Stack.Navigator initialRouteName="TabNavigator">
+            <Stack.Navigator initialRouteName="LoginView">
                 <Stack.Screen name="LoginView" component={LoginView} options={{ headerShown: false }} />
                 <Stack.Screen name="ClassesView" component={ClassesView} options={{ headerShown: false }} />
                 <Stack.Screen name="InterestSelectionView" component={InterestSelectionView} options={{ headerShown: false }} />

@@ -39,13 +39,13 @@ CREATE TABLE messages (
 CREATE TABLE `friends` (
   `user_id1` int NOT NULL,
   `user_id2` int NOT NULL,
-  `added` tinyint(1) DEFAULT ''0'',
+  `added` tinyint(1) DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`user_id1`,`user_id2`),
   KEY `user_id2` (`user_id2`),
   CONSTRAINT `friends_ibfk_1` FOREIGN KEY (`user_id1`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
   CONSTRAINT `friends_ibfk_2` FOREIGN KEY (`user_id2`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
-) 
+);
 
 CREATE TABLE interestCategory (
     interest_category_id INT PRIMARY KEY AUTO_INCREMENT,

@@ -625,9 +625,9 @@ app.post("/addInterestDetails", async (req, res) => {
 // import
 const crypto = require('crypto');
 
-app.post('/similar-users', async (req, res) => {
+app.post('/similar-users', authMiddleware, async (req, res) => {
   try {
-    const targetUserId = req.body.userId;
+    const targetUserId = req.user_id;
 
     if (!targetUserId) {
       return res.status(400).send("User ID is required");
@@ -800,7 +800,16 @@ app.post('/similar-users', async (req, res) => {
           category_jaccard: parseFloat(similarity.categoryJaccard.toFixed(2)),
           common_interests: similarity.common
         };
-      });
+      })
+      .sort((a, b) => b.score - a.score)
+    
+    for (let i = 0; i < results.length; i++) {
+      const uid = results[i]['user_id']
+      const [getUsername] = await database.execute(
+        'SELECT username FROM users WHERE user_id = ?', [uid]
+      )
+      results[i]['username'] = getUsername[0]['username']
+    }
 
     console.log(`Returning ${results.length} similar users`);
     res.status(200).json(results);
