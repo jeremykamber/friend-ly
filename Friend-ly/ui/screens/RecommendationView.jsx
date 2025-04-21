@@ -38,6 +38,7 @@ const RecommendationView = ({ navigation }) => {
                 body: JSON.stringify({ token: result})
             })
             const data = await response.json();
+            console.log(data)
             setSimilarUsers(data);
             setCurrentUsers(data);
         } catch (err) {

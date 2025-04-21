@@ -348,13 +348,10 @@ app.get('/users/:chat_id', async (req, res) => {
 })
 
 app.post('/users/editUName', authMiddleware, async (req, res) => {
-  console.log("EDIT USERNAME")
   const user_id = req.user_id
   const new_username = req.body.username
   const query = "UPDATE users SET username = ? WHERE user_id = ?"
   const [results, fields] = await database.execute(query, [new_username, user_id])
-  console.log("EDIT USERNAME")
-  console.log(results)
   res.json(results)
 })
 
@@ -519,6 +516,42 @@ app.post('/friends/deleteFriend', async (req, res) => {
     res.type("text").status(500).send("Couldn't delete friend.");
   }
 });
+
+
+app.post('/posts/newPost', authMiddleware, async (req, res) => {
+  const user_id = req.user_id;
+  const caption = req.body.caption
+  const query = "INSERT INTO post (user_id, title, content) VALUES (?, ?, ?)"
+  try {
+    const [result] = await database.execute(query, [user_id, caption, caption])
+    res.type("text").status(SUCCESS_CODE).send("Creating a new post worked!")
+  } catch (err) {
+    res.type("text").status(SERVER_ERROR_CODE).send("Creating a new post failed. ")
+  }
+})
+
+app.post('/posts/getUserPosts', authMiddleware, async (req, res) => {
+  const user_id = req.user_id;
+  const query = "SELECT * FROM post WHERE user_id = ? ORDER BY post.created_at DESC"
+  try {
+    const [posts, fields] = await database.execute(query, [user_id])
+    res.json(posts)
+  } catch (err) {
+    res.type("text").status(SERVER_ERROR_CODE).send("Fetching all posts failed. ")
+  }
+})
+
+app.post('/posts/deletePost', authMiddleware, async (req, res) => {
+  const user_id = req.user_id;
+  const post_id = req.body.post_id
+  const query = "DELETE FROM post WHERE id = ? AND user_id = ?"
+  try {
+    await database.execute(query, [post_id, user_id])
+    res.type("text").status(SUCCESS_CODE).send("Removing post worked. ")
+  } catch (err) {
+    res.type("text").status(SERVER_ERROR_CODE).send("Removing post failed. ")
+  }
+})
 
 /**
  * NOTE: Add to interestCategory and interestDetails before 

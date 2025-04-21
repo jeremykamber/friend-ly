@@ -21,7 +21,8 @@ const ProfileViewEditMode = () => {
 
     //const {name, imageUri, majorAndYear, aboutMe, interests, currentClasses, posts} = useProfileViewStore();
 
-    const {imageUri, setImageUri, name, setName, majorAndYear, setMajorAndYear, aboutMe, setAboutMe, interests, currentClasses, posts, setPosts} = useProfileViewStore();
+    const {imageUri, setImageUri, name, setName, majorAndYear, setMajorAndYear, aboutMe, 
+            setAboutMe, interests, currentClasses, posts, setPosts} = useProfileViewStore();
     const [tempName, setTempName] = useState(name);
     const [tempMajorAndYear, setTempMajorAndYear] = useState(majorAndYear);
     const [tempAboutMe, setTempAboutMe] = useState(aboutMe);
@@ -30,6 +31,7 @@ const ProfileViewEditMode = () => {
     const navigation = useNavigation();
     const [modalVisible, setModalVisible] = useState(false);
     const [postIndex, setPostIndex] = useState(null);
+    const [token, setToken] = useState(null)
 
     useEffect(() => {
         const getToken = async() => {
@@ -49,12 +51,14 @@ const ProfileViewEditMode = () => {
 
     // save all information
     const handleSave = async () => {
+        
         setName(tempName);
         setMajorAndYear(tempMajorAndYear);
         setAboutMe(tempAboutMe);
-        setPosts(tempPosts);
+        //setPosts(tempPosts);
+        
 
-        body = {
+        let body = {
           name: tempName,
           bio: tempAboutMe
         }
@@ -89,9 +93,21 @@ const ProfileViewEditMode = () => {
         setPostIndex(index)
     };
 
-    const handleRemovePost = () => {
-        setTempPosts((tempPosts) => tempPosts.filter((_, i) => i !== postIndex));
+    const handleRemovePost = async () => {
+        setTempPosts((tempPosts) => tempPosts.filter((post) => post.post_id !== postIndex));
         setModalVisible(false);
+        try {
+          const response = await fetch("http://localhost:8000/posts/deletePost", {
+            method: "POST", 
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: token, post_id: postIndex})
+          })
+          console.log(response)
+          handleSave()
+        } catch (err) {
+          throw (err);
+        }
+
     };
 
     return (
@@ -168,7 +184,7 @@ const ProfileViewEditMode = () => {
                           likes={item.likes}
                           comments={item.comments}
                       />
-                      <TouchableOpacity onPress={() => confirmDelete(index)} style={styles.removeButton}>
+                      <TouchableOpacity onPress={() => confirmDelete(item.post_id)} style={styles.removeButton}>
                           <Text style={styles.removeButtonText}>Delete</Text>
                       </TouchableOpacity>
                     </View>

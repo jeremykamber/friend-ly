@@ -24,7 +24,7 @@ const LoginView = ({ navigation }) => {
             const response = await fetch("http://localhost:6262/api/auth", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: "doncic@uw.edu" }),
+                body: JSON.stringify({ email: "lebron23@uw.edu" }),
             });
             const data = await response.json();
             await setToken(data["token"])
