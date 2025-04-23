@@ -24,6 +24,16 @@ const useProfileViewStore = create((set) => ({
 
     posts: [{timestamp:"2 hours ago", image:"https://placehold.co/600x300/png", caption:"This is an example post with all props provided.", likes:34, comments:12}, {timestamp:"3 hours ago", image:"https://placehold.co/600x300/png", caption:"This is an example post with all props provided.", likes:34, comments:12}, {timestamp:"5 days ago", image:"https://placehold.co/600x300/png", caption:"This is an example post with all props provided.", likes:34, comments:12}],
     setPosts: (postList) => set({ posts: postList }),
+
+    friends: [
+        { id: '1', name: 'Alice', theyRequestedMe: 'Requested', iRequestedThem: 'Following', avatar: 'https://i.pravatar.cc/150?img=1' }, 
+        { id: '2', name: 'Bob', theyRequestedMe: 'Requested', iRequestedThem: 'Not Following', avatar: 'https://i.pravatar.cc/150?img=1' }, 
+        { id: '3', name: 'Charlie', theyRequestedMe: 'Requested', iRequestedThem: 'Requested', avatar: 'https://i.pravatar.cc/150?img=1' }],
+    setFriends: (friendsListOrUpdater) => set((state) => ({ 
+            friends: typeof friendsListOrUpdater === 'function' 
+                ? friendsListOrUpdater(state.friends)
+                : friendsListOrUpdater 
+        })),
 }));
 
 export default useProfileViewStore;

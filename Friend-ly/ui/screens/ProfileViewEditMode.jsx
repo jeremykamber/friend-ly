@@ -9,6 +9,7 @@ import PostCard from '../components/PostCard';
 import { useNavigation } from '@react-navigation/native';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import appColors from '../common/app-colors';
+import Ionicons from "react-native-vector-icons/Ionicons";
 
 
 const ProfileViewEditMode = () => {
@@ -130,7 +131,7 @@ const ProfileViewEditMode = () => {
                           comments={item.comments}
                       />
                       <TouchableOpacity onPress={() => confirmDelete(index)} style={styles.removeButton}>
-                          <Text style={styles.removeButtonText}>Delete</Text>
+                          <Ionicons name="trash-outline" size={20} color="black" />
                       </TouchableOpacity>
                     </View>
                 ))}
@@ -253,18 +254,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   removeButton: {
-    backgroundColor: '#c0392b',
-    paddingHorizontal: 8,
+    backgroundColor: '#a4a5a3',
     borderRadius: 30,
+    borderWidth: 4,
+    borderColor: '#a4a5a3',
     alignItems: 'center',
     position: 'absolute',
     top: 30,
     right: 35,
-  },
-  removeButtonText: {
-    color: appColors.White,
-    fontSize: 16,
-    fontWeight: '80%',
   },
   postsContainer: {
     marginBottom: 20,
@@ -310,7 +307,7 @@ const styles = StyleSheet.create({
       backgroundColor: '#aaa', // Grey color for cancel button
   },
   deleteButton: {
-      backgroundColor: '#C0392B', // Muted red for delete button
+      backgroundColor: '#bb3f3f', // Muted red for delete button
   },
   comfirmationButtonText: {
       color: 'white',

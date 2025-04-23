@@ -1,5 +1,5 @@
 import { getChatHistory, getChatUsers, addUsersToChat, postNewMessage, updateMessageSeen, getUserInfo } from '../mocks/backendMock';
-import { View, Text, ScrollView, StyleSheet, TextInput, Button, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TextInput, Button, TouchableOpacity, SafeAreaView } from 'react-native';
 import React, { useEffect, useState, useRef } from 'react';
 import MessageBubble from '../components/MessageBubble';
 import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
@@ -162,7 +162,7 @@ const ChatMessagesView = ({ route, navigation }) => {
     };
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <ScrollView
                 ref={scrollViewRef}
                 contentContainerStyle={styles.scrollContainer}
@@ -198,7 +198,7 @@ const ChatMessagesView = ({ route, navigation }) => {
                     <Ionicons name="send" size={20} color={newMessage.trim() ? "#007AFF" : "#ccc"} />
                 </TouchableOpacity>
             </View>
-        </View>
+        </SafeAreaView>
     );
 
 }
