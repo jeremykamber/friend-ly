@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Alert} from 'react-native';
-import allInterests from '../common/allInterests';  // Import the interests list
+import allInterests from '../common/allInterests';  // import the interests list
 import appColors from '../common/app-colors';
-import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 
-const MultiSelectDropdown = ({ onSelectionChange }) => {
+const MultiSelectDropdown = ({ onSelectionChange, selectedInterests, setSelectedInterests }) => {
 
-    const {interests} = useProfileViewStore();
-
-    const [selectedInterests, setSelectedInterests] = useState(interests);
     const [showPicker, setShowPicker] = useState(false);
     const [searchText, setSearchText] = useState('');
     const [isFocused, setIsFocused] = useState(false);

@@ -85,6 +85,16 @@ const useProfileViewStore = create((set) => ({
     setPosts: (postList) => set({ posts: postList }),
 
     setProfileData: (data) => set({name: data.username, aboutMe: data.bio}),
+
+    friends: [
+        { id: '1', name: 'Alice', theyRequestedMe: 'Requested', iRequestedThem: 'Following', avatar: 'https://i.pravatar.cc/150?img=1' }, 
+        { id: '2', name: 'Bob', theyRequestedMe: 'Requested', iRequestedThem: 'Not Following', avatar: 'https://i.pravatar.cc/150?img=1' }, 
+        { id: '3', name: 'Charlie', theyRequestedMe: 'Requested', iRequestedThem: 'Requested', avatar: 'https://i.pravatar.cc/150?img=1' }],
+    setFriends: (friendsListOrUpdater) => set((state) => ({ 
+            friends: typeof friendsListOrUpdater === 'function' 
+                ? friendsListOrUpdater(state.friends)
+                : friendsListOrUpdater 
+        })),
 }));
 
 export default useProfileViewStore;

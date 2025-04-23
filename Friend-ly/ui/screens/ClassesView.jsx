@@ -89,12 +89,12 @@ const ClassInput = () => {
             <Modal isVisible={isModalVisible}>
                 <View style={styles.modalContent}>
                     <Text style={styles.modalTitle}>{editingIndex !== null ? 'Edit Class' : 'Add Class'}</Text>
-                    <Text style={styles.label}>Class Code:</Text>
+                    <Text style={styles.label}>Class Number:</Text>
                     <TextInput
                         style={styles.input}
                         value={classCode}
                         onChangeText={setClassCode}
-                        placeholder="Enter class code"
+                        placeholder="Enter class number"
                     />
                     <Text style={styles.label}>Class Name:</Text>
                     <TextInput

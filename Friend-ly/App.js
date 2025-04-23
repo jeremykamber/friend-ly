@@ -24,6 +24,8 @@ import InterestSelectionView from './ui/screens/InterestSelectionView';
 import ClassesView from './ui/screens/ClassesView';
 import LoginView from './ui/screens/LoginView';
 import AddChatView from './ui/screens/AddChatView'; // Import the AddChatView
+import ProfilePictureView from './ui/screens/ProfilePictureView';
+import BioInformationView from './ui/screens/BioInformationView';
 
 const Stack = createStackNavigator();
 
@@ -36,6 +38,8 @@ const App = () => {
                 <Stack.Screen name="InterestSelectionView" component={InterestSelectionView} options={{ headerShown: false }} />
                 <Stack.Screen name="TabNavigator" component={TabNavigator} options={{ headerShown: false }} />
                 <Stack.Screen name="AddChatView" component={AddChatView} options={{ headerShown: false }} />
+                <Stack.Screen name="ProfilePictureView" component={ProfilePictureView} options={{headerShown: false}} />
+                <Stack.Screen name="BioInformationView" component={BioInformationView} options={{headerShown: false}} />
             </Stack.Navigator>
         </NavigationContainer>
     );
