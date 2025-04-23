@@ -74,6 +74,11 @@ let database;
  */
 async function getSQLConnection() {
   try {
+    console.log("Connecting to Friend-ly DB...")
+    console.log("Host: ", process.env.DB_HOST)
+    console.log("User: ", process.env.DB_USER)
+    console.log("Password: ", process.env.DB_PASSWORD)
+    console.log("Database: ", process.env.DB_NAME)
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,    // Replace with your database host
       user: process.env.DB_USER,// Replace with your database username
@@ -832,15 +837,114 @@ app.post('/users/login', async (req, res) => {
       const profile_picture = null
       const addUserQuery = "INSERT INTO users (bio, email, profile_picture, username) VALUES (?, ?, ?, ?)"
       await database.execute(addUserQuery, ["Hi, I am " + email, email, profile_picture, email])
-    } 
+    }
     const getIDQuery = "SELECT user_id FROM users WHERE email = ?"
     const result = await database.execute(getIDQuery, [email])
     console.log(result)
-    res.type("text").status(200).send({"user_id": result[0], "new_user": newUser})
+    res.type("text").status(200).send({ "user_id": result[0], "new_user": newUser })
   } catch (err) {
     throw (err)
   }
-})
+});
+
+/**
+ * Endpoint to send a verification email with a code
+ * Required body parameters:
+ * - email: The recipient's email address
+ * 
+ * Optional body parameters:
+ * - code: Custom verification code (if not provided, a random 6-digit code will be generated)
+ */
+app.post('/users/sendVerificationEmail', authMiddleware, async function(req, res) {
+  try {
+    const email = req.body.email;
+    
+    if (!email) {
+      return res.type("text").status(USER_ERROR_CODE).send("Email address is required");
+    }
+    
+    // Generate a random 6-digit code if not provided
+    const verificationCode = req.body.code || Math.floor(100000 + Math.random() * 900000);
+    
+    // Store the verification code and expiration time in the database
+    const expiryMinutes = 15; // Code valid for 15 minutes
+    const expiresAt = new Date(Date.now() + expiryMinutes * 60000);
+    
+    try {
+      // Remove any existing verification codes for this email
+      await database.execute(
+        'DELETE FROM verification_codes WHERE email = ?',
+        [email]
+      );
+      
+      // Insert the new verification code
+      await database.execute(
+        'INSERT INTO verification_codes (email, code, expires_at) VALUES (?, ?, ?)',
+        [email, verificationCode, expiresAt]
+      );
+    } catch (dbError) {
+      console.error('Database error storing verification code:', dbError);
+      return res.type("text").status(SERVER_ERROR_CODE)
+        .send("Failed to store verification code");
+    }
+    
+    // Send the email with the verification code
+    await sendEmailVerificationEmail(verificationCode, email);
+    
+    res.type("text").status(SUCCESS_CODE)
+      .send("Verification email sent successfully");
+      
+  } catch (error) {
+    console.error('Error sending verification email:', error);
+    res.type("text").status(SERVER_ERROR_CODE)
+      .send("Failed to send verification email");
+  }
+});
+
+/**
+ * Endpoint to verify an email verification code
+ * Required body parameters:
+ * - email: The email address to verify
+ * - code: The verification code to check
+ */
+app.post('/users/verifyEmailCode', async function(req, res) {
+  try {
+    const { email, code } = req.body;
+    
+    if (!email || !code) {
+      return res.type("text").status(USER_ERROR_CODE)
+        .send("Email and verification code are required");
+    }
+    
+    // Check if the code exists and is valid
+    const [rows] = await database.execute(
+      'SELECT * FROM verification_codes WHERE email = ? AND code = ? AND expires_at > NOW()',
+      [email, code]
+    );
+    
+    if (rows.length === 0) {
+      return res.type("text").status(USER_ERROR_CODE)
+        .send("Invalid or expired verification code");
+    }
+    
+    // Code is valid - you can update user status here if needed
+    // For example, set email_verified = true in your users table
+    
+    // Remove the used verification code
+    await database.execute(
+      'DELETE FROM verification_codes WHERE email = ?',
+      [email]
+    );
+    
+    res.type("text").status(SUCCESS_CODE)
+      .send("Email verified successfully");
+      
+  } catch (error) {
+    console.error('Error verifying email code:', error);
+    res.type("text").status(SERVER_ERROR_CODE)
+      .send("Failed to verify email code");
+  }
+});
 
 
 // Allows us to change the port easily by setting an environment
