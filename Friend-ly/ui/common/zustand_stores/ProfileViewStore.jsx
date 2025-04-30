@@ -1,6 +1,50 @@
 import { create } from 'zustand';
+import React, {useEffect, useState} from 'react'
+import * as SecureStore from 'expo-secure-store'
+
+
+/*const tokenWrapper = async () => {
+    const [token, setToken] = useState(null);
+    useEffect(() => {
+        const getToken = async() => {
+            try {
+                const result = await SecureStore.getItemAsync("JWT") // jwt token
+                result ? setToken(result) : console.log("No token found!")
+            } catch (err) {
+                throw(err);
+            }
+        }
+        getToken();
+    }, [])
+    return token
+}*/
+
+
+
 
 const useProfileViewStore = create((set) => ({
+
+    fetchData: async () => {
+        try {
+            const token = await SecureStore.getItemAsync("JWT") // jwt token
+            if (!token) {
+                console.log("No token found!");
+                return;
+            }
+            const response = await fetch("http://localhost:8000/users/info", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token: token })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                useProfileViewStore.getState().setProfileData(data[0])
+            }
+        } catch (err) {
+            throw(err);
+        }
+    },
+
     imageUri: 'https://cdn-icons-png.flaticon.com/512/9203/9203764.png',
     setImageUri: (uri) => set({ imageUri: uri }),
 
@@ -10,7 +54,7 @@ const useProfileViewStore = create((set) => ({
     majorAndYear: 'Computer Science \'24',
     setMajorAndYear: (mAy) => set({ majorAndYear: mAy }),
 
-    aboutMe: 'Short Description Here',
+    aboutMe: "Short description here.",
     setAboutMe: (description) => set({ aboutMe: description }),
 
     interests: [],
@@ -34,6 +78,8 @@ const useProfileViewStore = create((set) => ({
                 ? friendsListOrUpdater(state.friends)
                 : friendsListOrUpdater 
         })),
+        
+    setProfileData: (data) => set({name: data.username, aboutMe: data.bio})
 }));
 
 export default useProfileViewStore;
