@@ -28,8 +28,8 @@ POST http://localhost:8000/users/1/newMessage
 Content-Type: application/json
 
 {
-    "messageText": "I love cookies!",
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImxlYnJvbjIzQHV3LmVkdSIsInVzZXJfaWQiOlt7InVzZXJfaWQiOjJ9XSwiaWF0IjoxNzQxMTQxMzA2fQ.aX5F82Ep0dURiToaOoTNeT2RDkbp7Ms8CXD5BQdXxkU"
+    "messageText": "Today's game day!",
+    "token": "add a tokens string here."
 }
 
 

@@ -161,7 +161,8 @@ const styles = StyleSheet.create({
         //backgroundColor: '#f5f5f5',
         paddingTop: 20,
         paddingHorizontal: 20,
-        marginLeft: 80,
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
     },
     addButton: {
         padding: 10,
@@ -232,7 +233,7 @@ const styles = StyleSheet.create({
     },
     photoButton: {
         padding: 10,
-        backgroundColor: '#007AFF',
+        backgroundColor: appColors.UW_Purple,
         borderRadius: 30,
         alignItems: 'center',
         marginBottom: 10,
@@ -279,10 +280,10 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     cancelButton: {
-        backgroundColor: '#aaa',
+        backgroundColor: appColors.Grey_600,
     },
     submitButton: {
-        backgroundColor: '#007AFF',
+        backgroundColor: appColors.UW_Purple,
     },
     buttonText: {
         color: 'white',
