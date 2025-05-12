@@ -33,6 +33,7 @@ const AddChatView = ({ navigation }) => {
 	const [chatTitle, setChatTitle] = useState("");    // Title for group chats
 	const [isLoading, setIsLoading] = useState(false); // Loading state for API calls
 	const [currentUserId, setCurrentUserId] = useState(1); // Current user ID (hardcoded for demo)
+	const [filteredFriends, setFilteredFriends] = useState([])
 
 	/**
 	 * Retrieves the authentication token from secure storage on component mount
@@ -42,7 +43,22 @@ const AddChatView = ({ navigation }) => {
 		const getToken = async () => {
 			try {
 				const result = await SecureStore.getItemAsync("JWT");
-				result ? setToken(result) : console.log("No token found!");
+				if (!result) {
+					console.log("No token found");
+					return
+				}
+				setToken(result)
+				const getFriends = await fetch("http://localhost:8000/friends/get_friends", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ token: result })
+				})
+				if (getFriends.ok) {
+					const friends = await getFriends.json()
+					setFriends(friends)
+					setFilteredFriends(friends)
+				}
+				
 
 				// In a real app, we'd get the current user ID from a proper auth context
 				// For now, we'll use a hardcoded value
@@ -79,9 +95,9 @@ const AddChatView = ({ navigation }) => {
 						{ user_id: 106, username: "robert_downey_jr", profile_picture: "https://randomuser.me/api/portraits/men/18.jpg" },
 						{ user_id: 107, username: "scarlett_johansson", profile_picture: "https://randomuser.me/api/portraits/women/16.jpg" }
 					];
-					setFriends(testFriends);
+					//setFriends(testFriends);
 				} else {
-					setFriends(fetchedFriends);
+					//setFriends(fetchedFriends);
 				}
 			} catch (err) {
 				console.error("Error fetching friends:", err);
@@ -95,7 +111,7 @@ const AddChatView = ({ navigation }) => {
 					{ user_id: 104, username: "florence_pugh", profile_picture: "https://randomuser.me/api/portraits/women/12.jpg" },
 					{ user_id: 105, username: "timothee_chalamet", profile_picture: "https://randomuser.me/api/portraits/men/15.jpg" }
 				];
-				setFriends(testFriends);
+				//setFriends(testFriends);
 			}
 		};
 
@@ -108,7 +124,10 @@ const AddChatView = ({ navigation }) => {
 	 * @param {string} query - The search text entered by the user
 	 */
 	const handleSearch = (query) => {
-		setSearchQuery(query);
+		console.log("Friends: " + friends)
+		setFilteredFriends(friends.filter(friend =>
+			friend["username"].toLowerCase().includes(query.toLowerCase())))
+		setSearchQuery(query)
 	};
 
 	/**
@@ -193,40 +212,42 @@ const AddChatView = ({ navigation }) => {
 			const userIds = [...selectedUsers.map(user => user.user_id), currentUserId];
 
 			// Call the mock backend API for development/testing environment
-			await createNewConversation(finalChatName, null, userIds);
+			//await createNewConversation(finalChatName, null, userIds);
 
 			// Call the real backend API
 			const response = await fetch("http://localhost:8000/chats/newConversation", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
-					"Authorization": `Bearer ${token}`
 				},
 				body: JSON.stringify({
+					token: token,
 					chat_name: finalChatName,
-					user_ids: selectedUsers.map(user => user.user_id)
+					user_ids: selectedUsers.map(user => user.user_id),
+					profile_pic: null
 				})
 			});
 
 			if (response.ok) {
 				// Extract chat ID from the response if available
 				const responseData = await response.json().catch(() => ({}));
+				console.log("Data: " + responseData)
 				const newChatId = responseData.chat_id;
 
 				// For group chats, create a system message notifying about the creation
-				if (newChatId && isGroupChat) {
+				if (newChatId) {
 					try {
 						// Create a system message to notify members about the new group
 						const systemMsgResponse = await fetch(`http://localhost:8000/users/${newChatId}/newMessage`, {
 							method: "POST",
 							headers: {
 								"Content-Type": "application/json",
-								"Authorization": `Bearer ${token}`
 							},
 							body: JSON.stringify({
-								messageText: finalChatName
-									? `Group "${finalChatName}" created`
-									: `Group chat created with ${selectedUsers.length} members`
+								token: token,
+								messageText: !isGroupChat ? `New Message with ${selectedUsers[0].username}` 
+									: (finalChatName ? `Group "${finalChatName}" created`
+									: `Group chat created with ${selectedUsers.length} members`)
 							})
 						});
 
@@ -269,9 +290,9 @@ const AddChatView = ({ navigation }) => {
 		}
 	};
 
-	const filteredFriends = friends.filter(friend =>
-		friend.username?.toLowerCase().includes(searchQuery.toLowerCase())
-	);
+	/*const filteredFriends = friends.filter(friend =>
+		friend["username"].toLowerCase().includes(searchQuery.toLowerCase())
+	);*/
 
 	return (
 		<SafeAreaView style={styles.container}>
@@ -345,6 +366,7 @@ const AddChatView = ({ navigation }) => {
 
 			{/* Friends list */}
 			<ScrollView style={styles.friendsList} showsVerticalScrollIndicator={false}>
+				
 				<Text style={styles.suggestionText}>Suggestions</Text>
 				{filteredFriends.length > 0 ? (
 					filteredFriends.map(friend => (
@@ -364,7 +386,7 @@ const AddChatView = ({ navigation }) => {
 								/>
 								<View style={styles.friendInfo}>
 									<Text style={styles.friendName}>
-										{friend.username.replace(/_/g, ' ')}
+										{friend['username']}
 									</Text>
 								</View>
 								{selectedUsers.some(u => u.user_id === friend.user_id) && (

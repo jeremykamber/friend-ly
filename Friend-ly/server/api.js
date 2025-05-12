@@ -289,7 +289,7 @@ app.post('/chats/newConversation', authMiddleware, async (req, res) => {
     }
 
     res.type("text").status(SUCCESS_CODE)
-        .send("Successfully posted a new chat in chats table and chatMembers table");
+        .send({"chat_id": chat_id});
   } catch (error) {
     res.type("text").status(USER_ERROR_CODE).send("Post new chat failed.")
   }
@@ -403,8 +403,8 @@ async function addUser(chat_id, user_ids) {
  * GET friend lists for one user
  * Select the rows that includes the user
  */
-app.get('/friends/:user_id', async (req, res) => {
-  const user_id = req.params.user_id;
+app.post('/friends/get_friends', authMiddleware, async (req, res) => {
+  const user_id = req.user_id;
   const query = `
     SELECT 
         CASE 
@@ -419,9 +419,19 @@ app.get('/friends/:user_id', async (req, res) => {
     FROM friends
     WHERE user_id1 = ? OR user_id2 = ?
     ORDER BY created_at ASC;
-`;
+  `;
   const [results, fields] = await database.execute(query, [user_id, user_id]);
-  res.json(results);
+  let friends = []
+  for (let i = 0; i < results.length; i++) {
+    let curr_rel = results[i];
+    let other_id = curr_rel["user_id1"] != user_id ? curr_rel["user_id1"] : 
+                                                      curr_rel["user_id2"]
+    let user_query = "SELECT * FROM users WHERE user_id = ?";
+    const [friend_data, fields] = await database.execute(user_query, [other_id])
+    friends.push(friend_data[0])
+  }
+  console.log(friends)
+  res.json(friends);
 })
 
 /**
