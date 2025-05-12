@@ -2,8 +2,8 @@ import React from "react";
 import { View, Text, StyleSheet, SafeAreaView } from "react-native";
 import LoginForm from "../forms/LoginForm";
 //import { GoogleAuthProvider } from "firebase/auth";
-import { signIn } from "firebase/auth";
-import { auth } from "../../server/firebase/firebase";
+// import { signIn } from "firebase/auth";
+// import { auth } from "../../server/firebase/firebase";
 import appColors from "../common/app-colors"; // Import your appColors
 import * as SecureStore from "expo-secure-store"
 //import { GoogleSignin } from '@react-native-google-signin/google-signin';

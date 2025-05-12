@@ -32,6 +32,7 @@ const LoginForm = ({ onLoginSuccess }) => {
 
         setLoading(true);
         try {
+            console.log("Sending verification email to:", email);
             const response = await fetch("http://localhost:8000/test", {
                 method: "POST",
                 headers: {
