@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState } from "react";
 import { View, StyleSheet, Alert, TextInput, Text } from "react-native";
 import Button from "../components/PrimaryButton";
-import appColors from "../common/app-colors"; // Import your appColors
+import appColors from "../common/app-colors";
+import { storeEmail } from "../common/helpers/secureStorage";
 
 const LoginForm = ({ onLoginSuccess }) => {
 
@@ -34,11 +36,12 @@ const LoginForm = ({ onLoginSuccess }) => {
         setLoading(true);
         try {
             console.log("Sending verification email to:", email);
-            const response = await fetch("http://localhost:8000/test", {
+            const response = await fetch("http://<your ip address>:8000/users/sendVerificationEmail", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
+                body: JSON.stringify({ email }),
             });
             //const response = await fetch("http://localhost:8000/users/sendVerificationEmail", {
             //    method: "POST",
@@ -69,13 +72,15 @@ const LoginForm = ({ onLoginSuccess }) => {
 
         setLoading(true);
         try {
-            const response = await fetch("http://localhost:8000/users/verifyEmailCode", {
+            const response = await fetch("http://<your ip address>:8000/users/verifyEmailCode", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, code: verificationCode }),
+                body: JSON.stringify({ email: email, code: verificationCode }),
             });
 
             if (response.ok) {
+                // Store the verified email with 7-day expiration
+                await storeEmail(email);
                 Alert.alert("Success", "Email verified successfully!");
                 onLoginSuccess(); // Navigate to the home page
             } else {
@@ -83,6 +88,7 @@ const LoginForm = ({ onLoginSuccess }) => {
                 Alert.alert("Error", errorText || "Invalid verification code. Please try again.");
             }
         } catch (error) {
+            console.log(error);
             Alert.alert("Error", "An error occurred while verifying the code.");
         } finally {
             setLoading(false);

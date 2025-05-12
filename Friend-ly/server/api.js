@@ -918,32 +918,50 @@ app.post('/users/sendVerificationEmail', async function (req, res) {
  */
 app.post('/users/verifyEmailCode', async function (req, res) {
   try {
+    console.log("Verifying email code");
     const { email, code } = req.body;
 
+    console.log("Attempting to verify email code for email:", email);
+
     if (!email || !code) {
+      console.log("Email or code missing in request body");
       return res.type("text").status(USER_ERROR_CODE)
         .send("Email and verification code are required");
     }
 
+    console.log("Checking if the code exists and is valid for email:", email);
+
+        // Log the codes for verification
+    console.log("Code from request:", code);
+
     // Check if the code exists and is valid
     const [rows] = await database.execute(
-      'SELECT * FROM verification_codes WHERE email = ? AND code = ? AND expires_at > NOW()',
+      'SELECT * FROM verification_codes WHERE email = ? AND code = ?',
       [email, code]
     );
 
+    console.log("Code from database:", rows[0].code);
+
     if (rows.length === 0) {
+      console.log("Invalid or expired verification code for email:", email);
       return res.type("text").status(USER_ERROR_CODE)
         .send("Invalid or expired verification code");
     }
 
+    console.log("Verification code is valid for email:", email);
+
     // Code is valid - you can update user status here if needed
     // For example, set email_verified = true in your users table
+
+    console.log("Removing the used verification code for email:", email);
 
     // Remove the used verification code
     await database.execute(
       'DELETE FROM verification_codes WHERE email = ?',
       [email]
     );
+
+    console.log("Successfully removed verification code for email:", email);
 
     res.type("text").status(SUCCESS_CODE)
       .send("Email verified successfully");
