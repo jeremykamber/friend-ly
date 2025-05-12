@@ -10,9 +10,10 @@ const LoginForm = ({ onLoginSuccess }) => {
     const [emailSent, setEmailSent] = useState(false);
     const [verificationCode, setVerificationCode] = useState("");
     const [loading, setLoading] = useState(false);
+    //const [token, setToken] = useState(null)
 
 
-    useEffect(() => {
+    /*useEffect(() => {
         const getToken = async () => {
             try {
                 const result = await SecureStore.getItemAsync("JWT") // jwt token
@@ -22,7 +23,7 @@ const LoginForm = ({ onLoginSuccess }) => {
             }
         }
         getToken()
-    }, [])
+    }, [])*/
 
     const handleSendVerificationEmail = async () => {
         if (!email) {

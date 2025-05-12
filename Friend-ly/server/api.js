@@ -22,6 +22,9 @@ const multer = require("multer");
 // importing the jwt token module
 const jwt = require("jsonwebtoken")
 
+// import cors
+const cors = require('cors')
+
 // importing mysql2
 const mysql = require('mysql2/promise');
 const { getIdToken } = require("firebase/auth");
@@ -41,6 +44,11 @@ app.use(express.json());
 
 // For data sent as a form (required for FormData use in frontend by the client)
 app.use(multer().none());
+
+// use cors
+app.use(cors())
+
+const {sendEmailVerificationEmail} = require('./functions/sendEmailVerificationEmail')
 
 
 // Importing the fs module for file reading and writing (Probably gonna use it)
@@ -74,11 +82,6 @@ let database;
  */
 async function getSQLConnection() {
   try {
-    console.log("Connecting to Friend-ly DB...")
-    console.log("Host: ", process.env.DB_HOST)
-    console.log("User: ", process.env.DB_USER)
-    console.log("Password: ", process.env.DB_PASSWORD)
-    console.log("Database: ", process.env.DB_NAME)
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,    // Replace with your database host
       user: process.env.DB_USER,// Replace with your database username
@@ -858,8 +861,10 @@ app.post('/users/login', async (req, res) => {
 
 app.post('/test', async function (req, res) {
   console.log("TESTING")
+  res.type("text").status(SUCCESS_CODE).send("worked")
 });
-app.post('/users/sendVerificationEmail', authMiddleware, async function (req, res) {
+
+app.post('/users/sendVerificationEmail', async function (req, res) {
   try {
     const email = req.body.email;
 
@@ -873,13 +878,13 @@ app.post('/users/sendVerificationEmail', authMiddleware, async function (req, re
     // Store the verification code and expiration time in the database
     const expiryMinutes = 15; // Code valid for 15 minutes
     const expiresAt = new Date(Date.now() + expiryMinutes * 60000);
-
     try {
       // Remove any existing verification codes for this email
       await database.execute(
         'DELETE FROM verification_codes WHERE email = ?',
         [email]
       );
+
 
       // Insert the new verification code
       await database.execute(
