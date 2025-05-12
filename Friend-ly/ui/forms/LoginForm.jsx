@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { View, StyleSheet, Alert, TextInput, Text } from "react-native";
 import Button from "../components/PrimaryButton";
@@ -30,6 +29,12 @@ const LoginForm = ({ onLoginSuccess }) => {
     const handleSendVerificationEmail = async () => {
         if (!email) {
             Alert.alert("Validation Error", "Please enter your email.");
+            return;
+        }
+
+        // Check if the email is a UW email
+        if (!email.endsWith("@uw.edu")) {
+            Alert.alert("Validation Error", "Only @uw.edu emails are allowed.");
             return;
         }
 
