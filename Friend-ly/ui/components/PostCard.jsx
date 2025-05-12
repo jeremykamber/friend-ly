@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 
-const PostCard = ({ user, timestamp, image, caption, likes, comments }) => {
+const PostCard = ({ user, timestamp, image, caption, likes, comments, post_id }) => {
     let likePost = () => {
         // TODO: Implement likePost functionality
     };
