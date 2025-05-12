@@ -1046,6 +1046,53 @@ app.post('/users/verifyEmailCode', async function (req, res) {
   }
 });
 
+// Get updates since a specific timestamp for a user
+// Returns minimal info about what's changed so client knows what to refresh
+app.get('/users/updates', authMiddleware, async function(req, res) {
+  const userId = req.user_id;
+  const lastSynced = req.query.lastSynced;
+  
+  try {
+    // Get updates relevant to this user since lastSynced
+    const [results] = await database.execute(
+      `SELECT entity_type, entity_id, chat_id, updated_at, action_type 
+       FROM updates 
+       WHERE (user_id = ? OR user_id IS NULL) 
+         AND updated_at > ? 
+       ORDER BY updated_at ASC`,
+      [userId, lastSynced]
+    );
+    
+    // Group updates by entity type for easier client-side processing
+    const groupedUpdates = {
+      messages: [],
+      chats: [],
+      friends: [],
+      users: [],
+      // TODO: Add other types as needed
+    };
+    
+    // add all the updates to the groupedUpdates object
+   results.forEach(update => {
+      if (groupedUpdates[update.entity_type + 's']) {
+        groupedUpdates[update.entity_type + 's'].push({
+          id: update.entity_id,
+          chatId: update.chat_id,
+          action: update.action_type,
+          timestamp: update.updated_at
+        });
+      }
+    });
+    
+    res.json({
+      updates: groupedUpdates,
+      serverTime: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error("Error fetching updates:", error);
+    res.status(500).send("Error fetching updates");
+  }
+});
 
 // Allows us to change the port easily by setting an environment
 // variable. If no environment variable is set, the port will default to 8000
