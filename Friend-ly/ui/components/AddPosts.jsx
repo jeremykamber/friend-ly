@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, Image, FlatList } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import moment from 'moment';
 import appColors from '../common/app-colors';
+import * as SecureStore from 'expo-secure-store'
 
 const AddPosts = () => {
 
@@ -12,8 +14,39 @@ const AddPosts = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [caption, setCaption] = useState('');
     const [photo, setPhoto] = useState(null);
+    const [token, setToken] = useState(null);
 
-    const handleAddPost = () => {
+    useFocusEffect(
+        useCallback(() => {
+            const getInfo = async() => {
+                try {
+                    const result = await SecureStore.getItemAsync("JWT") // jwt token
+                    if (!result) {
+                        console.log("No token found.")
+                        return
+                    }
+                    setToken(result)
+                } catch (err) {
+                    throw (err);
+                }
+            }
+            getInfo()
+        }, [])
+    )
+    
+
+    const handleAddPost = async () => {
+        console.log({ token: token, caption: caption})
+        const response = await fetch("http://localhost:8000/posts/newPost", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: token, caption: caption})
+        })
+        if (!response.ok) {
+            console.log("Making new post failed. ")
+            console.log(response)
+            return
+        }
         const newPost = {
             timestamp: moment().fromNow(),
             image: photo,
@@ -128,7 +161,8 @@ const styles = StyleSheet.create({
         //backgroundColor: '#f5f5f5',
         paddingTop: 20,
         paddingHorizontal: 20,
-        marginLeft: 80,
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
     },
     addButton: {
         padding: 10,
@@ -199,7 +233,7 @@ const styles = StyleSheet.create({
     },
     photoButton: {
         padding: 10,
-        backgroundColor: '#007AFF',
+        backgroundColor: appColors.UW_Purple,
         borderRadius: 30,
         alignItems: 'center',
         marginBottom: 10,
@@ -246,10 +280,10 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     cancelButton: {
-        backgroundColor: '#aaa',
+        backgroundColor: appColors.Grey_600,
     },
     submitButton: {
-        backgroundColor: '#007AFF',
+        backgroundColor: appColors.UW_Purple,
     },
     buttonText: {
         color: 'white',

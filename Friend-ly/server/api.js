@@ -297,7 +297,7 @@ app.post('/chats/newConversation', authMiddleware, async (req, res) => {
     }
 
     res.type("text").status(SUCCESS_CODE)
-      .send("Successfully posted a new chat in chats table and chatMembers table");
+        .send({"chat_id": chat_id});
   } catch (error) {
     res.type("text").status(USER_ERROR_CODE).send("Post new chat failed.")
   }
@@ -356,13 +356,10 @@ app.get('/users/:chat_id', async (req, res) => {
 })
 
 app.post('/users/editUName', authMiddleware, async (req, res) => {
-  console.log("EDIT USERNAME")
   const user_id = req.user_id
   const new_username = req.body.username
   const query = "UPDATE users SET username = ? WHERE user_id = ?"
   const [results, fields] = await database.execute(query, [new_username, user_id])
-  console.log("EDIT USERNAME")
-  console.log(results)
   res.json(results)
 })
 
@@ -414,8 +411,8 @@ async function addUser(chat_id, user_ids) {
  * GET friend lists for one user
  * Select the rows that includes the user
  */
-app.get('/friends/:user_id', async (req, res) => {
-  const user_id = req.params.user_id;
+app.post('/friends/get_friends', authMiddleware, async (req, res) => {
+  const user_id = req.user_id;
   const query = `
     SELECT 
         CASE 
@@ -430,9 +427,19 @@ app.get('/friends/:user_id', async (req, res) => {
     FROM friends
     WHERE user_id1 = ? OR user_id2 = ?
     ORDER BY created_at ASC;
-`;
+  `;
   const [results, fields] = await database.execute(query, [user_id, user_id]);
-  res.json(results);
+  let friends = []
+  for (let i = 0; i < results.length; i++) {
+    let curr_rel = results[i];
+    let other_id = curr_rel["user_id1"] != user_id ? curr_rel["user_id1"] : 
+                                                      curr_rel["user_id2"]
+    let user_query = "SELECT * FROM users WHERE user_id = ?";
+    const [friend_data, fields] = await database.execute(user_query, [other_id])
+    friends.push(friend_data[0])
+  }
+  console.log(friends)
+  res.json(friends);
 })
 
 /**
@@ -527,6 +534,42 @@ app.post('/friends/deleteFriend', async (req, res) => {
     res.type("text").status(500).send("Couldn't delete friend.");
   }
 });
+
+
+app.post('/posts/newPost', authMiddleware, async (req, res) => {
+  const user_id = req.user_id;
+  const caption = req.body.caption
+  const query = "INSERT INTO post (user_id, title, content) VALUES (?, ?, ?)"
+  try {
+    const [result] = await database.execute(query, [user_id, caption, caption])
+    res.type("text").status(SUCCESS_CODE).send("Creating a new post worked!")
+  } catch (err) {
+    res.type("text").status(SERVER_ERROR_CODE).send("Creating a new post failed. ")
+  }
+})
+
+app.post('/posts/getUserPosts', authMiddleware, async (req, res) => {
+  const user_id = req.user_id;
+  const query = "SELECT * FROM post WHERE user_id = ? ORDER BY post.created_at DESC"
+  try {
+    const [posts, fields] = await database.execute(query, [user_id])
+    res.json(posts)
+  } catch (err) {
+    res.type("text").status(SERVER_ERROR_CODE).send("Fetching all posts failed. ")
+  }
+})
+
+app.post('/posts/deletePost', authMiddleware, async (req, res) => {
+  const user_id = req.user_id;
+  const post_id = req.body.post_id
+  const query = "DELETE FROM post WHERE id = ? AND user_id = ?"
+  try {
+    await database.execute(query, [post_id, user_id])
+    res.type("text").status(SUCCESS_CODE).send("Removing post worked. ")
+  } catch (err) {
+    res.type("text").status(SERVER_ERROR_CODE).send("Removing post failed. ")
+  }
+})
 
 /**
  * NOTE: Add to interestCategory and interestDetails before 
@@ -633,9 +676,9 @@ app.post("/addInterestDetails", async (req, res) => {
 // import
 const crypto = require('crypto');
 
-app.post('/similar-users', async (req, res) => {
+app.post('/similar-users', authMiddleware, async (req, res) => {
   try {
-    const targetUserId = req.body.userId;
+    const targetUserId = req.user_id;
 
     if (!targetUserId) {
       return res.status(400).send("User ID is required");
@@ -808,7 +851,16 @@ app.post('/similar-users', async (req, res) => {
           category_jaccard: parseFloat(similarity.categoryJaccard.toFixed(2)),
           common_interests: similarity.common
         };
-      });
+      })
+      .sort((a, b) => b.score - a.score)
+    
+    for (let i = 0; i < results.length; i++) {
+      const uid = results[i]['user_id']
+      const [getUsername] = await database.execute(
+        'SELECT username FROM users WHERE user_id = ?', [uid]
+      )
+      results[i]['username'] = getUsername[0]['username']
+    }
 
     console.log(`Returning ${results.length} similar users`);
     res.status(200).json(results);

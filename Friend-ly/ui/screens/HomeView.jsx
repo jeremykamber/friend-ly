@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, FlatList, Text, ActivityIndicator, Image } from 'react-native';
 import AddPosts from '../components/AddPosts';
 import backendMock from '../mocks/backendMock';
-import UserAvatar2 from '../components/UserAvatar2';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import PostCard from '../components/PostCard';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -61,50 +60,28 @@ const HomeView = () => {
                 <AddPosts></AddPosts>
             </View>
 
-            <View style={{ flex: 1, paddingTop: 20, paddingBottom: 5, borderBottomWidth: 1 }}>
-                <FlatList
-                    horizontal={true}
-                    data={userInfo}
-                    keyExtractor={(item, index) => item?.user_id?.toString() || index.toString()}
-                    renderItem={({ item }) => (
-                        <View style={{ marginBottom: 20, flexDirection:'row', flexWrap:'wrap' }}>
-                            {item ? (
-                                <View style={{flexDirection:'row', flexWrap:'wrap', alignItems: 'center'}}>
-                                    <UserAvatar2 username={item[0].username} picture={item[0].profile_picture}></UserAvatar2>
-                                </View>
-                            ) : (
-                                <Text>User information not found</Text>
-                            )}
-                        </View>
-                    )}
-                />
-                
-                
-            </View>
-
-            {/* REPLACE CODE BELOW TO SHOW POSTS FROM FRIENDS NOT OWN POSTS */}
-            <View style={{paddingTop: 10}}>
-                <FlatList
-                    data={posts}
-                    keyExtractor={(item, index) => index.toString()}
-                    renderItem={({ item, index }) => (
-                        <View key={index}>
-                            <PostCard
-                                user={{
-                                    username: name,
-                                    profilePic: imageUri,
-                                }}
-                                timestamp={item.timestamp}
-                                image={item.image}
-                                caption={item.caption}
-                                likes={item.likes}
-                                comments={item.comments}
-                            />
-                        </View>
-                    )}
-                />
-            </View>
-
+            {/* TODO: REPLACE CODE BELOW TO SHOW POSTS FROM FRIENDS NOT OWN POSTS */}
+            <FlatList
+                style={{paddingTop: 10}}
+                scrollEnabled={false}
+                data={posts}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item, index }) => (
+                    <View key={index}>
+                        <PostCard
+                            user={{
+                                username: name,
+                                profilePic: imageUri,
+                            }}
+                            timestamp={item.timestamp}
+                            image={item.image}
+                            caption={item.caption}
+                            likes={item.likes}
+                            comments={item.comments}
+                        />
+                    </View>
+                )}
+            />
             
         </ScrollView>
         </SafeAreaView>
@@ -119,13 +96,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         flexDirection: 'row',
         justifyContent: 'center',
-        paddingBottom: 10,
-        borderBottomWidth: 1,
+        paddingVertical: 10,
     },
     headerPicture: {
-        width: 70,
-        height: 70,
+        width: 60,
+        height: 60,
         marginHorizontal: 20,
+        borderRadius: 75,
     },
 });
 

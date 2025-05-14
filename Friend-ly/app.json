@@ -18,6 +18,7 @@
     },
     "plugins": [
       "@react-native-firebase/app",
+      "expo-secure-store",
       "@react-native-firebase/auth",
       [
         "expo-build-properties",
@@ -26,8 +27,7 @@
             "useFrameworks": "static"
           }
         }
-      ],
-      "expo-secure-store"
+      ]
     ]
   }
 }

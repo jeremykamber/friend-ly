@@ -10,6 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import appColors from '../common/app-colors';
 import * as SecureStore from 'expo-secure-store'
+import Ionicons from "react-native-vector-icons/Ionicons";
 
 
 const ProfileViewEditMode = () => {
@@ -21,7 +22,8 @@ const ProfileViewEditMode = () => {
 
     //const {name, imageUri, majorAndYear, aboutMe, interests, currentClasses, posts} = useProfileViewStore();
 
-    const {imageUri, setImageUri, name, setName, majorAndYear, setMajorAndYear, aboutMe, setAboutMe, interests, currentClasses, posts, setPosts} = useProfileViewStore();
+    const {imageUri, setImageUri, name, setName, majorAndYear, setMajorAndYear, aboutMe, 
+            setAboutMe, interests, currentClasses, posts, setPosts} = useProfileViewStore();
     const [tempName, setTempName] = useState(name);
     const [tempMajorAndYear, setTempMajorAndYear] = useState(majorAndYear);
     const [tempAboutMe, setTempAboutMe] = useState(aboutMe);
@@ -30,6 +32,7 @@ const ProfileViewEditMode = () => {
     const navigation = useNavigation();
     const [modalVisible, setModalVisible] = useState(false);
     const [postIndex, setPostIndex] = useState(null);
+    const [token, setToken] = useState(null)
 
     useEffect(() => {
         const getToken = async() => {
@@ -49,12 +52,14 @@ const ProfileViewEditMode = () => {
 
     // save all information
     const handleSave = async () => {
+        
         setName(tempName);
         setMajorAndYear(tempMajorAndYear);
         setAboutMe(tempAboutMe);
-        setPosts(tempPosts);
+        //setPosts(tempPosts);
+        
 
-        body = {
+        let body = {
           name: tempName,
           bio: tempAboutMe
         }
@@ -89,9 +94,21 @@ const ProfileViewEditMode = () => {
         setPostIndex(index)
     };
 
-    const handleRemovePost = () => {
-        setTempPosts((tempPosts) => tempPosts.filter((_, i) => i !== postIndex));
+    const handleRemovePost = async () => {
+        setTempPosts((tempPosts) => tempPosts.filter((post) => post.post_id !== postIndex));
         setModalVisible(false);
+        try {
+          const response = await fetch("http://localhost:8000/posts/deletePost", {
+            method: "POST", 
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: token, post_id: postIndex})
+          })
+          console.log(response)
+          handleSave()
+        } catch (err) {
+          throw (err);
+        }
+
     };
 
     return (
@@ -169,7 +186,7 @@ const ProfileViewEditMode = () => {
                           comments={item.comments}
                       />
                       <TouchableOpacity onPress={() => confirmDelete(index)} style={styles.removeButton}>
-                          <Text style={styles.removeButtonText}>Delete</Text>
+                          <Ionicons name="trash-outline" size={20} color="black" />
                       </TouchableOpacity>
                     </View>
                 ))}
@@ -292,18 +309,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   removeButton: {
-    backgroundColor: '#c0392b',
-    paddingHorizontal: 8,
+    backgroundColor: '#a4a5a3',
     borderRadius: 30,
+    borderWidth: 4,
+    borderColor: '#a4a5a3',
     alignItems: 'center',
     position: 'absolute',
     top: 30,
     right: 35,
-  },
-  removeButtonText: {
-    color: appColors.White,
-    fontSize: 16,
-    fontWeight: '80%',
   },
   postsContainer: {
     marginBottom: 20,
@@ -349,7 +362,7 @@ const styles = StyleSheet.create({
       backgroundColor: '#aaa', // Grey color for cancel button
   },
   deleteButton: {
-      backgroundColor: '#C0392B', // Muted red for delete button
+      backgroundColor: '#bb3f3f', // Muted red for delete button
   },
   comfirmationButtonText: {
       color: 'white',

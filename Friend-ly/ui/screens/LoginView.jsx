@@ -27,11 +27,6 @@ const LoginView = ({ navigation }) => {
             const data = await response.json();
             await setToken(data["token"])
             return data["new_user"]
-            /*if (data["new_user"]) {
-                navigation.navigate("ClassesView")
-            } else {
-                navigation.navigate("TabNavigator");
-            }*/
         } catch (err) {
             throw err;
         }
