@@ -1,13 +1,11 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import LoginView from "../screens/LoginView";
-import ChatView from "../screens/ChatsView";
 import SettingsNavigator from "./SettingsNavigator";
-import RecommendationView from "../screens/RecommendationView";
 import ChatsNavigator from "./ChatsNavigator";
-import HomeView from "../screens/HomeView";
 import ProfileNavigator from "./ProfileNavigator";
+import HomeNavigator from "./HomeNavigator";
+import PeopleNavigator from "./PeopleNavigator";
 
 const Tab = createBottomTabNavigator();
 
@@ -15,8 +13,8 @@ function TabNavigator() {
     return (
         <Tab.Navigator>
             <Tab.Screen
-                name="Recommendations"
-                component={RecommendationView}
+                name="People"
+                component={PeopleNavigator}
                 options={{
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="people" size={size} color={color} />
@@ -36,7 +34,7 @@ function TabNavigator() {
             />
             <Tab.Screen
                 name="Home"
-                component={HomeView}
+                component={HomeNavigator}
                 options={{
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="home-outline" size={size} color={color} />

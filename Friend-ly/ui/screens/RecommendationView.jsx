@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import SearchBar from '../components/SearchBar';
 import UserRecommendationItem from '../components/UserRecommendationItem';
 import appColors from '../common/app-colors';
+import * as SecureStore from 'expo-secure-store'
+import { useFocusEffect } from '@react-navigation/native';
 
 /**
  * RecommendationView
@@ -16,6 +18,36 @@ import appColors from '../common/app-colors';
 const RecommendationView = ({ navigation }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
+  const [token, setToken] = useState(null);
+  const [similarUsers, setSimilarUsers] = useState([])
+  const [currentUsers, setCurrentUsers] = useState([])
+
+  useFocusEffect(
+    useCallback(() => {
+      const getInfo = async() => {
+        try {
+            const result = await SecureStore.getItemAsync("JWT") // jwt token
+            if (!result) {
+                console.log("No token found.")
+                return
+            }
+            setToken(result)
+            const response = await fetch("http://localhost:8000/similar-users", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token: result})
+            })
+            const data = await response.json();
+            console.log(data)
+            setSimilarUsers(data);
+            setCurrentUsers(data);
+        } catch (err) {
+            throw err
+        }
+    }
+    getInfo()
+    }, [])
+  )
 
   useEffect(() => {
     navigation.setOptions({
@@ -53,11 +85,12 @@ const RecommendationView = ({ navigation }) => {
    */
   const handleSearch = useCallback((searchText) => {
     setQuery(searchText);
-    const filtered = dummyUsers
-      .filter(user => user.name.toLowerCase().includes(searchText.toLowerCase()))
-      .sort((a, b) => b.similarityScore - a.similarityScore);
-    setResults(filtered);
-  }, [dummyUsers]);
+
+    const filtered = similarUsers
+      .filter(user => user.username.toLowerCase().includes(searchText.toLowerCase()))
+      .sort((a, b) => b.score - a.score);
+    setCurrentUsers(filtered);
+  }, []);
 
   // Initialize with all recommendations sorted by similarity
   useEffect(() => {
@@ -76,13 +109,12 @@ const RecommendationView = ({ navigation }) => {
         </View>
       </View>
       <FlatList
-        data={results}
-        keyExtractor={(item) => item.id}
+        data={currentUsers}
         renderItem={({ item }) => (
           <View style={styles.itemContainer}>
             <UserRecommendationItem
-              name={item.name}
-              similarityScore={item.similarityScore}
+              name={item.username}
+              similarityScore={item.score}
             />
           </View>
         )}

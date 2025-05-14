@@ -32,8 +32,8 @@ const styles = StyleSheet.create({
     button: {
         flex: 1,
         position: 'absolute',
-        top: 130,
-        left: 80,
+        top: 133,
+        left: 85,
     },
     circle: {
         width: 40,

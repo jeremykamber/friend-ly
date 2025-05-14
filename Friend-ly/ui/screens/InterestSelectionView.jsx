@@ -1,32 +1,20 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import appColors from '../common/app-colors';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import InterestSubmitButton from '../components/InterestSubmitButton';
 import MultiSelectDropdown from '../components/MultiSelectDropdown';
 import { useNavigation } from '@react-navigation/native';
 
-//import Slider from '@react-native-community/slider';
-
 
 const InterestSelectionView = () => {
   const {interests, setInterests, hasPreviousScreen, setHasPreviousScreen} = useProfileViewStore();
-
-  //const [value, setValue] = useState(''); // Stores current interest
-  const [submittedValues, setSubmittedValues] = useState(interests); // Stores all interests
-  //const [submittedNums, setSubmittedNums] = useState([]); // Stores all interest levels (numbers)
-  //const [sliderValue, setSliderValue] = useState(1); // Stores current slider value
+  const [submittedValues, setSubmittedValues] = useState(interests); // stores selected interests
 
   const navigation = useNavigation();
 
-  // Add/save a new interest and its respective number value
+  // add/save a new interest
   const handleSubmit = () => {
-    //if (value.trim() !== '') {  // Only save non-empty strings
-      //setSubmittedValues((prevValues) => [...prevValues, value]);
-      //setValue(''); // reset the TextInput box
-      //setSubmittedNums((prevValues) => [...prevValues, sliderValue]);
-      //setSliderValue(1); // reset the slider
-    //}
     setInterests(submittedValues);
     if (hasPreviousScreen) {
         navigation.navigate('ProfileViewEditMode');
@@ -37,10 +25,9 @@ const InterestSelectionView = () => {
     }
   };
 
-  // Remove an interest (based on its index)
+  // remove an interest (based on its index in submittedValues)
   const handleRemove = (index) => {
     setSubmittedValues((prevValues) => prevValues.filter((_, i) => i !== index));
-    //setSubmittedNums((prevValues) => prevValues.filter((_, i) => i !== index));
   };
 
   const handleSelectionChange = (newInterestList) => {
@@ -51,71 +38,37 @@ const InterestSelectionView = () => {
 
     <SafeAreaView style={styles.broadContainer}>
         <View style={styles.container}>
-          <Text style={ {fontSize: 20, marginBottom: 40}}>My Interests</Text>
-          {/* User can type in their interests */}
-          {/* <TextInput
-            style={styles.input}
-            placeholder="Input interests here..."
-            value={value}
-            onChangeText={setValue}
-          /> */}
+            <Text style={ {fontSize: 20, marginBottom: 40}}>My Interests</Text>
 
-          <Text style={styles.heading}>Select your top 10 interests!</Text>
-          
-          
-          {/* Create the slider */}
-          { /* <View style={styles.sliderContainer}>
-            <Slider
-              style = {{width:200, height:40}}
-              minimumValue={1}
-              maximumValue={10}
-              minimumTrackTintColor="#000000"
-              maximumTrackTintColor="#757575"
-              thumbTintColor="#4B2E83"
-              step={1}
-              value={sliderValue}
-              onValueChange={(value) => setSliderValue(value)}
-            />
-            <Text style={styles.sliderText}>{sliderValue}</Text>
-          </View>
-          */ }
+            <Text style={styles.heading}>Select your top 10 interests!</Text>
+            
+            <MultiSelectDropdown onSelectionChange={handleSelectionChange} selectedInterests={submittedValues} setSelectedInterests={setSubmittedValues}></MultiSelectDropdown>
 
-          <MultiSelectDropdown onSelectionChange={handleSelectionChange}></MultiSelectDropdown>
-
-          {/* Display the submitted interests */}
-          <View style={styles.valuesContainer}>
-            {submittedValues.map((item, index) => (
-              <View key={index} style={styles.itemContainer}>
-                {/*
-                <Text style={styles.displayText}>
-                  {item},  {submittedNums[index]}
-                </Text>
-                */}
-                <Text style={styles.displayText}>
-                  {item}
-                </Text>
-                {/* Remove button for each interest */}
-                {/*
-                <TouchableOpacity onPress={() => handleRemove(index)} style={styles.removeButton}>
-                  <Text style={styles.removeButtonText}>x</Text>
-                </TouchableOpacity>
-                */}
-              </View>
-            ))}
-          </View>
-
+            {/* Display the submitted interests */}
+            <View style={styles.valuesContainer}>
+                {submittedValues.map((item, index) => (
+                    <View key={index} style={styles.itemContainer}>
+                        <Text style={styles.displayText}>
+                            {item}
+                        </Text>
+                        {/* Remove button for each interest */}
+                        <TouchableOpacity onPress={() => handleRemove(index)} style={styles.removeButton}>
+                            <Text style={styles.removeButtonText}>x</Text>
+                        </TouchableOpacity>
+                    </View>
+                ))}
+            </View>
         </View>
 
         {/* Submit button to add an interest and its respective number value */}
         <View styles={styles.buttonContainer}>
             <InterestSubmitButton text='Done!' onPress={handleSubmit}/>
         </View>
-
     </SafeAreaView>
   );
 };
 
-// Styles for button, slider, text, and interests
+// styles for button, slider, text, and interests
 const styles = StyleSheet.create({
   broadContainer: {
     flex: 1,

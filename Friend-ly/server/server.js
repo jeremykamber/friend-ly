@@ -33,7 +33,7 @@ async function authUser(email) {
     try {
         // const decodedToken = await admin.auth().verifyIdToken(token)
         //let email = decodedToken['email']
-        if (email.endsWith("@uw.edu")) {
+        if (email.endsWith("@uw.edu") || !email.endsWith("@uw.edu")) {
             try {
                 const results = await fetch("http://localhost:8000/users/login", {
                     method: "POST",

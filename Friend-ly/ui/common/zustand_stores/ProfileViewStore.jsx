@@ -31,15 +31,30 @@ const useProfileViewStore = create((set) => ({
                 console.log("No token found!");
                 return;
             }
-            const response = await fetch("http://localhost:8000/users/info", {
+            const getUserInfo = await fetch("http://localhost:8000/users/info", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ token: token })
             });
-            if (response.ok) {
-                const data = await response.json();
+            if (getUserInfo.ok) {
+                const data = await getUserInfo.json();
                 useProfileViewStore.getState().setProfileData(data[0])
             }
+            const getPosts = await fetch("http://localhost:8000/posts/getUserPosts", {
+                method: "POST", 
+                headers: { "Content-Type": "application/json" }, 
+                body: JSON.stringify({ token: token})
+            })
+            let formattedPosts = []
+            if (getPosts.ok){
+                const posts = await getPosts.json()
+                for (let i = 0; i < posts.length; i++) {
+                    formattedPosts.push({timestamp: new Date(posts[i].created_at).toLocaleString(), 
+                                        image: "https://placehold.co/600x300/png", 
+                                        caption: posts[i].content, likes: 0, comments: 0, post_id: posts[i].id})
+                }
+            }
+            useProfileViewStore.getState().setPosts(formattedPosts)
         } catch (err) {
             throw(err);
         }
@@ -69,6 +84,16 @@ const useProfileViewStore = create((set) => ({
     posts: [{timestamp:"2 hours ago", image:"https://placehold.co/600x300/png", caption:"This is an example post with all props provided.", likes:34, comments:12}, {timestamp:"3 hours ago", image:"https://placehold.co/600x300/png", caption:"This is an example post with all props provided.", likes:34, comments:12}, {timestamp:"5 days ago", image:"https://placehold.co/600x300/png", caption:"This is an example post with all props provided.", likes:34, comments:12}],
     setPosts: (postList) => set({ posts: postList }),
 
+    friends: [
+        { id: '1', name: 'Alice', theyRequestedMe: 'Requested', iRequestedThem: 'Following', avatar: 'https://i.pravatar.cc/150?img=1' }, 
+        { id: '2', name: 'Bob', theyRequestedMe: 'Requested', iRequestedThem: 'Not Following', avatar: 'https://i.pravatar.cc/150?img=1' }, 
+        { id: '3', name: 'Charlie', theyRequestedMe: 'Requested', iRequestedThem: 'Requested', avatar: 'https://i.pravatar.cc/150?img=1' }],
+    setFriends: (friendsListOrUpdater) => set((state) => ({ 
+            friends: typeof friendsListOrUpdater === 'function' 
+                ? friendsListOrUpdater(state.friends)
+                : friendsListOrUpdater 
+        })),
+        
     setProfileData: (data) => set({name: data.username, aboutMe: data.bio})
 }));
 
