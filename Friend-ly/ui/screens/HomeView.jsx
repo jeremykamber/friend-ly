@@ -8,22 +8,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const HomeView = () => {
 
-    /*
-    const { getUserInfo } = backendMock;
-    const [uI, setUI] = useState(null);
-
-    const fetchUserInfo = async (userId) => {
-        try {
-            const userInfo = await getUserInfo(userId);
-            console.log('User Info:', userInfo);
-        } catch (error) {
-            console.error('error fetching user info', error);
-        }
-    };
-
-    fetchUserInfo('1');
-    */
-
     const {imageUri, name, posts} = useProfileViewStore();
     const [userInfo, setUserInfo] = useState([]);  // Stores all user info
     const [loading, setLoading] = useState(true);   // Indicates if data is being fetched

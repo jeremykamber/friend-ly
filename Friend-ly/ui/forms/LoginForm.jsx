@@ -1,40 +1,134 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Alert } from "react-native";
+import { View, StyleSheet, Alert, TextInput, Text } from "react-native";
 import Button from "../components/PrimaryButton";
-import appColors from "../common/app-colors"; // Import your appColors
+import appColors from "../common/app-colors";
+import { storeEmail } from "../common/helpers/secureStorage";
 
-const LoginForm = ({ onSubmit }) => {
+const LoginForm = ({ onLoginSuccess }) => {
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [emailSent, setEmailSent] = useState(false);
+    const [verificationCode, setVerificationCode] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmit = () => {
-        if (!email || !password) {
-            Alert.alert("Validation Error", "Please fill in all fields.");
+    const handleSendVerificationEmail = async () => {
+        if (!email) {
+            Alert.alert("Validation Error", "Please enter your email.");
             return;
         }
-        console.log("Login submitted:", { email, password });
+
+        // Check if the email is a UW email
+        if (!email.endsWith("@uw.edu")) {
+            Alert.alert("Validation Error", "Only @uw.edu emails are allowed.");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            console.log("Sending verification email to:", email);
+            const response = await fetch("http://localhost:8000/users/sendVerificationEmail", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email }),
+            });
+
+            if (response.ok) {
+                setEmailSent(true);
+                Alert.alert("Success", "Verification email sent. Please check your inbox.");
+            } else {
+                const errorText = await response.text();
+                Alert.alert("Error", errorText || "Failed to send verification email.");
+            }
+        } catch (error) {
+            Alert.alert("Error", "An error occurred while sending the email.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleVerifyCode = async () => {
+        if (!verificationCode) {
+            Alert.alert("Validation Error", "Please enter the verification code.");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const response = await fetch("http://localhost:8000/users/verifyEmailCode", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: email, code: verificationCode }),
+            });
+
+            if (response.ok) {
+                // Store the verified email with 7-day expiration
+                await storeEmail(email);
+                Alert.alert("Success", "Email verified successfully!");
+                await onLoginSuccess(email); // Navigate to the home page
+            } else {
+                const errorText = await response.text();
+                Alert.alert("Error", errorText || "Invalid verification code. Please try again.");
+            }
+        } catch (error) {
+            Alert.alert("Error", "An error occurred while verifying the code.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
         <View style={styles.container}>
-            <Button text="Login" onPress={onSubmit} />
+            {!emailSent ? (
+                <>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Email"
+                        placeholderTextColor={appColors.Grey_600}
+                        value={email}
+                        onChangeText={setEmail}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                    />
+                    <Button text={loading ? "Sending..." : "Get started"} onPress={handleSendVerificationEmail} />
+                </>
+            ) : (
+                <>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Verification Code"
+                        placeholderTextColor={appColors.Grey_600}
+                        value={verificationCode}
+                        onChangeText={setVerificationCode}
+                        keyboardType="numeric"
+                    />
+                    <Button text={loading ? "Verifying..." : "Verify Code"} onPress={handleVerifyCode} />
+                </>
+            )}
         </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
         paddingHorizontal: 20,
     },
     input: {
-        backgroundColor: appColors.Grey_100, // Lighter input background
-        color: appColors.Black, // Text color for inputs
-        borderRadius: 10, // Rounded corners
+        backgroundColor: appColors.Grey_100,
+        width: 300,
+        height: 50,
+        color: appColors.Black,
+        borderRadius: 10,
         paddingVertical: 12,
         paddingHorizontal: 15,
         marginBottom: 15,
         fontSize: 16,
-        shadowColor: appColors.Black, // Add a slight shadow for better focus
+        shadowColor: appColors.Black,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
         shadowRadius: 3,
@@ -42,4 +136,3 @@ const styles = StyleSheet.create({
 });
 
 export default LoginForm;
-

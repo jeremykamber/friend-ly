@@ -3,7 +3,30 @@
     "name": "Friend-ly",
     "slug": "Friend-ly",
     "version": "1.0.0",
+    "extra": {
+      "eas": {
+        "projectId": "adc77d0b-e858-42b2-be96-027f772f8365"
+      }
+    },
+    "android": {
+      "googleServicesFile": "./google-services.json",
+      "package": "com.hcp.friendly"
+    },
+    "ios": {
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "bundleIdentifier": "com.hcp.friendly"
+    },
     "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ],
       "expo-secure-store"
     ]
   }

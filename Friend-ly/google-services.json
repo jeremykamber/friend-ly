@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "872954733121",
+    "project_id": "friend-ly-28e7c",
+    "storage_bucket": "friend-ly-28e7c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:872954733121:android:ac0b0078966340f8935cc0",
+        "android_client_info": {
+          "package_name": "com.hcp.friendly"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "872954733121-96a6npm235ra74vnh8ktp1900q6tmbkg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBHvMoTnfi-LaliKCijf8v0R7J39wsL-7M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "872954733121-96a6npm235ra74vnh8ktp1900q6tmbkg.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "872954733121-ll542sg47ekvh3pcaka3gf8105bk4vt0.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.hcp.friendly"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
