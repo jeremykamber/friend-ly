@@ -43,7 +43,6 @@ export function Home() {
       } catch (err) {
         throw (err)
       }
-      console.log("HI")
     }
 
     return (

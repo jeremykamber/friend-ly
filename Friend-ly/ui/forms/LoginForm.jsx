@@ -11,20 +11,6 @@ const LoginForm = ({ onLoginSuccess }) => {
     const [emailSent, setEmailSent] = useState(false);
     const [verificationCode, setVerificationCode] = useState("");
     const [loading, setLoading] = useState(false);
-    //const [token, setToken] = useState(null)
-
-
-    /*useEffect(() => {
-        const getToken = async () => {
-            try {
-                const result = await SecureStore.getItemAsync("JWT") // jwt token
-                result ? setToken(result) : console.log("No token found!")
-            } catch (err) {
-                throw err
-            }
-        }
-        getToken()
-    }, [])*/
 
     const handleSendVerificationEmail = async () => {
         if (!email) {
@@ -41,18 +27,13 @@ const LoginForm = ({ onLoginSuccess }) => {
         setLoading(true);
         try {
             console.log("Sending verification email to:", email);
-            const response = await fetch("http://<your ip address>:8000/users/sendVerificationEmail", {
+            const response = await fetch("http://localhost:8000/users/sendVerificationEmail", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({ email }),
             });
-            //const response = await fetch("http://localhost:8000/users/sendVerificationEmail", {
-            //    method: "POST",
-            //    headers: { "Content-Type": "application/json" },
-            //    body: JSON.stringify({ email }),
-            //});
 
             if (response.ok) {
                 setEmailSent(true);
@@ -62,7 +43,6 @@ const LoginForm = ({ onLoginSuccess }) => {
                 Alert.alert("Error", errorText || "Failed to send verification email.");
             }
         } catch (error) {
-            console.log(error);
             Alert.alert("Error", "An error occurred while sending the email.");
         } finally {
             setLoading(false);
@@ -77,7 +57,7 @@ const LoginForm = ({ onLoginSuccess }) => {
 
         setLoading(true);
         try {
-            const response = await fetch("http://<your ip address>:8000/users/verifyEmailCode", {
+            const response = await fetch("http://localhost:8000/users/verifyEmailCode", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: email, code: verificationCode }),
@@ -87,13 +67,12 @@ const LoginForm = ({ onLoginSuccess }) => {
                 // Store the verified email with 7-day expiration
                 await storeEmail(email);
                 Alert.alert("Success", "Email verified successfully!");
-                onLoginSuccess(); // Navigate to the home page
+                await onLoginSuccess(email); // Navigate to the home page
             } else {
                 const errorText = await response.text();
                 Alert.alert("Error", errorText || "Invalid verification code. Please try again.");
             }
         } catch (error) {
-            console.log(error);
             Alert.alert("Error", "An error occurred while verifying the code.");
         } finally {
             setLoading(false);

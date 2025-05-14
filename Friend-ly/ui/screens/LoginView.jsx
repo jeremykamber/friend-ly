@@ -4,9 +4,39 @@ import { View, Text, StyleSheet, SafeAreaView } from "react-native";
 import LoginForm from "../forms/LoginForm";
 import appColors from "../common/app-colors";
 import { getEmailIfValid } from "../common/helpers/secureStorage";
+import * as SecureStore from 'expo-secure-store'
 
 const LoginView = ({ navigation }) => {
     const [checking, setChecking] = useState(true);
+
+    const setToken = async (token) => {
+        try {
+            await SecureStore.setItemAsync("JWT", token)
+        } catch (err) {
+            throw (err)
+        }
+    }
+
+    const authLogin = async (email) => {
+        try {
+            const response = await fetch("http://localhost:6262/api/auth", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: email }),
+            });
+            const data = await response.json();
+            await setToken(data["token"])
+            return data["new_user"]
+            /*if (data["new_user"]) {
+                navigation.navigate("ClassesView")
+            } else {
+                navigation.navigate("TabNavigator");
+            }*/
+        } catch (err) {
+            throw err;
+        }
+        
+    };
 
     useEffect(() => {
         const checkStoredEmail = async () => {
@@ -14,7 +44,7 @@ const LoginView = ({ navigation }) => {
                 const email = await getEmailIfValid();
                 if (email) {
                     // User already verified, skip to the next screen
-                    navigation.navigate("InterestSelectionView");
+                    navigation.navigate("TabNavigator")
                 }
             } catch (error) {
                 console.error("Error checking stored email:", error);
@@ -25,8 +55,13 @@ const LoginView = ({ navigation }) => {
         checkStoredEmail();
     }, []);
 
-    const onLoginSuccess = () => {
-        navigation.navigate("InterestSelectionView");
+    const onLoginSuccess = async (email) => {
+        let res = authLogin(email);
+        if (res == true) {
+            navigation.navigate("ClassesView")
+        } else {
+            navigation.navigate("TabNavigator")
+        }
     };
 
     if (checking) {
