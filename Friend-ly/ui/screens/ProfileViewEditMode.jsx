@@ -59,7 +59,7 @@ const ProfileViewEditMode = () => {
         //setPosts(tempPosts);
         
 
-        let body = {
+        let user_info = {
           name: tempName,
           bio: tempAboutMe
         }
@@ -73,7 +73,7 @@ const ProfileViewEditMode = () => {
             const response = await fetch("http://localhost:8000/users/updateInfo", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ token: token, user_info: body })
+                body: JSON.stringify({ token: token, user_info: user_info })
             });
             navigation.navigate('SelfProfileView');
         } catch (err) {
@@ -98,12 +98,13 @@ const ProfileViewEditMode = () => {
         setTempPosts((tempPosts) => tempPosts.filter((post) => post.post_id !== postIndex));
         setModalVisible(false);
         try {
+          console.log(postIndex)
           const response = await fetch("http://localhost:8000/posts/deletePost", {
             method: "POST", 
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ token: token, post_id: postIndex})
           })
-          console.log(response)
+
           handleSave()
         } catch (err) {
           throw (err);
@@ -185,7 +186,7 @@ const ProfileViewEditMode = () => {
                           likes={item.likes}
                           comments={item.comments}
                       />
-                      <TouchableOpacity onPress={() => confirmDelete(index)} style={styles.removeButton}>
+                      <TouchableOpacity onPress={() => confirmDelete(item.post_id)} style={styles.removeButton}>
                           <Ionicons name="trash-outline" size={20} color="black" />
                       </TouchableOpacity>
                     </View>
