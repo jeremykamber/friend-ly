@@ -1,14 +1,13 @@
-import React from "react";
+
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, SafeAreaView } from "react-native";
 import LoginForm from "../forms/LoginForm";
-import { GoogleAuthProvider } from "firebase/auth";
-// import { signIn } from "firebase/auth";
-// import { auth } from "../../server/firebase/firebase";
-import appColors from "../common/app-colors"; // Import your appColors
-import * as SecureStore from "expo-secure-store"
+import appColors from "../common/app-colors";
+import { getEmailIfValid } from "../common/helpers/secureStorage";
+import * as SecureStore from 'expo-secure-store'
 
 const LoginView = ({ navigation }) => {
-    const microsoftProvider = new GoogleAuthProvider();
+    const [checking, setChecking] = useState(true);
 
     const setToken = async (token) => {
         try {
@@ -20,31 +19,59 @@ const LoginView = ({ navigation }) => {
 
     const authLogin = async (email) => {
         try {
-            //const results = await signInWithRedirect(auth, microsoftProvider);
             const response = await fetch("http://localhost:6262/api/auth", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: "lebron23@uw.edu" }),
+                body: JSON.stringify({ email: email }),
             });
             const data = await response.json();
             await setToken(data["token"])
-            if (data["new_user"]) {
-                navigation.navigate("ClassesView")
-            } else {
-                navigation.navigate("TabNavigator");
-            }
+            return data["new_user"]
         } catch (err) {
             throw err;
         }
-        // TODO: Implement mobile-friendly login popup
         
     };
+
+    useEffect(() => {
+        const checkStoredEmail = async () => {
+            try {
+                const email = await getEmailIfValid();
+                if (email) {
+                    // User already verified, skip to the next screen
+                    navigation.navigate("TabNavigator")
+                }
+            } catch (error) {
+                console.error("Error checking stored email:", error);
+            } finally {
+                setChecking(false);
+            }
+        };
+        checkStoredEmail();
+    }, []);
+
+    const onLoginSuccess = async (email) => {
+        let res = authLogin(email);
+        if (res == true) {
+            navigation.navigate("ClassesView")
+        } else {
+            navigation.navigate("TabNavigator")
+        }
+    };
+
+    if (checking) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <Text>Loading...</Text>
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView style={styles.container}>
             <Text style={styles.title}>Welcome Back!</Text>
             <View style={{ height: 40 }} />
-            <LoginForm onSubmit={authLogin} />
+            <LoginForm onLoginSuccess={onLoginSuccess} />
         </SafeAreaView>
     );
 };

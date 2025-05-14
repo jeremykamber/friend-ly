@@ -22,6 +22,9 @@ const multer = require("multer");
 // importing the jwt token module
 const jwt = require("jsonwebtoken")
 
+// import cors
+const cors = require('cors')
+
 // importing mysql2
 const mysql = require('mysql2/promise');
 const { getIdToken } = require("firebase/auth");
@@ -34,13 +37,18 @@ require('dotenv').config()
 // Middleware (Boilerplate code):
 
 // For data sent as form-urlencoded (application/x-www-form-urlencoded)
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 
 // For data sent as json (application/json)
 app.use(express.json());
 
 // For data sent as a form (required for FormData use in frontend by the client)
 app.use(multer().none());
+
+// use cors
+app.use(cors())
+
+const {sendEmailVerificationEmail} = require('./functions/sendEmailVerificationEmail')
 
 
 // Importing the fs module for file reading and writing (Probably gonna use it)
@@ -112,11 +120,11 @@ async function queryDatabase(database, query) {
   // Handle empty case later
   if (query === "") {
     // Boilerplate for testing now
-    query = 'SELECT m.chat_id, m.message_id, m.message_text, m.sent_at, u.username AS sender '+
-    'FROM messages m '+
-    'JOIN users u ON m.sender_id = u.user_id '+
-    'WHERE m.chat_id = 2 '+
-    'ORDER BY m.sent_at ASC; ';
+    query = 'SELECT m.chat_id, m.message_id, m.message_text, m.sent_at, u.username AS sender ' +
+      'FROM messages m ' +
+      'JOIN users u ON m.sender_id = u.user_id ' +
+      'WHERE m.chat_id = 2 ' +
+      'ORDER BY m.sent_at ASC; ';
   }
   const [results, fields] = await database.execute(query);
   return results;
@@ -132,7 +140,7 @@ app.get('/chats/:chat_id', async (req, res) => {
   res.json(results)
 });
 
-app.get('/chats/:chat_id/users', async(req, res) => {
+app.get('/chats/:chat_id/users', async (req, res) => {
   const chat_id = req.params.chat_id
   const [results, fields] = await database.execute(
     'SELECT user_id FROM chatMembers WHERE chat_id = ?', [chat_id]);
@@ -148,7 +156,7 @@ app.get('/chats/usernames/:chat_id', async (req, res) => {
   res.json(usernames)
 })
 
-app.get('/users/chats', authMiddleware, async(req, res) => {
+app.get('/users/chats', authMiddleware, async (req, res) => {
   const user_id = req.user_id
   const [results, fields] = await database.execute(
     'SELECT chat_id FROM chatMembers WHERE user_id = ?', [user_id])
@@ -159,7 +167,7 @@ app.get('/users/chats', authMiddleware, async(req, res) => {
 
 
 // Gets a single users information
-app.post('/users/info', authMiddleware, async function(req, res) {
+app.post('/users/info', authMiddleware, async function (req, res) {
   let userId = req.user_id;
   let query = "SELECT * FROM users WHERE user_id = ?;";
 
@@ -184,7 +192,7 @@ app.post('/users/info', authMiddleware, async function(req, res) {
   }
 });
 
-app.post('/users/getUserID', authMiddleware, async function(req, res) {
+app.post('/users/getUserID', authMiddleware, async function (req, res) {
   res.json(req.user_id)
 })
 
@@ -193,9 +201,9 @@ app.post('/users/getUserID', authMiddleware, async function(req, res) {
   Takes in a body that has a token, and a user_info body with
   a username and bio. 
 */
-app.post('/users/updateInfo', authMiddleware, async function(req, res){
+app.post('/users/updateInfo', authMiddleware, async function (req, res) {
   let userID = req.user_id
-  let username = req.body.user_info.name 
+  let username = req.body.user_info.name
   let bio = req.body.user_info.bio
   let query = "UPDATE users SET username = ?, bio = ? WHERE user_id = ?"
 
@@ -225,7 +233,7 @@ app.post('/seen/updateSeen', async function (req, res) {
 
       // Later write code that sends back correct part of the metaData.
       res.type("text").status(SUCCESS_CODE)
-          .send("Successfully set the most recent message for specified user");
+        .send("Successfully set the most recent message for specified user");
     } catch (error) {
 
     }
@@ -249,7 +257,7 @@ app.post('/users/:chat_id/newMessage', authMiddleware, async function (req, res)
 
     // Later write code that sends back correct part of the metaData.
     res.type("text").status(SUCCESS_CODE)
-        .send("Successfully posted a new message into user chat.");
+      .send("Successfully posted a new message into user chat.");
   } catch (error) {
     res.type("text").status(USER_ERROR_CODE).send("Post new message failed.")
   }
@@ -390,10 +398,10 @@ async function addUser(chat_id, user_ids) {
       const metaData = resultArr[1];
       // Later write code that sends back correct part of the metaData.
     } catch (error) {
-      return { success: false, message: "Adding a new user failed"}
+      return { success: false, message: "Adding a new user failed" }
     }
   }
-  return { success: true, message: "Successfully posted new users to the chat."}
+  return { success: true, message: "Successfully posted new users to the chat." }
 }
 
 // Above were endpoint pertaining the chatbox features. Below are endpoints
@@ -454,20 +462,20 @@ app.post('/friends/sendFriendRequest', async (req, res) => {
     `;
 
     const [rows] = await database.execute(checkQuery, [user_id1, user_id2, user_id2, user_id1]);
-    
+
 
     if (rows.length > 0) {
       return res.type("text").status(400).send("Friend request already exists / added.");
     }
 
-    
+
     const query = "INSERT INTO friends (user_id1, user_id2) VALUES (?, ?)"
 
     // Perform the async process
     await database.execute(query, [user_id1, user_id2]);
 
     res.type("text").status(200).send("Successfully send friend request");
-    
+
   } catch (error) {
     res.type("text").status(500).send("Couldn't send friend request.");
   }
@@ -483,14 +491,14 @@ app.post('/friends/acceptFriendRequest', async (req, res) => {
   // the person that accepts the friend request
   const user_id2 = req.body.user_id2;
 
-  try {   
+  try {
     const query = "UPDATE friends SET added = true WHERE user_id1 = ? and user_id2 = ?"
 
     // Perform the async process
     await database.execute(query, [user_id1, user_id2]);
 
     res.type("text").status(200).send("Successfully accept friend request");
-    
+
   } catch (error) {
     res.type("text").status(500).send("Couldn't accept friend request.");
   }
@@ -506,7 +514,7 @@ app.post('/friends/deleteFriend', async (req, res) => {
   // the person that accepts the friend request
   const user_id2 = req.body.user_id2;
 
-  try {   
+  try {
     const query = `
       DELETE FROM friends 
       WHERE (user_id1 = ? AND user_id2 = ?) 
@@ -521,7 +529,7 @@ app.post('/friends/deleteFriend', async (req, res) => {
     } else {
       return res.type("text").status(404).send("Friendship not found.");
     }
-    
+
   } catch (error) {
     res.type("text").status(500).send("Couldn't delete friend.");
   }
@@ -555,8 +563,10 @@ app.post('/posts/deletePost', authMiddleware, async (req, res) => {
   const user_id = req.user_id;
   const post_id = req.body.post_id
   const query = "DELETE FROM post WHERE id = ? AND user_id = ?"
+  console.log(user_id, post_id)
   try {
     await database.execute(query, [post_id, user_id])
+    console.log("Worked?")
     res.type("text").status(SUCCESS_CODE).send("Removing post worked. ")
   } catch (err) {
     res.type("text").status(SERVER_ERROR_CODE).send("Removing post failed. ")
@@ -578,17 +588,17 @@ app.post("/addUserInterests", (req, res) => {
   const { user_id, interest_ids } = req.body;
 
   if (!user_id || !Array.isArray(interest_ids) || interest_ids.length === 0) {
-      return res.status(400).json({ error: 'Invalid input' });
+    return res.status(400).json({ error: 'Invalid input' });
   }
 
   // Normal for loop to insert each interest
   for (let i = 0; i < interest_ids.length; i++) {
-      const addQuery = 'INSERT INTO userInterest (user_id, interest_id) VALUES (?, ?)';
-      database.query(addQuery, [user_id, interest_ids[i]], (err) => {
-          if (err) {
-              console.error("Database Error:", err);
-          }
-      });
+    const addQuery = 'INSERT INTO userInterest (user_id, interest_id) VALUES (?, ?)';
+    database.query(addQuery, [user_id, interest_ids[i]], (err) => {
+      if (err) {
+        console.error("Database Error:", err);
+      }
+    });
   }
 
   res.status(201).json({ message: 'User interests added successfully' });
@@ -604,17 +614,17 @@ app.post("/deleteUserInterests", (req, res) => {
   const { user_id, interest_ids } = req.body;
 
   if (!user_id || !Array.isArray(interest_ids) || interest_ids.length === 0) {
-      return res.status(400).json({ error: 'Invalid input' });
+    return res.status(400).json({ error: 'Invalid input' });
   }
 
   // Normal for loop to delete each interest
   for (let i = 0; i < interest_ids.length; i++) {
-      const deleteQuery = 'DELETE FROM userInterest WHERE user_id = ? AND interest_id = ?';
-      database.query(deleteQuery, [user_id, interest_ids[i]], (err) => {
-          if (err) {
-              console.error("Database Error:", err);
-          }
-      });
+    const deleteQuery = 'DELETE FROM userInterest WHERE user_id = ? AND interest_id = ?';
+    database.query(deleteQuery, [user_id, interest_ids[i]], (err) => {
+      if (err) {
+        console.error("Database Error:", err);
+      }
+    });
   }
 
   res.status(200).json({ message: 'User interests deleted successfully' });
@@ -630,7 +640,7 @@ app.post("/addInterestCategory", (req, res) => {
   if (!category_name) {
     return res.type("text").status(400).send("Invalid input.");
   }
- 
+
   const addQuery = 'INSERT INTO interestCategory (category_name) VALUES (?)';
 
   database.query(addQuery, [category_name], (err, result) => {
@@ -641,7 +651,7 @@ app.post("/addInterestCategory", (req, res) => {
   });
 
   res.status(201).json({ message: 'Interest category added successfully' });
-  
+
 });
 
 /**
@@ -679,7 +689,7 @@ app.post('/similar-users', authMiddleware, async (req, res) => {
     console.log(`Finding similar users for user ID: ${targetUserId}`);
 
     const [userCheck] = await database.execute(
-      'SELECT COUNT(*) as count FROM userinterest WHERE user_id = ?', 
+      'SELECT COUNT(*) as count FROM userinterest WHERE user_id = ?',
       [targetUserId]
     );
 
@@ -807,18 +817,18 @@ app.post('/similar-users', authMiddleware, async (req, res) => {
 
     if (candidates.size <= 6) {
       console.log(`LSH returned only ${candidates.size} users. Adding 10 unique random users.`);
-    
+
       const alreadyIncluded = new Set(candidates);
       alreadyIncluded.add(targetUserId);
-    
+
       const eligibleUsers = Object.keys(userInterests).filter(u =>
         !alreadyIncluded.has(u) &&
         userInterests[u] &&
         userInterests[u].length > 0
       );
-    
+
       console.log(`Found ${eligibleUsers.length} eligible users to randomly select from.`);
-    
+
       let added = 0;
       while (added < 7 && eligibleUsers.length > 0) {
         const randomIndex = Math.floor(Math.random() * eligibleUsers.length);
@@ -828,7 +838,7 @@ app.post('/similar-users', authMiddleware, async (req, res) => {
           added++;
         }
       }
-    
+
       console.log(`Successfully added ${added} random users. Total candidates now: ${candidates.size}`);
     }
 
@@ -884,15 +894,138 @@ app.post('/users/login', async (req, res) => {
       const profile_picture = null
       const addUserQuery = "INSERT INTO users (bio, email, profile_picture, username) VALUES (?, ?, ?, ?)"
       await database.execute(addUserQuery, ["Hi, I am " + email, email, profile_picture, email])
-    } 
+    }
     const getIDQuery = "SELECT user_id FROM users WHERE email = ?"
     const result = await database.execute(getIDQuery, [email])
     console.log(result)
-    res.type("text").status(200).send({"user_id": result[0], "new_user": newUser})
+    res.type("text").status(200).send({ "user_id": result[0], "new_user": newUser })
   } catch (err) {
     throw (err)
   }
-})
+});
+
+/**
+ * Endpoint to send a verification email with a code
+ * Required body parameters:
+ * - email: The recipient's email address
+ * 
+ * Optional body parameters:
+ * - code: Custom verification code (if not provided, a random 6-digit code will be generated)
+ */
+
+app.post('/test', async function (req, res) {
+  console.log("TESTING")
+  res.type("text").status(SUCCESS_CODE).send("worked")
+});
+
+app.post('/users/sendVerificationEmail', async function (req, res) {
+  try {
+    const email = req.body.email;
+
+    if (!email) {
+      return res.type("text").status(USER_ERROR_CODE).send("Email address is required");
+    }
+
+    // Generate a random 6-digit code if not provided
+    const verificationCode = req.body.code || Math.floor(100000 + Math.random() * 900000);
+
+    // Store the verification code and expiration time in the database
+    const expiryMinutes = 15; // Code valid for 15 minutes
+    const expiresAt = new Date(Date.now() + expiryMinutes * 60000);
+    try {
+      // Remove any existing verification codes for this email
+      await database.execute(
+        'DELETE FROM verification_codes WHERE email = ?',
+        [email]
+      );
+
+
+      // Insert the new verification code
+      await database.execute(
+        'INSERT INTO verification_codes (email, code, expires_at) VALUES (?, ?, ?)',
+        [email, verificationCode, expiresAt]
+      );
+    } catch (dbError) {
+      console.error('Database error storing verification code:', dbError);
+      return res.type("text").status(SERVER_ERROR_CODE)
+        .send("Failed to store verification code");
+    }
+
+    // Send the email with the verification code
+    await sendEmailVerificationEmail(verificationCode, email);
+
+    res.type("text").status(SUCCESS_CODE)
+      .send("Verification email sent successfully");
+
+  } catch (error) {
+    console.error('Error sending verification email:', error);
+    res.type("text").status(SERVER_ERROR_CODE)
+      .send("Failed to send verification email");
+  }
+});
+
+/**
+ * Endpoint to verify an email verification code
+ * Required body parameters:
+ * - email: The email address to verify
+ * - code: The verification code to check
+ */
+app.post('/users/verifyEmailCode', async function (req, res) {
+  try {
+    console.log("Verifying email code");
+    const { email, code } = req.body;
+
+    console.log("Attempting to verify email code for email:", email);
+
+    if (!email || !code) {
+      console.log("Email or code missing in request body");
+      return res.type("text").status(USER_ERROR_CODE)
+        .send("Email and verification code are required");
+    }
+
+    console.log("Checking if the code exists and is valid for email:", email);
+
+        // Log the codes for verification
+    console.log("Code from request:", code);
+
+    // Check if the code exists and is valid
+    const [rows] = await database.execute(
+      'SELECT * FROM verification_codes WHERE email = ? AND code = ?',
+      [email, code]
+    );
+
+    console.log("Code from database:", rows[0].code);
+
+    if (rows.length === 0) {
+      console.log("Invalid or expired verification code for email:", email);
+      return res.type("text").status(USER_ERROR_CODE)
+        .send("Invalid or expired verification code");
+    }
+
+    console.log("Verification code is valid for email:", email);
+
+    // Code is valid - you can update user status here if needed
+    // For example, set email_verified = true in your users table
+
+    console.log("Removing the used verification code for email:", email);
+
+    // Remove the used verification code
+    await database.execute(
+      'DELETE FROM verification_codes WHERE email = ?',
+      [email]
+    );
+
+    console.log("Successfully removed verification code for email:", email);
+
+    res.type("text").status(SUCCESS_CODE)
+      .send("Email verified successfully");
+
+  } catch (error) {
+    console.error('Error verifying email code:', error);
+    res.type("text").status(SERVER_ERROR_CODE)
+      .send("Failed to verify email code");
+  }
+});
 
 
 // Allows us to change the port easily by setting an environment

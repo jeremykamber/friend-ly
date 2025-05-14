@@ -24,13 +24,14 @@
 //    "chat_id": 18,
 //    "user_ids": [3]
 //}
-POST http://localhost:8000/users/1/newMessage
+POST http://localhost:8000/users/verifyEmailCode
 Content-Type: application/json
 
 {
-    "messageText": "Today's game day!",
-    "token": "add a tokens string here."
+    "email": "rarun1@uw.edu",
+    "code": "566107"
 }
+
 
 
 

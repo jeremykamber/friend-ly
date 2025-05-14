@@ -2,26 +2,6 @@ import { create } from 'zustand';
 import React, {useEffect, useState} from 'react'
 import * as SecureStore from 'expo-secure-store'
 
-
-/*const tokenWrapper = async () => {
-    const [token, setToken] = useState(null);
-    useEffect(() => {
-        const getToken = async() => {
-            try {
-                const result = await SecureStore.getItemAsync("JWT") // jwt token
-                result ? setToken(result) : console.log("No token found!")
-            } catch (err) {
-                throw(err);
-            }
-        }
-        getToken();
-    }, [])
-    return token
-}*/
-
-
-
-
 const useProfileViewStore = create((set) => ({
 
     fetchData: async () => {

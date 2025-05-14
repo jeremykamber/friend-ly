@@ -45,13 +45,11 @@ const EditUsernameView = ({ navigation }) => {
     }
 
     try {
-      console.log("HI?: " + token)
       const results = await fetch("http://localhost:8000/users/editUName", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: token, username: username.trim()})
       })
-      console.log(results)
     } catch (err) {
       throw (err);
     }
