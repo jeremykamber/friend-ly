@@ -553,6 +553,22 @@ app.post('/posts/deletePost', authMiddleware, async (req, res) => {
   }
 })
 
+app.get('/posts/getFriendsPost/:user_id', async (req, res) => {
+  const user_id = req.params.user_id;
+  const query = `
+    SELECT post.*
+    FROM post
+    JOIN friends ON (
+      (friends.user_id1 = ? AND friends.user_id2 = post.user_id)
+      OR
+      (friends.user_id2 = ? AND friends.user_id1 = post.user_id)
+    )
+    WHERE friends.added = TRUE
+`;
+  const [results, fields] = await database.execute(query, [user_id, user_id]);
+  res.json(results);
+})
+
 /**
  * NOTE: Add to interestCategory and interestDetails before 
  * inserting into userInterests due to foreign keys
