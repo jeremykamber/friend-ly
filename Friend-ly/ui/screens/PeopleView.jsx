@@ -16,28 +16,112 @@ const PeopleView = () => {
 
     // note: all friend request actions use zustand store 
     // while producing friend list at bottom of page uses mock backend
-    const acceptRequest = (id) => {
-        setFriends((prevFriends) =>
-            prevFriends.map((req) =>
-                req.id === id ? { ...req, theyRequestedMe: 'Following' } : req
-            )
-        );
-    };
+    // const acceptRequest = (id) => {
+    //     setFriends((prevFriends) =>
+    //         prevFriends.map((req) =>
+    //             req.id === id ? { ...req, theyRequestedMe: 'Following' } : req
+    //         )
+    //     );
+    // };
     
-    const deleteRequest = (id) => {
-        setFriends((prevFriends) =>
-            prevFriends.map((req) =>
-                req.id === id ? { ...req, theyRequestedMe: 'Not Following' } : req
-            )
-        );
+    // const deleteRequest = (id) => {
+    //     setFriends((prevFriends) =>
+    //         prevFriends.map((req) =>
+    //             req.id === id ? { ...req, theyRequestedMe: 'Not Following' } : req
+    //         )
+    //     );
+    // };
+
+    // const followBack = (id) => {
+    //     setFriends((prevFriends) =>
+    //         prevFriends.map((req) =>
+    //             req.id === id ? { ...req, iRequestedThem: 'Requested' } : req
+    //         )
+    //     );
+    // };
+
+    const acceptRequest = async (id) => {
+        try {
+            const result = await SecureStore.getItemAsync("JWT");
+            if (!result) return;
+
+            const response = await fetch(`http://localhost:8000/friends/acceptFriendRequest`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id1: id,
+                    user_id2: result,
+                }),
+            });
+
+            if (!response.ok) throw new Error('Failed to accept friend request');
+
+            setFriends((prevFriends) =>
+                prevFriends.map((req) =>
+                    req.id === id ? { ...req, theyRequestedMe: 'Following' } : req
+                )
+            );
+        } catch (err) {
+            console.error(err.message);
+        }
     };
 
-    const followBack = (id) => {
-        setFriends((prevFriends) =>
-            prevFriends.map((req) =>
-                req.id === id ? { ...req, iRequestedThem: 'Requested' } : req
-            )
-        );
+    const deleteRequest = async (id) => {
+        try {
+            const result = await SecureStore.getItemAsync("JWT");
+            if (!result) return;
+
+            const response = await fetch(`http://localhost:8000/friends/deleteFriend`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id1: id,
+                    user_id2: result,
+                }),
+            });
+
+            if (!response.ok) throw new Error('Failed to delete friend request');
+
+            setFriends((prevFriends) =>
+                prevFriends.map((req) =>
+                    req.id === id ? { ...req, theyRequestedMe: 'Not Following' } : req
+                )
+            );
+        } catch (err) {
+            console.error(err.message);
+        }
+    };
+
+    const followBack = async (id) => {
+        const result = await SecureStore.getItemAsync("JWT");
+        if (!result) return;
+
+        try {
+            const response = await fetch(`http://localhost:8000/friends/sendFriendRequest`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id1: result,
+                    user_id2: id,
+                }),
+            });
+
+            if (!response.ok) throw new Error('Failed to follow back');
+
+            setFriends((prevFriends) =>
+                prevFriends.map((req) =>
+                    req.id === id ? { ...req, iRequestedThem: 'Requested' } : req
+                )
+            );
+        } catch (err) {
+            console.error(err.message);
+        }
     };
 
 
