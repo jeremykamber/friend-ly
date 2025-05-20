@@ -19,6 +19,7 @@ const LoginView = ({ navigation }) => {
 
     const authLogin = async (email) => {
         try {
+            // TODO: Make sure to change to localhost if using simulator
             const response = await fetch(`http://10.18.75.225:6262/api/auth`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
