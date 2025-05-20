@@ -1,9 +1,6 @@
 import React from "react";
-import { TouchableOpacity, Text } from "react-native";
+import { TouchableOpacity, Text, StyleSheet } from "react-native";
 import appColors from "../common/app-colors";
-import { styled } from "nativewind";
-
-const StyledTouchableOpacity = styled(TouchableOpacity);
 
 const PrimaryButton = ({
     text,
@@ -13,22 +10,38 @@ const PrimaryButton = ({
     color = appColors.UW_Purple,
     style, // External style prop
 }) => {
+    const buttonStyle = {
+        justifyContent: "center",
+        alignItems: "center",
+        marginVertical: 10,
+        width: width,
+        height: height,
+        backgroundColor: color,
+        borderRadius: Math.floor(height / 2),
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    };
+
+    const textStyle = {
+        color: "white",
+        fontSize: 16,
+        fontWeight: "bold",
+    };
 
     return (
-        <StyledTouchableOpacity
-            className={`justify-center items-center my-2.5
-        w-[${width}px] h-[${height}px]
-        bg-[${color}]
-        rounded-[${Math.floor(height / 2)}px] shadow-lg`}
-            style={[shadowStyle, style]} // Apply shadow styles and any external styles.
-            // The `styled` HOC merges className and style props.
+        <TouchableOpacity
+            style={[buttonStyle, style]} // Apply button styles and any external styles.
             onPress={onPress}
         >
-            <Text className={`text-white text-base font-bold`}>{text}</Text>
-        </StyledTouchableOpacity>
+            <Text style={textStyle}>{text}</Text>
+        </TouchableOpacity>
     );
 };
-
-// The StyleSheet.create block is no longer needed and has been removed.
 
 export default PrimaryButton;

@@ -4,7 +4,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import MessageBubble from '../components/MessageBubble';
 import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import * as SecureStore from 'expo-secure-store'
+import * as SecureStore from 'expo-secure-store';
+import { useSyncService } from '../common/hooks/useSyncService';
 
 // Change the function signature to receive route and navigation
 const ChatMessagesViewDB = ({ route, navigation }) => {
@@ -18,11 +19,21 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
     const [newMessage, setNewMessage] = useState('');
     const scrollViewRef = useRef();
 
+    // Use the sync service hook for messages
+    const { data: messageUpdates, performSync } = useSyncService('messages', {
+        onUpdate: (data) => {
+            // Only update if the update is for this chat
+            if (data && data.chatId === chatId) {
+                setMessages(data.messages);
+            }
+        }
+    });
+
     /*  
         Gets the token from SecureStore
         and sets the state variable.
     */
-    const getToken = async() => {
+    const getToken = async () => {
         try {
             const result = await SecureStore.getItemAsync("JWT") // jwt token
             if (!result) {
@@ -41,11 +52,11 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
     */
     const messageToDB = async (messageText) => {
         body = {
-            token: token, 
+            token: token,
             messageText: messageText
         }
         try {
-            const response = await fetch(`http://localhost:8000/users/${chatId}/newMessage`, {
+            const response = await fetch(`http://10.18.75.225:8000/users/${chatId}/newMessage`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body)
@@ -61,7 +72,7 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
     */
     const getChatUsers = async () => {
         try {
-            const response = await fetch(`http://localhost:8000/chats/${chatId}/users`, {
+            const response = await fetch(`http://10.18.75.225:8000/chats/${chatId}/users`, {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             })
@@ -74,7 +85,7 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
 
     const getUsernames = async () => {
         try {
-            const response = await fetch(`http://localhost:8000/chats/usernames/${chatId}`, {
+            const response = await fetch(`http://10.18.75.225:8000/chats/usernames/${chatId}`, {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             })
@@ -84,13 +95,13 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
             throw (err)
         }
     }
-    
+
     /*
         Gets all the messages in the chat.
     */
     const getChatHistory = async () => {
         try {
-            const response = await fetch(`http://localhost:8000/chats/${chatId}`, {
+            const response = await fetch(`http://10.18.75.225:8000/chats/${chatId}`, {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             })
@@ -101,30 +112,31 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
         }
     }
 
-    // Fetch messages and mark them as seen
-    const fetchMessages = async () => {
-        const fetchedMessages = await getChatHistory();
-        setMessages(fetchedMessages);
-
-        // Mark messages as seen
-        for (const message of fetchedMessages) {
-            if (message.sender_id !== userId && !message.seen_by?.includes(userId)) {
-                await updateMessageSeen(true, message.id, userId, chatId);
-            }
-        }
-    };
-
+    // Fetch initial data
     useEffect(() => {
-        getToken()
-        fetchMessages();
-        getChatUsers().then(setUsers);
-        getUsernames()
+        getToken();
 
-        // Set up polling for new messages and status updates
-        const intervalId = setInterval(fetchMessages, 5000);
+        // Initial loading of messages
+        const loadInitialData = async () => {
+            try {
+                // Get initial messages (later updates will come through the sync service)
+                const fetchedMessages = await getChatHistory();
+                setMessages(fetchedMessages);
 
-        return () => clearInterval(intervalId);
-    }, [chatId]);
+                // Get user data
+                const usersData = await getChatUsers();
+                setUsers(usersData);
+                await getUsernames();
+
+                // Perform initial sync to make sure we have the latest data
+                performSync();
+            } catch (err) {
+                console.error("Error fetching initial data:", err);
+            }
+        };
+
+        loadInitialData();
+    }, [chatId, performSync]);
 
     const handleSendMessage = async () => {
         if (!newMessage.trim()) return;
@@ -147,7 +159,7 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
 
         try {
             // Send the message to the backend
-            const sentToDatabase = messageToDB(newMessage)
+            const sentToDatabase = await messageToDB(newMessage)
             const messageData = await postNewMessage(userId, chatId, newMessage);
 
             // Check if messageData is a valid message object
@@ -168,6 +180,9 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
                     )
                 );
             }
+
+            // Force a sync to update other clients
+            performSync();
         } catch (error) {
             console.error('Failed to send message:', error);
 
