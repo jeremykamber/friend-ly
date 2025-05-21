@@ -323,7 +323,7 @@ app.post('/chats/newConversation', authMiddleware, async (req, res) => {
     }
 
     res.type("text").status(SUCCESS_CODE)
-      .send("Successfully posted a new chat in chats table and chatMembers table");
+        .send({"chat_id": chat_id});
   } catch (error) {
     res.type("text").status(USER_ERROR_CODE).send("Post new chat failed.")
   }
@@ -589,8 +589,10 @@ app.post('/posts/deletePost', authMiddleware, async (req, res) => {
   const user_id = req.user_id;
   const post_id = req.body.post_id
   const query = "DELETE FROM post WHERE id = ? AND user_id = ?"
+  console.log(user_id, post_id)
   try {
     await database.execute(query, [post_id, user_id])
+    console.log("Worked?")
     res.type("text").status(SUCCESS_CODE).send("Removing post worked. ")
   } catch (err) {
     res.type("text").status(SERVER_ERROR_CODE).send("Removing post failed. ")
