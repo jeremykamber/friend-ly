@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, SafeAreaView } from "react-native";
 import LoginForm from "../forms/LoginForm";
 import appColors from "../common/app-colors";
-import { getEmailIfValid } from "../common/helpers/secureStorage";
+import { getEmailIfValid, storeEmail } from "../common/helpers/secureStorage";
 import * as SecureStore from 'expo-secure-store'
 
 const LoginView = ({ navigation }) => {
@@ -38,7 +38,10 @@ const LoginView = ({ navigation }) => {
             try {
                 const email = await getEmailIfValid();
                 if (email) {
+                    // Reset email in storage
+                    await storeEmail(email)
                     // User already verified, skip to the next screen
+                    let res = authLogin(email);
                     navigation.navigate("TabNavigator")
                 }
             } catch (error) {
