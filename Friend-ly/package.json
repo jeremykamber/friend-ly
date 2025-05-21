@@ -51,6 +51,7 @@
     "react-native-gesture-handler": "^2.24.0",
     "react-native-modal": "^13.0.1",
     "react-native-multiple-select": "^0.5.12",
+    "react-native-pager-view": "^6.8.0",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.10.0",
