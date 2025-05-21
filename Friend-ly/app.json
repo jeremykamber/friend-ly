@@ -16,6 +16,9 @@
       "googleServicesFile": "./GoogleService-Info.plist",
       "bundleIdentifier": "com.hcp.friendly"
     },
+    "expo": {
+      "jsEngine": "jsc"
+    },
     "plugins": [
       "@react-native-firebase/app",
       "expo-secure-store",

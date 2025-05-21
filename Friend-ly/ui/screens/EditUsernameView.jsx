@@ -16,7 +16,7 @@ const EditUsernameView = ({ navigation }) => {
       const getToken = async() => {
           try {
               const result = await SecureStore.getItemAsync("JWT") // jwt token
-              result ? setToken(result) : console.log("No token found!")
+              result ? setToken(result) : ("No token found!")
           } catch (err) {
               throw err
           }
