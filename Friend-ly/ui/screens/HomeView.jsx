@@ -23,11 +23,39 @@ const HomeView = () => {
 
     fetchUserInfo('1');
     */
-
-    const {imageUri, name, posts} = useProfileViewStore();
+    const { imageUri, name, posts, setPosts } = useProfileViewStore();
     const [userInfo, setUserInfo] = useState([]);  // Stores all user info
     const [loading, setLoading] = useState(true);   // Indicates if data is being fetched
     const [error, setError] = useState(null);
+
+    useFocusEffect(
+        useCallback(() => {
+          const getFriendPosts = async () => {
+            try {
+              const result = await SecureStore.getItemAsync("JWT");
+              if (!result) {
+                console.log("No token found.");
+                return;
+              }
+      
+              const decoded = jwtDecode(result);
+              const userId = decoded.user_id;
+      
+              const response = await fetch(`http://localhost:8000/posts/getFriendsPost/${userId}`, {
+                method: "GET",
+              });
+      
+              const data = await response.json();
+              setPosts(data);
+            } catch (err) {
+              console.error("Error fetching friend posts:", err);
+            }
+          };
+      
+          getFriendPosts();
+        }, [])
+      );
+
 
     useEffect(() => {
         const getAllUserInfo = async () => {
@@ -68,45 +96,45 @@ const HomeView = () => {
 
     return (
         <SafeAreaView>
-        <ScrollView style={styles.container}>
+            <ScrollView style={styles.container}>
 
-            <View style={styles.header}>
-                {imageUri && <Image source={{ uri: imageUri }} style={styles.headerPicture} />}
-                <Text style={{fontSize: 18}}>{name}</Text>
-                <AddPosts></AddPosts>
-            </View>
+                <View style={styles.header}>
+                    {imageUri && <Image source={{ uri: imageUri }} style={styles.headerPicture} />}
+                    <Text style={{ fontSize: 18 }}>{name}</Text>
+                    <AddPosts></AddPosts>
+                </View>
 
-            {/* TODO: REPLACE CODE BELOW TO SHOW POSTS FROM FRIENDS NOT OWN POSTS */}
-            <FlatList
-                style={{paddingTop: 10}}
-                scrollEnabled={false}
-                data={posts}
-                keyExtractor={(item, index) => index.toString()}
-                renderItem={({ item, index }) => (
-                    <View key={index}>
-                        <PostCard
-                            user={{
-                                username: name,
-                                profilePic: imageUri,
-                            }}
-                            timestamp={item.timestamp}
-                            image={item.image}
-                            caption={item.caption}
-                            likes={item.likes}
-                            comments={item.comments}
-                        />
-                    </View>
-                )}
-            />
-            
-        </ScrollView>
+                {/* TODO: REPLACE CODE BELOW TO SHOW POSTS FROM FRIENDS NOT OWN POSTS */}
+                <FlatList
+                    style={{ paddingTop: 10 }}
+                    scrollEnabled={false}
+                    data={posts}
+                    keyExtractor={(item, index) => index.toString()}
+                    renderItem={({ item, index }) => (
+                        <View key={index}>
+                            <PostCard
+                                user={{
+                                    username: name,
+                                    profilePic: imageUri,
+                                }}
+                                timestamp={item.timestamp}
+                                image={item.image}
+                                caption={item.caption}
+                                likes={item.likes}
+                                comments={item.comments}
+                            />
+                        </View>
+                    )}
+                />
+
+            </ScrollView>
         </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        marginTop: 20, 
+        marginTop: 20,
     },
     header: {
         alignItems: 'center',
