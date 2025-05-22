@@ -8,6 +8,7 @@ import {
     ActivityIndicator,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import Card from "./Card";
 
 const PostCard = ({ user, timestamp, image, caption, likes, comments, post_id }) => {
     let likePost = () => {
@@ -19,7 +20,10 @@ const PostCard = ({ user, timestamp, image, caption, likes, comments, post_id })
     };
 
     return (
-        <View style={styles.card}>
+        <Card style={{
+            marginVertical: 10,
+            marginHorizontal: 15,
+        }}>
             {/* Header: User Info */}
             <View style={styles.header}>
                 {user?.profilePic ? (
@@ -74,20 +78,14 @@ const PostCard = ({ user, timestamp, image, caption, likes, comments, post_id })
                     <Text style={styles.actionText}>{comments ?? "..."}</Text>
                 </TouchableOpacity>
             </View>
-        </View>
+        </Card>
     );
 };
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: "#fff",
-        borderRadius: 15,
         marginVertical: 10,
         marginHorizontal: 15,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 15,
     },
     header: {
         flexDirection: "row",
