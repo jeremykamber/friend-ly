@@ -1,189 +1,386 @@
-import React, {useEffect} from 'react';
-import { View, Text, StyleSheet, ScrollView} from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Animated,
+  RefreshControl,
+  StatusBar
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import ProfileButton from '../components/ProfileButton';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import { useNavigation } from '@react-navigation/native';
 import DisplayProfilePhoto from '../components/DisplayProfilePhoto';
 import PostItem from '../components/PostItem';
-
+import { Ionicons } from '@expo/vector-icons';
+import appColors from '../common/app-colors';
+import Card from '../components/Card';
 
 const SelfProfileView = () => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [refreshing, setRefreshing] = React.useState(false);
   const fetchData = useProfileViewStore(state => state.fetchData);
+  const { name, imageUri, majorAndYear, aboutMe, interests, currentClasses, posts } = useProfileViewStore();
+  const navigation = useNavigation();
 
   useEffect(() => {
-      fetchData(); // Fetch profile data every time this screen mounts
-  }, [fetchData]);
+    // Fetch profile data when the component mounts
+    fetchData();
 
-  const {name, imageUri, majorAndYear, aboutMe, interests, currentClasses, posts} = useProfileViewStore();
-
-  const navigation = useNavigation();
+    // Animate the content in when component mounts
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  }, [fadeAnim, fetchData]);
 
   const handleEdit = () => {
     navigation.navigate('ProfileViewEditMode');
   };
 
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    fetchData().then(() => {
+      setRefreshing(false);
+    });
+  }, [fetchData]);
+
   return (
-    <ScrollView style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor={appColors.White} />
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Profile</Text>
+      </View>
 
-        {/* Create profile header (picture, name, major/graduation year, follow/message buttons */}
-        <View style={styles.profilePictureHeader}>
-            <View style={styles.profilePictureEdit}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+          {/* Profile Header Section */}
+          <Card variant="shadow" style={styles.profileCard}>
+            <View style={styles.profileHeaderContent}>
+              <View style={styles.profilePictureContainer}>
                 <DisplayProfilePhoto imageUri={imageUri} />
+                <TouchableOpacity
+                  style={styles.editProfileButton}
+                  onPress={handleEdit}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="pencil" size={18} color={appColors.White} />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.profileInfoContainer}>
+                <Text style={styles.nameText}>{name}</Text>
+                <Text style={styles.majorText}>{majorAndYear}</Text>
+
+                <TouchableOpacity
+                  style={styles.editFullProfileButton}
+                  onPress={handleEdit}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.editButtonText}>Edit Profile</Text>
+                  <Ionicons name="chevron-forward" size={16} color={appColors.UW_Purple} />
+                </TouchableOpacity>
+              </View>
             </View>
-        </View>
+          </Card>
 
-        <View style={styles.profileInfoHeader}>
-            <Text style={styles.name}>{name}</Text>
-            <Text style={styles.major}>{majorAndYear}</Text>
+          {/* About Me Section */}
+          <Card variant="default" style={styles.sectionCard}>
+            <Card.Header>
+              <Card.Title>About Me</Card.Title>
+            </Card.Header>
+            <Card.Content>
+              <Text style={styles.aboutMeText}>{aboutMe || "No bio added yet."}</Text>
+            </Card.Content>
+          </Card>
 
-            <View style={styles.buttonContainer}>
-            <ProfileButton text="Edit" onPress={handleEdit}></ProfileButton>
-            </View>
-        </View>
-
-        {/* Create About Me section (text) */}
-        <View style={styles.section}>
-            <Text style={styles.sectionTitle}>About Me</Text>
-            <View style={styles.aboutMeBox}>
-            <Text style={styles.aboutMe}>{aboutMe}</Text>
-            </View>
-        </View>
-
-        {/* Create Interests section (interests displayed as list) */}
-        <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Interests</Text>
-            <View style={styles.interestsContainer}>
-            {interests.map((interest, index) => (
-                <View key={index} style={styles.interestBox}>
-                <Text style={styles.interestText}>{interest}</Text>
+          {/* Interests Section */}
+          <Card variant="default" style={styles.sectionCard}>
+            <Card.Header>
+              <Card.Title>Interests</Card.Title>
+            </Card.Header>
+            <Card.Content>
+              {interests && interests.length > 0 ? (
+                <View style={styles.interestsContainer}>
+                  {interests.map((interest, index) => (
+                    <View key={index} style={styles.interestChip}>
+                      <Text style={styles.interestText}>{interest}</Text>
+                    </View>
+                  ))}
                 </View>
-            ))}
-            </View>
-        </View>
+              ) : (
+                <Text style={styles.emptyStateText}>No interests added yet.</Text>
+              )}
+            </Card.Content>
+          </Card>
 
-        {/* Create Classes section (classes displayed as list) */}
-        <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Current Classes</Text>
-            <View style={styles.list}>
-            {currentClasses.map((classItem, index) => (
-                <View key={index} style={styles.classItem}>
-                    <Text key={index} style={styles.listItem}>{classItem.code} - {classItem.name}</Text>
-                    {index !== currentClasses.length - 1 && <View style={styles.divider} />}
+          {/* Current Classes Section */}
+          <Card variant="default" style={styles.sectionCard}>
+            <Card.Header>
+              <Card.Title>Current Classes</Card.Title>
+            </Card.Header>
+            <Card.Content>
+              {currentClasses && currentClasses.length > 0 ? (
+                <View style={styles.classesList}>
+                  {currentClasses.map((classItem, index) => (
+                    <View key={index} style={styles.classItem}>
+                      <Text style={styles.classCode}>{classItem.code}</Text>
+                      <Text style={styles.className}>{classItem.name}</Text>
+                    </View>
+                  ))}
                 </View>
-            ))}
-            </View>
-        </View>
+              ) : (
+                <Text style={styles.emptyStateText}>No classes added yet.</Text>
+              )}
+            </Card.Content>
+          </Card>
 
-        {/* Create Posts section */}
-        <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Posts</Text>
-            { posts.map((item, index) => (
-                <View key={index}>
+          {/* Posts Section */}
+          <Card variant="default" style={styles.postsCard}>
+            <Card.Header style={styles.postsHeader}>
+              <Card.Title>Posts</Card.Title>
+              <TouchableOpacity style={styles.addPostButton}>
+                <Ionicons name="add-circle-outline" size={22} color={appColors.UW_Purple} />
+                <Text style={styles.addPostText}>New Post</Text>
+              </TouchableOpacity>
+            </Card.Header>
+            <Card.Content style={styles.postsContent}>
+              {posts && posts.length > 0 ? (
+                posts.map((item, index) => (
+
                   <PostItem
-                      user={{
-                          username: name,
-                          profilePic: imageUri,
-                      }}
-                      timestamp={item.timestamp}
-                      image={item.image}
-                      caption={item.caption}
-                      likes={item.likes}
-                      comments={item.comments}
+                    user={{
+                      username: name,
+                      profilePic: imageUri,
+                    }}
+                    timestamp={item.timestamp}
+                    image={item.image}
+                    caption={item.caption}
+                    likes={item.likes}
+                    comments={item.comments}
                   />
-                </View>
-            ))}
-            
-        </View>
-    </ScrollView>
+                ))
+              ) : (
+                <Card variant="glass" style={styles.emptyPostCard}>
+                  <Card.Content style={styles.emptyPostsContainer}>
+                    <Ionicons name="images-outline" size={48} color={appColors.Grey_600} />
+                    <Text style={styles.emptyStateText}>No posts yet.</Text>
+                    <Text style={styles.emptyStateSubtext}>Share something with your friends!</Text>
+                  </Card.Content>
+                </Card>
+              )}
+            </Card.Content>
+          </Card>
+        </Animated.View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
+// Using an 8-point spacing system for consistency
+const spacing = {
+  xs: 4,
+  s: 8,
+  m: 16,
+  l: 24,
+  xl: 32,
+  xxl: 48,
+};
+
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: appColors.White,
+  },
+  header: {
+    paddingHorizontal: spacing.m,
+    paddingVertical: spacing.s,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: appColors.Grey_100,
+  },
+  headerTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: appColors.Dark_Grey,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#f9f9f9',
-    padding: 16,
+
   },
-  profilePictureHeader: {
+  contentContainer: {
+    paddingBottom: spacing.xl,
+  },
+  content: {
+    padding: spacing.m,
+  },
+  profileCard: {
+    marginBottom: spacing.m,
+  },
+  profileHeaderContent: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 0,
   },
-  profilePictureEdit: {
+  profilePictureContainer: {
     position: 'relative',
+    marginRight: spacing.m,
   },
-  profileInfoHeader: {
+  editProfileButton: {
+    position: 'absolute',
+    bottom: 16,
+    right: 0,
+    backgroundColor: appColors.UW_Purple,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
-    marginBottom: 30,
+    justifyContent: 'center',
+    shadowColor: appColors.Black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  name: {
+  profileInfoContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  nameText: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: appColors.Dark_Grey,
+    marginBottom: spacing.xs,
   },
-  major: {
-    fontSize: 18,
-    color: '#7f7f7f',
-    marginBottom: 4,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '80%',
-    marginTop: 16,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  aboutMeBox: {
-    backgroundColor: '#DEDEDE', // Light blue background
-    borderRadius: 8, // Rounded corners
-    padding: 16, // Padding inside the box
-    marginTop: 8, // Some space between the title and box
-  },
-  aboutMe: {
+  majorText: {
     fontSize: 16,
-    color: '#555',
+    color: appColors.Grey_600,
+    marginBottom: spacing.m,
+  },
+  editFullProfileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.s,
+    borderRadius: 8,
+    backgroundColor: '#F2F0F7', // Light purple background
+  },
+  editButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: appColors.UW_Purple,
+    marginRight: spacing.xs,
+  },
+  sectionCard: {
+    marginBottom: spacing.m,
+  },
+  aboutMeText: {
+    fontSize: 16,
     lineHeight: 24,
+    color: appColors.Grey_600,
   },
   interestsContainer: {
-    flexDirection: 'row', // Align items horizontally
-    flexWrap: 'wrap', // Allow wrapping to next line if needed
-    gap: 8, // Space between each interest box
-    marginTop: 8, // Some space between section title and interest boxes
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -spacing.xs, // To offset padding of interest chips
   },
-  interestBox: {
-    backgroundColor: '#E6E6FA', // Light purple background
-    borderRadius: 8, // Rounded corners
-    paddingHorizontal: 12, // Padding inside the box
-    paddingVertical: 5,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderColor: '#635687',
+  interestChip: {
+    backgroundColor: '#EAE5F7', // Light purple for chips, derived from UW_Purple
+    paddingHorizontal: spacing.m,
+    paddingVertical: spacing.xs,
+    borderRadius: 20,
+    margin: spacing.xs,
     borderWidth: 1,
+    borderColor: '#D5CCEB', // Slightly darker border
   },
   interestText: {
     fontSize: 14,
-    color: '#635687', // Purple color for text
+    color: appColors.UW_Purple,
+    fontWeight: '500',
   },
-  list: {
-    marginTop: 8,
+  classesList: {
+    marginTop: spacing.xs,
   },
-  listItem: {
-    fontSize: 16,
-    color: '#444',
-    marginBottom: 4,
-  },
-  divider: {
+  classItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.s,
     borderBottomWidth: 1,
-    borderBottomColor: '#DEDEDE', // Light gray color for the border
-    marginTop: 5,
-    marginBottom: 8,
+    borderBottomColor: appColors.Grey_100,
+  },
+  classCode: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: appColors.UW_Purple,
+    marginRight: spacing.s,
+    minWidth: 70,
+  },
+  className: {
+    fontSize: 15,
+    color: appColors.Dark_Grey,
+    flex: 1,
+  },
+  postsCard: {
+    marginBottom: spacing.m,
+    padding: 0,
+  },
+  postsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.m,
+    paddingTop: spacing.m,
+  },
+  addPostButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.s,
+  },
+  addPostText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: appColors.UW_Purple,
+    marginLeft: spacing.xs,
+  },
+  postsContent: {
+    paddingVertical: spacing.m,
+  },
+  postContainer: {
+    marginBottom: spacing.m,
+    padding: 0,
+    overflow: 'hidden',
+  },
+  emptyPostCard: {
+    marginTop: spacing.m,
+  },
+  emptyPostsContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xl,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: appColors.Grey_600,
+    marginTop: spacing.s,
+    textAlign: 'center',
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: appColors.Grey_600,
+    marginTop: spacing.xs,
+    textAlign: 'center',
   },
 });
 
