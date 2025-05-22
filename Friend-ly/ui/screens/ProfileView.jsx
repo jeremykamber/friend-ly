@@ -4,7 +4,7 @@ import ProfileButton from '../components/ProfileButton';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import { useNavigation } from '@react-navigation/native';
 import DisplayProfilePhoto from '../components/DisplayProfilePhoto';
-import PostCard from '../components/PostCard';
+import PostItem from '../components/PostItem';
 import appColors from '../common/app-colors';
 
 const ProfileView = () => {
@@ -77,7 +77,7 @@ const ProfileView = () => {
                 <Text style={styles.sectionTitle}>Posts</Text>
                 {posts.map((item, index) => (
                     <View key={index}>
-                        <PostCard
+                        <PostItem
                             user={{
                                 username: name,
                                 profilePic: imageUri,

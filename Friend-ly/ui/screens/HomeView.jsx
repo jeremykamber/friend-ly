@@ -3,7 +3,7 @@ import { View, ScrollView, StyleSheet, FlatList, Text, ActivityIndicator, Image,
 import AddPosts from '../components/AddPosts';
 import backendMock from '../mocks/backendMock';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
-import PostCard from '../components/PostCard';
+import PostItem from '../components/PostItem';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import appColors from '../common/app-colors';
 
@@ -71,7 +71,7 @@ const HomeView = () => {
                         keyExtractor={(item, index) => index.toString()}
                         renderItem={({ item, index }) => (
                             <View key={index}>
-                                <PostCard
+                                <PostItem
                                     user={{
                                         username: name,
                                         profilePic: imageUri,
