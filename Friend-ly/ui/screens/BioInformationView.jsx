@@ -6,7 +6,7 @@ import appColors from '../common/app-colors';
 import { Picker } from '@react-native-picker/picker';
 
 const BioInformationView = () => {
-    const {setName, setMajorAndYear, setAboutMe} = useProfileViewStore();
+    const { setName, setMajorAndYear, setAboutMe } = useProfileViewStore();
     const navigation = useNavigation();
 
     const [tempName, setTempName] = useState('');
@@ -27,7 +27,7 @@ const BioInformationView = () => {
     return (
         <ScrollView contentContainerStyle={styles.container}>
             <Text style={styles.title}>Create Your Profile</Text>
-        
+
             <Text style={styles.label}>Name</Text>
             <TextInput
                 style={styles.input}
@@ -43,7 +43,7 @@ const BioInformationView = () => {
                 value={major}
                 onChangeText={(text) => setMajor(text)}
             />
-            
+
             <Text style={styles.label}>Graduation Year</Text>
             <View style={styles.pickerContainer}>
                 <Picker
@@ -78,7 +78,7 @@ const BioInformationView = () => {
 const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
-        backgroundColor: '#f4f4f4',
+        backgroundColor: appColors.White,
         padding: 20,
         alignItems: 'center',
     },

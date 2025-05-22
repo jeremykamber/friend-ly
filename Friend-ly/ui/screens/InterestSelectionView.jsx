@@ -8,7 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 
 
 const InterestSelectionView = () => {
-  const {interests, setInterests, hasPreviousScreen, setHasPreviousScreen} = useProfileViewStore();
+  const { interests, setInterests, hasPreviousScreen, setHasPreviousScreen } = useProfileViewStore();
   const [submittedValues, setSubmittedValues] = useState(interests); // stores selected interests
 
   const navigation = useNavigation();
@@ -17,11 +17,11 @@ const InterestSelectionView = () => {
   const handleSubmit = () => {
     setInterests(submittedValues);
     if (hasPreviousScreen) {
-        navigation.navigate('ProfileViewEditMode');
+      navigation.navigate('ProfileViewEditMode');
     }
     else {
-        setHasPreviousScreen(true);
-        navigation.navigate('TabNavigator');
+      setHasPreviousScreen(true);
+      navigation.navigate('TabNavigator');
     }
   };
 
@@ -31,39 +31,39 @@ const InterestSelectionView = () => {
   };
 
   const handleSelectionChange = (newInterestList) => {
-      setSubmittedValues(newInterestList);
+    setSubmittedValues(newInterestList);
   };
 
   return (
 
     <SafeAreaView style={styles.broadContainer}>
-        <View style={styles.container}>
-            <Text style={ {fontSize: 20, marginBottom: 40}}>My Interests</Text>
+      <View style={styles.container}>
+        <Text style={{ fontSize: 20, marginBottom: 40 }}>My Interests</Text>
 
-            <Text style={styles.heading}>Select your top 10 interests!</Text>
-            
-            <MultiSelectDropdown onSelectionChange={handleSelectionChange} selectedInterests={submittedValues} setSelectedInterests={setSubmittedValues}></MultiSelectDropdown>
+        <Text style={styles.heading}>Select your top 10 interests!</Text>
 
-            {/* Display the submitted interests */}
-            <View style={styles.valuesContainer}>
-                {submittedValues.map((item, index) => (
-                    <View key={index} style={styles.itemContainer}>
-                        <Text style={styles.displayText}>
-                            {item}
-                        </Text>
-                        {/* Remove button for each interest */}
-                        <TouchableOpacity onPress={() => handleRemove(index)} style={styles.removeButton}>
-                            <Text style={styles.removeButtonText}>x</Text>
-                        </TouchableOpacity>
-                    </View>
-                ))}
+        <MultiSelectDropdown onSelectionChange={handleSelectionChange} selectedInterests={submittedValues} setSelectedInterests={setSubmittedValues}></MultiSelectDropdown>
+
+        {/* Display the submitted interests */}
+        <View style={styles.valuesContainer}>
+          {submittedValues.map((item, index) => (
+            <View key={index} style={styles.itemContainer}>
+              <Text style={styles.displayText}>
+                {item}
+              </Text>
+              {/* Remove button for each interest */}
+              <TouchableOpacity onPress={() => handleRemove(index)} style={styles.removeButton}>
+                <Text style={styles.removeButtonText}>x</Text>
+              </TouchableOpacity>
             </View>
+          ))}
         </View>
+      </View>
 
-        {/* Submit button to add an interest and its respective number value */}
-        <View styles={styles.buttonContainer}>
-            <InterestSubmitButton text='Done!' onPress={handleSubmit}/>
-        </View>
+      {/* Submit button to add an interest and its respective number value */}
+      <View styles={styles.buttonContainer}>
+        <InterestSubmitButton text='Done!' onPress={handleSubmit} />
+      </View>
     </SafeAreaView>
   );
 };
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     paddingLeft: 20,
     marginBottom: 20,
-    backgroundColor: appColors.Grey_100,
+    backgroundColor: appColors.White,
   },
   buttonContainer: {
     justifyContent: 'flex-end',

@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, FlatList, Text, ActivityIndicator, Image } from 'react-native';
+import { View, ScrollView, StyleSheet, FlatList, Text, ActivityIndicator, Image, StatusBar } from 'react-native';
 import AddPosts from '../components/AddPosts';
 import backendMock from '../mocks/backendMock';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import PostCard from '../components/PostCard';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import appColors from '../common/app-colors';
 
 const HomeView = () => {
 
-    const {imageUri, name, posts} = useProfileViewStore();
+    const { imageUri, name, posts } = useProfileViewStore();
     const [userInfo, setUserInfo] = useState([]);  // Stores all user info
     const [loading, setLoading] = useState(true);   // Indicates if data is being fetched
     const [error, setError] = useState(null);
@@ -51,46 +52,50 @@ const HomeView = () => {
     }
 
     return (
-        <SafeAreaView>
-        <ScrollView style={styles.container}>
+        <>
+            <StatusBar barStyle="dark-content" backgroundColor={appColors.White} />
+            <SafeAreaView style={{ backgroundColor: appColors.White, flex: 1 }}>
+                <ScrollView style={styles.container} contentContainerStyle={{ flexGrow: 1 }}>
 
-            <View style={styles.header}>
-                {imageUri && <Image source={{ uri: imageUri }} style={styles.headerPicture} />}
-                <Text style={{fontSize: 18}}>{name}</Text>
-                <AddPosts></AddPosts>
-            </View>
-
-            {/* TODO: REPLACE CODE BELOW TO SHOW POSTS FROM FRIENDS NOT OWN POSTS */}
-            <FlatList
-                style={{paddingTop: 10}}
-                scrollEnabled={false}
-                data={posts}
-                keyExtractor={(item, index) => index.toString()}
-                renderItem={({ item, index }) => (
-                    <View key={index}>
-                        <PostCard
-                            user={{
-                                username: name,
-                                profilePic: imageUri,
-                            }}
-                            timestamp={item.timestamp}
-                            image={item.image}
-                            caption={item.caption}
-                            likes={item.likes}
-                            comments={item.comments}
-                        />
+                    <View style={styles.header}>
+                        {imageUri && <Image source={{ uri: imageUri }} style={styles.headerPicture} />}
+                        <Text style={{ fontSize: 18 }}>{name}</Text>
+                        <AddPosts></AddPosts>
                     </View>
-                )}
-            />
-            
-        </ScrollView>
-        </SafeAreaView>
+
+                    {/* TODO: REPLACE CODE BELOW TO SHOW POSTS FROM FRIENDS NOT OWN POSTS */}
+                    <FlatList
+                        style={{ paddingTop: 10 }}
+                        scrollEnabled={false}
+                        data={posts}
+                        keyExtractor={(item, index) => index.toString()}
+                        renderItem={({ item, index }) => (
+                            <View key={index}>
+                                <PostCard
+                                    user={{
+                                        username: name,
+                                        profilePic: imageUri,
+                                    }}
+                                    timestamp={item.timestamp}
+                                    image={item.image}
+                                    caption={item.caption}
+                                    likes={item.likes}
+                                    comments={item.comments}
+                                />
+                            </View>
+                        )}
+                    />
+
+                </ScrollView>
+            </SafeAreaView>
+        </>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        marginTop: 20, 
+        backgroundColor: appColors.White,
+        marginTop: 20,
     },
     header: {
         alignItems: 'center',
