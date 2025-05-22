@@ -403,8 +403,8 @@ async function addUser(chat_id, user_ids) {
  * GET friend lists for one user
  * Select the rows that includes the user
  */
-app.get('/friends/:user_id', async (req, res) => {
-  const user_id = req.params.user_id;
+app.get('/friends', authMiddleware, async (req, res) => {
+  const user_id = req.user_id;
   const query = `
     SELECT 
         CASE 
@@ -553,19 +553,22 @@ app.post('/posts/deletePost', authMiddleware, async (req, res) => {
   }
 })
 
-app.get('/posts/getFriendsPost/:user_id', async (req, res) => {
-  const user_id = req.params.user_id;
+app.post('/posts/getFriendsPost', authMiddleware, async (req, res) => {
+  const user_id = req.user_id;
   const query = `
-    SELECT post.*
+    SELECT post.*, users.username, users.profile_picture
     FROM post
     JOIN friends ON (
       (friends.user_id1 = ? AND friends.user_id2 = post.user_id)
       OR
       (friends.user_id2 = ? AND friends.user_id1 = post.user_id)
     )
+    JOIN users ON users.user_id = post.user_id
     WHERE friends.added = TRUE
+    ORDER BY post.created_at DESC;
 `;
   const [results, fields] = await database.execute(query, [user_id, user_id]);
+  console.log(results)
   res.json(results);
 })
 

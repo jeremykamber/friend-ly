@@ -3,6 +3,7 @@
     "name": "Friend-ly",
     "slug": "Friend-ly",
     "version": "1.0.0",
+    "jsEngine": "jsc",
     "plugins": [
       "expo-secure-store"
     ]

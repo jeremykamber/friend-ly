@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import React, {useEffect, useState} from 'react'
 import * as SecureStore from 'expo-secure-store'
+import formatMessageTime from '../../screens/timeFormat';
 
 
 /*const tokenWrapper = async () => {
@@ -49,7 +50,7 @@ const useProfileViewStore = create((set) => ({
             if (getPosts.ok){
                 const posts = await getPosts.json()
                 for (let i = 0; i < posts.length; i++) {
-                    formattedPosts.push({timestamp: new Date(posts[i].created_at).toLocaleString(), 
+                    formattedPosts.push({timestamp: formatMessageTime(posts[i].created_at), 
                                         image: "https://placehold.co/600x300/png", 
                                         caption: posts[i].content, likes: 0, comments: 0, post_id: posts[i].id})
                 }

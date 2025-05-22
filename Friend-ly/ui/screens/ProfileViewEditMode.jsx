@@ -179,7 +179,7 @@ const ProfileViewEditMode = () => {
                               username: name,
                               profilePic: imageUri,
                           }}
-                          timestamp={item.timestamp}
+                          timestamp={(item.timestamp)}
                           image={item.image}
                           caption={item.caption}
                           likes={item.likes}

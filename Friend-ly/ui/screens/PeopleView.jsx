@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, ScrollView, StyleSheet, FlatList, Text, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
 import backendMock from '../mocks/backendMock';
 import UserAvatar2 from '../components/UserAvatar2';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import appColors from '../common/app-colors';
+import { useFocusEffect } from '@react-navigation/native';
 
 const PeopleView = () => {
 
@@ -124,27 +125,45 @@ const PeopleView = () => {
         }
     };
 
+    useFocusEffect(
+        useCallback(() => {
+            const getAllUserInfo = async () => {
+                try {
+                    const result = await SecureStore.getItemAsync("JWT") // jwt token
+                    if (!result) {
+                        console.log("No token found.")
+                        return
+                    }
+                    setToken(result)
+                    const response = await fetch("http://localhost:8000/users/getUserID", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ token: result})
+                    })
+                    if (!response.ok) {
+                        console.log("Getting User ID failed. ")
+                        return
+                    }
+                    const user_id = await response.json()
+                    setUserID(user_id)
+                    const userIds = [1, 2, 3, 4];  // IDs of users you want to fetch
+                    const userPromises = userIds.map(async (userId) => {
+                        const userInfo = await backendMock.getUserInfo(userId);
+                        return userInfo;  // Resolves the user information or null
+                    });
 
-    useEffect(() => {
-        const getAllUserInfo = async () => {
-            try {
-                const userIds = [1, 2, 3, 4];  // IDs of users you want to fetch
-                const userPromises = userIds.map(async (userId) => {
-                    const userInfo = await backendMock.getUserInfo(userId);
-                    return userInfo;  // Resolves the user information or null
-                });
+                    const allUserInfo = await Promise.all(userPromises);
+                    setUserInfo(allUserInfo);  // Update state with all user info
+                } catch (err) {
+                    setError(err.message);  // Handle errors
+                } finally {
+                    setLoading(false);  // Set loading to false after fetching is done
+                }
+            };
 
-                const allUserInfo = await Promise.all(userPromises);
-                setUserInfo(allUserInfo);  // Update state with all user info
-            } catch (err) {
-                setError(err.message);  // Handle errors
-            } finally {
-                setLoading(false);  // Set loading to false after fetching is done
-            }
-        };
-
-        getAllUserInfo();
-    }, []);  // Empty dependency array ensures this runs once when the component mounts
+            getAllUserInfo();
+        }, [])  // Empty dependency array ensures this runs once when the component mounts
+    )
 
     if (loading) {
         return (

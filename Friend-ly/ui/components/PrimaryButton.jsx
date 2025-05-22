@@ -1,9 +1,9 @@
 import React from "react";
 import { TouchableOpacity, Text } from "react-native";
 import appColors from "../common/app-colors";
-import { styled } from "nativewind";
+//import { styled } from "nativewind";
 
-const StyledTouchableOpacity = styled(TouchableOpacity);
+//const StyledTouchableOpacity = styled(TouchableOpacity);
 
 const PrimaryButton = ({
     text,
@@ -15,17 +15,18 @@ const PrimaryButton = ({
 }) => {
 
     return (
-        <StyledTouchableOpacity
+        <TouchableOpacity
+        //<StyledTouchableOpacity
             className={`justify-center items-center my-2.5
         w-[${width}px] h-[${height}px]
         bg-[${color}]
         rounded-[${Math.floor(height / 2)}px] shadow-lg`}
-            style={[shadowStyle, style]} // Apply shadow styles and any external styles.
+            //style={[shadowStyle, style]} // Apply shadow styles and any external styles.
             // The `styled` HOC merges className and style props.
             onPress={onPress}
         >
             <Text className={`text-white text-base font-bold`}>{text}</Text>
-        </StyledTouchableOpacity>
+        </TouchableOpacity>
     );
 };
 
