@@ -3,7 +3,7 @@ import { View, ScrollView, StyleSheet, FlatList, Text, ActivityIndicator, Image,
 import AddPosts from '../components/AddPosts';
 import backendMock from '../mocks/backendMock';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
-import PostCard from '../components/PostCard';
+import PostItem from '../components/PostItem';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store'
@@ -105,7 +105,7 @@ const HomeView = () => {
                         keyExtractor={(item, index) => index.toString()}
                         renderItem={({ item, index }) => (
                             <View key={index}>
-                                <PostCard
+                                <PostItem
                                     user={{
                                         username: item.username,
                                         profilePic: imageUri,
