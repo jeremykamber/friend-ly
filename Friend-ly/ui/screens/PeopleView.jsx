@@ -1,18 +1,31 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, ScrollView, StyleSheet, FlatList, Text, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
+import {
+    View,
+    ScrollView,
+    StyleSheet,
+    FlatList,
+    Text,
+    ActivityIndicator,
+    TouchableOpacity,
+    Image
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import backendMock from '../mocks/backendMock';
 import UserAvatar2 from '../components/UserAvatar2';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import appColors from '../common/app-colors';
 import { useFocusEffect } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store'
+import Card from '../components/Card';
+import AppButton from '../components/AppButton';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 
 const PeopleView = () => {
-
+    const navigation = useNavigation();
     const { friends, setFriends } = useProfileViewStore();
-
-    const [userInfo, setUserInfo] = useState([]);  // Stores all user info
-    const [loading, setLoading] = useState(true);   // Indicates if data is being fetched
+    const [userInfo, setUserInfo] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [token, setToken] = useState(null)
     const numColumns = 3;
@@ -166,216 +179,464 @@ const PeopleView = () => {
             getAllUserInfo();
         }, [])  // Empty dependency array ensures this runs once when the component mounts
     )
+    const pendingRequests = friends.filter(friend => friend.theyRequestedMe === 'Requested');
+
+    // Accept a follow request
+    /*const acceptRequest = (id) => {
+        setFriends((prevFriends) =>
+            prevFriends.map((req) =>
+                req.id === id ? { ...req, theyRequestedMe: 'Following' } : req
+            )
+        );
+    };
+
+    // Decline/delete a follow request
+    const deleteRequest = (id) => {
+        setFriends((prevFriends) =>
+            prevFriends.map((req) =>
+                req.id === id ? { ...req, theyRequestedMe: 'Not Following' } : req
+            )
+        );
+    };
+
+    // Follow back a user
+    const followBack = (id) => {
+        setFriends((prevFriends) =>
+            prevFriends.map((req) =>
+                req.id === id ? { ...req, iRequestedThem: 'Requested' } : req
+            )
+        );
+    }; */
+
+    // Navigate to profile view when a friend is pressed
+    const handleProfilePress = (userId) => {
+        navigation.navigate('ProfileView', { userId });
+    };
+
+    /*useEffect(() => {
+        const getAllUserInfo = async () => {
+            try {
+                const userIds = [1, 2, 3, 4];  // IDs of users you want to fetch
+                const userPromises = userIds.map(async (userId) => {
+                    const userInfo = await backendMock.getUserInfo(userId);
+                    return userInfo;
+                });
+
+                const allUserInfo = await Promise.all(userPromises);
+                setUserInfo(allUserInfo);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        getAllUserInfo();
+    }, []);*/
+
+    // Get the primary action button based on request state
+    const getPrimaryAction = (item) => {
+        if (item.theyRequestedMe === 'Requested') {
+            return (
+                <AppButton
+                    variant="default"
+                    size="sm"
+                    onPress={() => acceptRequest(item.id)}
+                >
+                    Accept
+                </AppButton>
+            );
+        } else if (item.theyRequestedMe === 'Following' && item.iRequestedThem === 'Not Following') {
+            return (
+                <AppButton
+                    variant="outline"
+                    size="sm"
+                    onPress={() => followBack(item.id)}
+                >
+                    Follow Back
+                </AppButton>
+            );
+        } else if (item.theyRequestedMe === 'Following' && item.iRequestedThem === 'Requested') {
+            return (
+                <AppButton
+                    variant="secondary"
+                    size="sm"
+                    disabled={true}
+                >
+                    Requested
+                </AppButton>
+            );
+        } else if (item.theyRequestedMe === 'Following' && item.iRequestedThem === 'Following') {
+            return (
+                <AppButton
+                    variant="secondary"
+                    size="sm"
+                    disabled={true}
+                >
+                    Following
+                </AppButton>
+            );
+        }
+
+        return null;
+    };
+
+    // Render follow request item
+    const renderRequestItem = ({ item }) => (
+        <Card variant="default" style={styles.requestCard}>
+            <View style={styles.requestContent}>
+                <TouchableOpacity
+                    style={styles.requestUserInfo}
+                    onPress={() => handleProfilePress(item.id)}
+                >
+                    <Image source={{ uri: item.avatar }} style={styles.avatar} />
+                    <Text style={styles.userName}>{item.name}</Text>
+                </TouchableOpacity>
+
+                <View style={styles.requestActions}>
+                    {getPrimaryAction(item)}
+
+                    {item.theyRequestedMe === 'Requested' && (
+                        <TouchableOpacity
+                            style={styles.closeButton}
+                            onPress={() => deleteRequest(item.id)}
+                        >
+                            <Ionicons name="close" size={18} color={appColors.Dark_Grey} />
+                        </TouchableOpacity>
+                    )}
+                </View>
+            </View>
+        </Card>
+    );
+
+    // Render friend grid item
+    const renderFriendItem = ({ item }) => {
+        if (!item) return null;
+        const userData = item[0];
+
+        return (
+            <TouchableOpacity
+                style={styles.friendItem}
+                onPress={() => handleProfilePress(userData.user_id)}
+                activeOpacity={0.7}
+            >
+                <View style={styles.friendItemContent}>
+                    <View style={styles.friendAvatarContainer}>
+                        {userData.profile_picture ? (
+                            <Image source={{ uri: userData.profile_picture }} style={styles.friendAvatar} />
+                        ) : (
+                            <View style={[styles.friendAvatar, styles.placeholderAvatar]}>
+                                <Text style={styles.avatarInitial}>
+                                    {userData.username.charAt(0).toUpperCase()}
+                                </Text>
+                            </View>
+                        )}
+                    </View>
+                    <View style={styles.friendTextContainer}>
+                        <Text style={styles.friendUsername} numberOfLines={1} ellipsizeMode="tail">
+                            {userData.username}
+                        </Text>
+                        {userData.fullName && (
+                            <Text style={styles.friendName} numberOfLines={1} ellipsizeMode="tail">
+                                {userData.fullName}
+                            </Text>
+                        )}
+                    </View>
+                </View>
+            </TouchableOpacity>
+        );
+    };
 
     if (loading) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color="#0000ff" />
-            </View>
+            <SafeAreaView style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={appColors.UW_Purple} />
+                <Text style={styles.loadingText}>Loading your connections...</Text>
+            </SafeAreaView>
         );
     }
 
     if (error) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <Text>Error: {error}</Text>
-            </View>
+            <SafeAreaView style={styles.errorContainer}>
+                <Ionicons name="alert-circle" size={48} color="#ef4444" />
+                <Text style={styles.errorTitle}>Error</Text>
+                <Text style={styles.errorText}>{error}</Text>
+                <AppButton
+                    variant="default"
+                    onPress={() => navigation.navigate('PeopleView')}
+                >
+                    Retry
+                </AppButton>
+            </SafeAreaView>
         );
     }
 
     return (
-        <ScrollView style={styles.container}>
-
-
-            <Text style={styles.requestsHeader}>Follow Requests</Text>
-
-
-            <FlatList
-                data={friends.filter(friend => friend.theyRequestedMe === 'Requested')}
-                scrollEnabled={false}
-                keyExtractor={(item, index) => index.toString()}
-                renderItem={({ item, index }) => (
-                    <View style={styles.friendCard} key={index}>
-                        <Image source={{ uri: item.avatar }} style={styles.avatar} />
-
-                        <Text style={styles.name}>{item.name}</Text>
-
-                        <View style={styles.buttonGroup}>
-                            <TouchableOpacity style={styles.acceptButton} onPress={() => acceptRequest(item.id)}>
-                                <Text style={styles.buttonText}>Accept</Text>
-                            </TouchableOpacity>
+        <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+            {/* Follow Requests Section */}
+            <Card variant="default" style={styles.sectionCard}>
+                <Card.Header style={styles.sectionHeader}>
+                    <Card.Title>Follow Requests</Card.Title>
+                    {pendingRequests.length > 0 && (
+                        <View style={styles.countBadge}>
+                            <Text style={styles.countText}>{pendingRequests.length}</Text>
                         </View>
+                    )}
+                </Card.Header>
 
-                        <TouchableOpacity style={[
-                            styles.statusButton,
-                            item.iRequestedThem === 'Not Following'
-                                ? styles.statusButtonActive
-                                : styles.statusButtonInactive]}
-                            disabled={item.iRequestedThem !== 'Not Following'}
-                            onPress={() => {
-                                if (item.iRequestedThem === 'Not Following') {
-                                    followBack(item.id);
-                                }
-                            }}
-                        >
-                            <Text style={styles.buttonText}>
-                                {item.iRequestedThem === 'Not Following'
-                                    ? 'Follow Back'
-                                    : item.iRequestedThem}
+                <Card.Content style={styles.requestsContent}>
+                    {pendingRequests.length > 0 ? (
+                        <FlatList
+                            data={pendingRequests}
+                            renderItem={renderRequestItem}
+                            keyExtractor={(item) => item.id.toString()}
+                            scrollEnabled={false}
+                            ItemSeparatorComponent={() => <View style={styles.requestSeparator} />}
+                            contentContainerStyle={styles.requestsList}
+                        />
+                    ) : (
+                        <View style={styles.emptyState}>
+                            <Ionicons name="person-add-outline" size={48} color={appColors.Grey_600} />
+                            <Text style={styles.emptyStateText}>No pending requests</Text>
+                            <Text style={styles.emptyStateSubtext}>
+                                When people request to follow you, they'll appear here.
                             </Text>
-                        </TouchableOpacity>
+                        </View>
+                    )}
+                </Card.Content>
+            </Card>
 
-                        <TouchableOpacity style={styles.deleteButton} onPress={() => deleteRequest(item.id)}>
-                            <Text style={styles.deleteText}>✖</Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
-                contentContainerStyle={styles.container}
-            />
+            {/* Friends Section */}
+            <Card variant="default" style={styles.sectionCard}>
+                <Card.Header style={styles.sectionHeader}>
+                    <Card.Title>Friends</Card.Title>
+                    {userInfo.length > 0 && (
+                        <View style={styles.countBadge}>
+                            <Text style={styles.countText}>{userInfo.length}</Text>
+                        </View>
+                    )}
+                </Card.Header>
 
-            <View style={styles.line}></View>
-            <Text style={styles.friendsHeader}>Friends</Text>
-
-            <FlatList
-                style={{ flex: 1, paddingTop: 20, paddingBottom: 3 }}
-                data={userInfo}
-                scrollEnabled={false}
-                numColumns={numColumns}
-                keyExtractor={(item, index) => item?.user_id?.toString() || index.toString()}
-                renderItem={({ item }) => (
-                    <View style={{ marginBottom: 20, flexDirection: 'row', flexWrap: 'wrap' }}>
-                        {item ? (
-                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
-                                <UserAvatar2 username={item[0].username} picture={item[0].profile_picture}></UserAvatar2>
-                            </View>
-                        ) : (
-                            <Text>User information not found</Text>
-                        )}
-                    </View>
-                )}
-            />
-
+                <Card.Content style={styles.friendsContent}>
+                    {userInfo.length > 0 ? (
+                        <View style={styles.friendsGrid}>
+                            {userInfo.map((item, index) => (
+                                <View key={index} style={styles.friendItemWrapper}>
+                                    {renderFriendItem({ item })}
+                                </View>
+                            ))}
+                        </View>
+                    ) : (
+                        <View style={styles.emptyState}>
+                            <Ionicons name="people-outline" size={48} color={appColors.Grey_600} />
+                            <Text style={styles.emptyStateText}>No friends yet</Text>
+                            <Text style={styles.emptyStateSubtext}>
+                                Follow others and get followed back to build connections.
+                            </Text>
+                        </View>
+                    )}
+                </Card.Content>
+            </Card>
         </ScrollView>
     );
 };
 
+// Using an 8-point spacing system for consistency
+const spacing = {
+    xs: 4,
+    s: 8,
+    m: 16,
+    l: 24,
+    xl: 32,
+    xxl: 48,
+};
+
 const styles = StyleSheet.create({
     container: {
-        paddingTop: 20,
-        backgroundColor: appColors.White,
+        flex: 1,
+        backgroundColor: '#f7f7f7',
+        paddingHorizontal: spacing.m,
+        paddingVertical: spacing.m,
     },
-    header: {
-        alignItems: 'center',
-        flexDirection: 'row',
+    loadingContainer: {
+        flex: 1,
         justifyContent: 'center',
-        paddingVertical: 10,
-        borderBottomWidth: 1,
+        alignItems: 'center',
+        backgroundColor: '#f7f7f7',
     },
-    headerPicture: {
-        width: 60,
-        height: 60,
-        marginHorizontal: 20,
-        borderRadius: 75,
+    loadingText: {
+        marginTop: spacing.m,
+        fontSize: 16,
+        color: appColors.Grey_600,
     },
-    friendCard: {
+    errorContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f7f7f7',
+        padding: spacing.xl,
+    },
+    errorTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: appColors.Dark_Grey,
+        marginTop: spacing.m,
+    },
+    errorText: {
+        fontSize: 16,
+        color: appColors.Grey_600,
+        textAlign: 'center',
+        marginTop: spacing.s,
+    },
+    sectionCard: {
+        marginBottom: spacing.l,
+    },
+    sectionHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingBottom: 15,
+    },
+    countBadge: {
+        backgroundColor: appColors.UW_Purple,
         borderRadius: 12,
-        marginVertical: 4,
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-        shadowOffset: { width: 0, height: 5 },
-        marginHorizontal: 25,
+        paddingHorizontal: spacing.s,
+        paddingVertical: spacing.xs,
+        minWidth: 24,
+        alignItems: 'center',
+    },
+    countText: {
+        color: appColors.White,
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    requestsContent: {
+        paddingHorizontal: 0,
+        paddingVertical: 0,
+    },
+    requestsList: {
+        paddingVertical: spacing.xs,
+    },
+    requestSeparator: {
+        height: 1,
+        backgroundColor: appColors.Grey_100,
+        marginVertical: spacing.xs,
+    },
+    requestCard: {
+        marginHorizontal: spacing.xs,
+        marginVertical: spacing.xs,
+        borderWidth: 0,
+        elevation: 0,
+        shadowOpacity: 0,
+    },
+    requestContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    requestUserInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
     },
     avatar: {
-        width: 40,
-        height: 40,
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        marginRight: spacing.m,
+    },
+    userName: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: appColors.Dark_Grey,
+    },
+    requestActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.m, // Increased from spacing.s to spacing.m for more space between buttons
+    },
+    closeButton: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#f1f1f1',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    friendsContent: {
+        paddingHorizontal: spacing.s,
+        paddingVertical: spacing.s,
+    },
+    friendsGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        marginHorizontal: -spacing.xs,
+    },
+    friendItemWrapper: {
+        width: '50%', // Changed from 33% to 50% (2 columns instead of 3)
+        padding: spacing.xs,
+    },
+    friendItem: {
+        backgroundColor: '#f9f9f9',
+        borderRadius: 12,
+        padding: spacing.s,
+        borderWidth: 1,
+        borderColor: '#eaeaea',
+    },
+    friendItemContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    friendAvatarContainer: {
+        marginRight: spacing.m,
+    },
+    friendAvatar: {
+        width: 50, // Reduced from 80
+        height: 50, // Reduced from 80
         borderRadius: 25,
-        marginRight: 10,
     },
-    name: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 5,
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginLeft: 10,
-    },
-    buttonGroup: {
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-        alignItems: 'center',
-    },
-    acceptButton: {
+    placeholderAvatar: {
         backgroundColor: appColors.UW_Purple,
-        paddingVertical: 3,
         alignItems: 'center',
-        borderRadius: 5,
-        width: 70,
-        height: 30,
-        marginRight: 8,
-        borderWidth: 1,
-        borderColor: '#333333',
+        justifyContent: 'center',
     },
-    statusButton: {
-        paddingVertical: 4,
-        borderRadius: 5,
-        marginRight: 8,
-        width: 100,
-        height: 30,
-        alignItems: 'center',
-        borderWidth: 1,
-    },
-    statusButtonActive: {
-        backgroundColor: '#5D8AA8',
-        borderColor: '#3A5F7A',
-    },
-    statusButtonInactive: {
-        backgroundColor: '#C0C0C0',
-        borderColor: '#A9A9A9',
-    },
-    deleteButton: {
-        backgroundColor: '#4A4A4A',
-        borderRadius: 5,
-        width: 30,
-        height: 30,
-        padding: 2,
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#000000',
-    },
-    buttonText: {
-        color: '#fff',
+    avatarInitial: {
+        fontSize: 20, // Reduced from 32
         fontWeight: 'bold',
+        color: appColors.White,
+    },
+    friendTextContainer: {
+        flex: 1,
+        justifyContent: 'center',
+    },
+    friendUsername: {
         fontSize: 14,
+        fontWeight: '600',
+        color: appColors.Dark_Grey,
     },
-    deleteText: {
-        color: '#fff',
+    friendName: {
+        fontSize: 12,
+        color: appColors.Grey_600,
+        marginTop: 2,
+    },
+    emptyState: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: spacing.xl,
+        paddingHorizontal: spacing.m,
+    },
+    emptyStateText: {
         fontSize: 16,
-        fontWeight: '100',
+        fontWeight: '600',
+        color: appColors.Dark_Grey,
+        marginTop: spacing.m,
     },
-    requestsHeader: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#333',
+    emptyStateSubtext: {
+        fontSize: 14,
+        color: appColors.Grey_600,
         textAlign: 'center',
-    },
-    friendsHeader: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 8,
-        textAlign: 'center',
-    },
-    line: {
-        height: 1,
-        backgroundColor: '#ccc',
-        marginVertical: 30,
-        width: '100%',
+        marginTop: spacing.xs,
+        lineHeight: 20,
     },
 });
 
