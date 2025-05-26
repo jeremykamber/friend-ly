@@ -19,7 +19,7 @@ const LoginView = ({ navigation }) => {
 
     const authLogin = async (email) => {
         try {
-            const response = await fetch("http://localhost:6262/api/auth", {
+            const response = await fetch(`http://10.18.75.225:6262/api/auth`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: email }),
@@ -31,7 +31,7 @@ const LoginView = ({ navigation }) => {
         } catch (err) {
             throw err;
         }
-        
+
     };
 
     useEffect(() => {
