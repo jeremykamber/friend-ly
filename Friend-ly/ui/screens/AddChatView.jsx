@@ -58,7 +58,7 @@ const AddChatView = ({ navigation }) => {
 					setFriends(friends)
 					setFilteredFriends(friends)
 				}
-				
+
 
 				// In a real app, we'd get the current user ID from a proper auth context
 				// For now, we'll use a hardcoded value
@@ -245,9 +245,9 @@ const AddChatView = ({ navigation }) => {
 							},
 							body: JSON.stringify({
 								token: token,
-								messageText: !isGroupChat ? `New Message with ${selectedUsers[0].username}` 
+								messageText: !isGroupChat ? `New Message with ${selectedUsers[0].username}`
 									: (finalChatName ? `Group "${finalChatName}" created`
-									: `Group chat created with ${selectedUsers.length} members`)
+										: `Group chat created with ${selectedUsers.length} members`)
 							})
 						});
 
@@ -366,7 +366,7 @@ const AddChatView = ({ navigation }) => {
 
 			{/* Friends list */}
 			<ScrollView style={styles.friendsList} showsVerticalScrollIndicator={false}>
-				
+
 				<Text style={styles.suggestionText}>Suggestions</Text>
 				{filteredFriends.length > 0 ? (
 					filteredFriends.map(friend => (
@@ -435,7 +435,7 @@ const AddChatView = ({ navigation }) => {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#F2F2F7', // iMessage light background color
+		backgroundColor: appColors.White,
 		paddingTop: 10,
 	},
 	header: {

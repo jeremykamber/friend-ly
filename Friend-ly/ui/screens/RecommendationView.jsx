@@ -132,7 +132,7 @@ const RecommendationView = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: appColors.Grey_100,
+    backgroundColor: appColors.White,
   },
   searchWrapper: {
     alignItems: 'center',

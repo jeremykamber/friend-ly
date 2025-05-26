@@ -9,7 +9,7 @@ import * as SecureStore from 'expo-secure-store'
 
 const PeopleView = () => {
 
-    const {friends, setFriends} = useProfileViewStore();
+    const { friends, setFriends } = useProfileViewStore();
 
     const [userInfo, setUserInfo] = useState([]);  // Stores all user info
     const [loading, setLoading] = useState(true);   // Indicates if data is being fetched
@@ -186,9 +186,9 @@ const PeopleView = () => {
     return (
         <ScrollView style={styles.container}>
 
-            
+
             <Text style={styles.requestsHeader}>Follow Requests</Text>
-            
+
 
             <FlatList
                 data={friends.filter(friend => friend.theyRequestedMe === 'Requested')}
@@ -207,16 +207,16 @@ const PeopleView = () => {
                         </View>
 
                         <TouchableOpacity style={[
-                                styles.statusButton,
-                                item.iRequestedThem === 'Not Following'
-                                    ? styles.statusButtonActive
-                                    : styles.statusButtonInactive ]}
-                                disabled={item.iRequestedThem !== 'Not Following'}
-                                onPress={() => {
-                                    if (item.iRequestedThem === 'Not Following') {
-                                        followBack(item.id);
-                                    }
-                                }}
+                            styles.statusButton,
+                            item.iRequestedThem === 'Not Following'
+                                ? styles.statusButtonActive
+                                : styles.statusButtonInactive]}
+                            disabled={item.iRequestedThem !== 'Not Following'}
+                            onPress={() => {
+                                if (item.iRequestedThem === 'Not Following') {
+                                    followBack(item.id);
+                                }
+                            }}
                         >
                             <Text style={styles.buttonText}>
                                 {item.iRequestedThem === 'Not Following'
@@ -237,15 +237,15 @@ const PeopleView = () => {
             <Text style={styles.friendsHeader}>Friends</Text>
 
             <FlatList
-                style={{ flex: 1, paddingTop: 20, paddingBottom: 3}}
+                style={{ flex: 1, paddingTop: 20, paddingBottom: 3 }}
                 data={userInfo}
                 scrollEnabled={false}
                 numColumns={numColumns}
                 keyExtractor={(item, index) => item?.user_id?.toString() || index.toString()}
                 renderItem={({ item }) => (
-                    <View style={{ marginBottom: 20, flexDirection:'row', flexWrap:'wrap' }}>
+                    <View style={{ marginBottom: 20, flexDirection: 'row', flexWrap: 'wrap' }}>
                         {item ? (
-                            <View style={{flexDirection:'row', flexWrap:'wrap', alignItems: 'center'}}>
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
                                 <UserAvatar2 username={item[0].username} picture={item[0].profile_picture}></UserAvatar2>
                             </View>
                         ) : (
@@ -254,15 +254,15 @@ const PeopleView = () => {
                     </View>
                 )}
             />
-            
+
         </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        paddingTop: 20, 
-        backgroundColor: '#FFFFFF',
+        paddingTop: 20,
+        backgroundColor: appColors.White,
     },
     header: {
         alignItems: 'center',

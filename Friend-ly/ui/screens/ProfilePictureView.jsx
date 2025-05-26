@@ -8,7 +8,7 @@ import appColors from '../common/app-colors';
 const ProfilePictureView = () => {
     const [profileImage, setProfileImage] = useState(null);
     const navigation = useNavigation();
-    const {setImageUri} = useProfileViewStore();
+    const { setImageUri } = useProfileViewStore();
 
     const pickImageFromGallery = async () => {
         const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -63,7 +63,7 @@ const ProfilePictureView = () => {
             <View style={styles.container}>
                 <Text style={styles.title}>Set Your Profile Picture</Text>
                 <Text style={styles.subtitle}>Choose a picture that represents you!</Text>
-                
+
                 {profileImage ? (
                     <Image source={{ uri: profileImage }} style={styles.imagePreview} />
                 ) : (
@@ -83,7 +83,7 @@ const ProfilePictureView = () => {
                 </View>
             </View>
 
-            <View style={styles.endButtonContainer}>            
+            <View style={styles.endButtonContainer}>
                 <TouchableOpacity
                     style={styles.skipButton}
                     onPress={handleSkip}
@@ -96,7 +96,7 @@ const ProfilePictureView = () => {
                     disabled={!profileImage}
                 >
                     <Text style={styles.actionButtonText}>Confirm</Text>
-                </TouchableOpacity>    
+                </TouchableOpacity>
             </View>
         </SafeAreaView>
     );
@@ -105,7 +105,7 @@ const ProfilePictureView = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: appColors.White,
         alignItems: 'center',
         padding: 20,
         marginTop: 20,

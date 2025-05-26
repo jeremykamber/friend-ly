@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, ScrollView, StyleSheet, FlatList, Text, ActivityIndicator, Image } from 'react-native';
+import { View, ScrollView, StyleSheet, FlatList, Text, ActivityIndicator, Image, StatusBar } from 'react-native';
 import AddPosts from '../components/AddPosts';
 import backendMock from '../mocks/backendMock';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store'
 import formatMessageTime from "./timeFormat";
+import appColors from '../common/app-colors';
 
 const HomeView = () => {
 
@@ -85,45 +86,49 @@ const HomeView = () => {
     }
 
     return (
-        <SafeAreaView>
-            <ScrollView style={styles.container}>
+        <>
+            <StatusBar barStyle="dark-content" backgroundColor={appColors.White} />
+            <SafeAreaView style={{ backgroundColor: appColors.White, flex: 1 }}>
+                <ScrollView style={styles.container} contentContainerStyle={{ flexGrow: 1 }}>
 
-                <View style={styles.header}>
-                    {imageUri && <Image source={{ uri: imageUri }} style={styles.headerPicture} />}
-                    <Text style={{ fontSize: 18 }}>{name}</Text>
-                    <AddPosts></AddPosts>
-                </View>
+                    <View style={styles.header}>
+                        {imageUri && <Image source={{ uri: imageUri }} style={styles.headerPicture} />}
+                        <Text style={{ fontSize: 18 }}>{name}</Text>
+                        <AddPosts></AddPosts>
+                    </View>
 
-                {/* TODO: REPLACE CODE BELOW TO SHOW POSTS FROM FRIENDS NOT OWN POSTS */}
-                <FlatList
-                    style={{ paddingTop: 10 }}
-                    scrollEnabled={false}
-                    data={friendPosts}
-                    keyExtractor={(item, index) => index.toString()}
-                    renderItem={({ item, index }) => (
-                        <View key={index}>
-                            <PostCard
-                                user={{
-                                    username: item.username,
-                                    profilePic: imageUri,
-                                }}
-                                timestamp={formatMessageTime(item.created_at)}
-                                image={"https://picsum.photos/500/300"}
-                                caption={item.content}
-                                likes={item.likes}
-                                comments={item.comments}
-                            />
-                        </View>
-                    )}
-                />
+                    {/* TODO: REPLACE CODE BELOW TO SHOW POSTS FROM FRIENDS NOT OWN POSTS */}
+                    <FlatList
+                        style={{ paddingTop: 10 }}
+                        scrollEnabled={false}
+                        data={friendPosts}
+                        keyExtractor={(item, index) => index.toString()}
+                        renderItem={({ item, index }) => (
+                            <View key={index}>
+                                <PostCard
+                                    user={{
+                                        username: item.username,
+                                        profilePic: imageUri,
+                                    }}
+                                    timestamp={formatMessageTime(item.created_at)}
+                                    image={"https://picsum.photos/500/300"}
+                                    caption={item.content}
+                                    likes={item.likes}
+                                    comments={item.comments}
+                                />
+                            </View>
+                        )}
+                    />
 
-            </ScrollView>
-        </SafeAreaView>
+                </ScrollView>
+            </SafeAreaView>
+        </>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
+        backgroundColor: appColors.White,
         marginTop: 20,
     },
     header: {

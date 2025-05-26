@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView} from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import ProfileButton from '../components/ProfileButton';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import { useNavigation } from '@react-navigation/native';
@@ -7,13 +7,14 @@ import DisplayProfilePhoto from '../components/DisplayProfilePhoto';
 import PostCard from '../components/PostCard';
 import formatMessageTime from "./timeFormat";
 
+import appColors from '../common/app-colors';
 
 const ProfileView = () => {
     // VARIABLES BELOW SHOULD STORE INFO OF USER WHO'S PROFILE IT IS (NOT USER WHO'S LOGGED IN)
-    const {imageUri, name, majorAndYear, aboutMe, interests, currentClasses, posts} = useProfileViewStore();
+    const { imageUri, name, majorAndYear, aboutMe, interests, currentClasses, posts } = useProfileViewStore();
 
     const navigation = useNavigation();
-    const {test} = useParams();
+    const { test } = useParams();
 
     const handleFollow = () => {
         navigation.navigate('ProfileViewEditMode'); // ADD FOLLOW FUNCTIONALITY
@@ -47,51 +48,51 @@ const ProfileView = () => {
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>About Me</Text>
                 <View style={styles.aboutMeBox}>
-                <Text style={styles.aboutMe}>{aboutMe}</Text>
+                    <Text style={styles.aboutMe}>{aboutMe}</Text>
                 </View>
             </View>
 
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Interests</Text>
                 <View style={styles.interestsContainer}>
-                {interests.map((interest, index) => (
-                    <View key={index} style={styles.interestBox}>
-                    <Text style={styles.interestText}>{interest}</Text>
-                    </View>
-                ))}
+                    {interests.map((interest, index) => (
+                        <View key={index} style={styles.interestBox}>
+                            <Text style={styles.interestText}>{interest}</Text>
+                        </View>
+                    ))}
                 </View>
             </View>
 
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Current Classes</Text>
                 <View style={styles.list}>
-                {currentClasses.map((classItem, index) => (
-                    <View key={index} style={styles.classItem}>
-                        <Text key={index} style={styles.listItem}>{classItem.code} - {classItem.name}</Text>
-                        {index !== currentClasses.length - 1 && <View style={styles.divider} />}
-                    </View>
-                ))}
+                    {currentClasses.map((classItem, index) => (
+                        <View key={index} style={styles.classItem}>
+                            <Text key={index} style={styles.listItem}>{classItem.code} - {classItem.name}</Text>
+                            {index !== currentClasses.length - 1 && <View style={styles.divider} />}
+                        </View>
+                    ))}
                 </View>
             </View>
 
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Posts</Text>
-                { posts.map((item, index) => (
+                {posts.map((item, index) => (
                     <View key={index}>
-                    <PostCard
-                        user={{
-                            username: name,
-                            profilePic: imageUri,
-                        }}
-                        timestamp={(item.timestamp)}
-                        image={item.image}
-                        caption={item.caption}
-                        likes={item.likes}
-                        comments={item.comments}
-                    />
+                        <PostCard
+                            user={{
+                                username: name,
+                                profilePic: imageUri,
+                            }}
+                            timestamp={item.timestamp}
+                            image={item.image}
+                            caption={item.caption}
+                            likes={item.likes}
+                            comments={item.comments}
+                        />
                     </View>
                 ))}
-                
+
             </View>
         </ScrollView>
     );
@@ -100,7 +101,7 @@ const ProfileView = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f9f9f9',
+        backgroundColor: appColors.White,
         padding: 16,
     },
     profilePictureHeader: {

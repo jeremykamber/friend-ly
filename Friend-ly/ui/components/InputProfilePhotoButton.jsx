@@ -4,8 +4,8 @@ import * as ImagePicker from 'expo-image-picker';
 import Ionicons from "react-native-vector-icons/Ionicons";
 import appColors from '../common/app-colors';
 
-const InputProfilePhotoButton = ({onImageSelected}) => {
-    
+const InputProfilePhotoButton = ({ onImageSelected }) => {
+
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.Images,
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
         borderRadius: 40 / 2,
         borderColor: appColors.Black,
         borderWidth: 2,
-        backgroundColor: '#d3d3d3',
+        backgroundColor: appColors.White,
         justifyContent: 'center',
         alignItems: 'center',
     },

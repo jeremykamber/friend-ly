@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
     },
     input: {
-        backgroundColor: appColors.Grey_100,
+        backgroundColor: appColors.White,
         width: 300,
         height: 50,
         color: appColors.Black,
