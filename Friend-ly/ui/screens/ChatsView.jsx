@@ -113,36 +113,7 @@ const ChatsView = ({navigation}) => {
                         />
                     )
                 })}
-                <ChatConversationCard
-                    senderName="Jeremy"
-                    lastMessage={"Well hello there"}
-                    timestamp="2:45 PM"
-                    onPress={() => navigation.navigate('ChatMessagesView', { chatId: 1, userId: 1 })}
-                />
-                <ChatConversationCard
-                    senderName="Alex"
-                    lastMessage="Can we reschedule our meeting?"
-                    timestamp="1:15 PM"
-                    onPress={() => navigation.navigate('ChatMessagesView', { chatId: 2, userId: 1 })}
-                />
-                <ChatConversationCard
-                    senderName="Mia"
-                    lastMessage="Don't forget to bring the documents!"
-                    timestamp="12:30 PM"
-                    onPress={() => navigation.navigate('ChatMessagesView', { chatId: 3, userId: 1 })}
-                />
-                <ChatConversationCard
-                    senderName="Sophia"
-                    lastMessage="Thanks for your help yesterday!"
-                    timestamp="Yesterday"
-                    onPress={() => navigation.navigate('ChatMessagesView', { chatId: 4, userId: 1 })}
-                />
-                <ChatConversationCard
-                    senderName="Liam"
-                    lastMessage="What's your plan for the weekend?"
-                    timestamp="Sunday"
-                    onPress={() => navigation.navigate('ChatMessagesView', { chatId: 5, userId: 1 })}
-                />
+                
             </ScrollView>
         </SafeAreaView>
     );
