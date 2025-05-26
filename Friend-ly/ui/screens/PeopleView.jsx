@@ -5,6 +5,7 @@ import UserAvatar2 from '../components/UserAvatar2';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import appColors from '../common/app-colors';
 import { useFocusEffect } from '@react-navigation/native';
+import * as SecureStore from 'expo-secure-store'
 
 const PeopleView = () => {
 
@@ -13,6 +14,7 @@ const PeopleView = () => {
     const [userInfo, setUserInfo] = useState([]);  // Stores all user info
     const [loading, setLoading] = useState(true);   // Indicates if data is being fetched
     const [error, setError] = useState(null);
+    const [token, setToken] = useState(null)
     const numColumns = 3;
 
     // note: all friend request actions use zustand store 
@@ -145,7 +147,7 @@ const PeopleView = () => {
                         return
                     }
                     const user_id = await response.json()
-                    setUserID(user_id)
+                    //setUserID(user_id)
                     const userIds = [1, 2, 3, 4];  // IDs of users you want to fetch
                     const userPromises = userIds.map(async (userId) => {
                         const userInfo = await backendMock.getUserInfo(userId);

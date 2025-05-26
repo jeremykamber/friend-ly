@@ -108,7 +108,7 @@ const HomeView = () => {
                                     profilePic: imageUri,
                                 }}
                                 timestamp={formatMessageTime(item.created_at)}
-                                image={null}
+                                image={"https://picsum.photos/500/300"}
                                 caption={item.content}
                                 likes={item.likes}
                                 comments={item.comments}
