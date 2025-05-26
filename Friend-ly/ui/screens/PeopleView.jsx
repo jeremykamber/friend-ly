@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, ScrollView, StyleSheet, FlatList, Text, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
 import backendMock from '../mocks/backendMock';
 import UserAvatar2 from '../components/UserAvatar2';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import appColors from '../common/app-colors';
+import { useFocusEffect } from '@react-navigation/native';
+import * as SecureStore from 'expo-secure-store'
 
 const PeopleView = () => {
 
@@ -12,55 +14,158 @@ const PeopleView = () => {
     const [userInfo, setUserInfo] = useState([]);  // Stores all user info
     const [loading, setLoading] = useState(true);   // Indicates if data is being fetched
     const [error, setError] = useState(null);
+    const [token, setToken] = useState(null)
     const numColumns = 3;
 
     // note: all friend request actions use zustand store 
     // while producing friend list at bottom of page uses mock backend
-    const acceptRequest = (id) => {
-        setFriends((prevFriends) =>
-            prevFriends.map((req) =>
-                req.id === id ? { ...req, theyRequestedMe: 'Following' } : req
-            )
-        );
-    };
+    // const acceptRequest = (id) => {
+    //     setFriends((prevFriends) =>
+    //         prevFriends.map((req) =>
+    //             req.id === id ? { ...req, theyRequestedMe: 'Following' } : req
+    //         )
+    //     );
+    // };
     
-    const deleteRequest = (id) => {
-        setFriends((prevFriends) =>
-            prevFriends.map((req) =>
-                req.id === id ? { ...req, theyRequestedMe: 'Not Following' } : req
-            )
-        );
+    // const deleteRequest = (id) => {
+    //     setFriends((prevFriends) =>
+    //         prevFriends.map((req) =>
+    //             req.id === id ? { ...req, theyRequestedMe: 'Not Following' } : req
+    //         )
+    //     );
+    // };
+
+    // const followBack = (id) => {
+    //     setFriends((prevFriends) =>
+    //         prevFriends.map((req) =>
+    //             req.id === id ? { ...req, iRequestedThem: 'Requested' } : req
+    //         )
+    //     );
+    // };
+
+    const acceptRequest = async (id) => {
+        try {
+            const result = await SecureStore.getItemAsync("JWT");
+            if (!result) return;
+
+            const response = await fetch(`http://localhost:8000/friends/acceptFriendRequest`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id1: id,
+                    user_id2: result,
+                }),
+            });
+
+            if (!response.ok) throw new Error('Failed to accept friend request');
+
+            setFriends((prevFriends) =>
+                prevFriends.map((req) =>
+                    req.id === id ? { ...req, theyRequestedMe: 'Following' } : req
+                )
+            );
+        } catch (err) {
+            console.error(err.message);
+        }
     };
 
-    const followBack = (id) => {
-        setFriends((prevFriends) =>
-            prevFriends.map((req) =>
-                req.id === id ? { ...req, iRequestedThem: 'Requested' } : req
-            )
-        );
+    const deleteRequest = async (id) => {
+        try {
+            const result = await SecureStore.getItemAsync("JWT");
+            if (!result) return;
+
+            const response = await fetch(`http://localhost:8000/friends/deleteFriend`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id1: id,
+                    user_id2: result,
+                }),
+            });
+
+            if (!response.ok) throw new Error('Failed to delete friend request');
+
+            setFriends((prevFriends) =>
+                prevFriends.map((req) =>
+                    req.id === id ? { ...req, theyRequestedMe: 'Not Following' } : req
+                )
+            );
+        } catch (err) {
+            console.error(err.message);
+        }
     };
 
+    const followBack = async (id) => {
+        const result = await SecureStore.getItemAsync("JWT");
+        if (!result) return;
 
-    useEffect(() => {
-        const getAllUserInfo = async () => {
-            try {
-                const userIds = [1, 2, 3, 4];  // IDs of users you want to fetch
-                const userPromises = userIds.map(async (userId) => {
-                    const userInfo = await backendMock.getUserInfo(userId);
-                    return userInfo;  // Resolves the user information or null
-                });
+        try {
+            const response = await fetch(`http://localhost:8000/friends/sendFriendRequest`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id1: result,
+                    user_id2: id,
+                }),
+            });
 
-                const allUserInfo = await Promise.all(userPromises);
-                setUserInfo(allUserInfo);  // Update state with all user info
-            } catch (err) {
-                setError(err.message);  // Handle errors
-            } finally {
-                setLoading(false);  // Set loading to false after fetching is done
-            }
-        };
+            if (!response.ok) throw new Error('Failed to follow back');
 
-        getAllUserInfo();
-    }, []);  // Empty dependency array ensures this runs once when the component mounts
+            setFriends((prevFriends) =>
+                prevFriends.map((req) =>
+                    req.id === id ? { ...req, iRequestedThem: 'Requested' } : req
+                )
+            );
+        } catch (err) {
+            console.error(err.message);
+        }
+    };
+
+    useFocusEffect(
+        useCallback(() => {
+            const getAllUserInfo = async () => {
+                try {
+                    const result = await SecureStore.getItemAsync("JWT") // jwt token
+                    if (!result) {
+                        console.log("No token found.")
+                        return
+                    }
+                    setToken(result)
+                    const response = await fetch("http://localhost:8000/users/getUserID", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ token: result})
+                    })
+                    if (!response.ok) {
+                        console.log("Getting User ID failed. ")
+                        return
+                    }
+                    const user_id = await response.json()
+                    //setUserID(user_id)
+                    const userIds = [1, 2, 3, 4];  // IDs of users you want to fetch
+                    const userPromises = userIds.map(async (userId) => {
+                        const userInfo = await backendMock.getUserInfo(userId);
+                        return userInfo;  // Resolves the user information or null
+                    });
+
+                    const allUserInfo = await Promise.all(userPromises);
+                    setUserInfo(allUserInfo);  // Update state with all user info
+                } catch (err) {
+                    setError(err.message);  // Handle errors
+                } finally {
+                    setLoading(false);  // Set loading to false after fetching is done
+                }
+            };
+
+            getAllUserInfo();
+        }, [])  // Empty dependency array ensures this runs once when the component mounts
+    )
 
     if (loading) {
         return (

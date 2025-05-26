@@ -1,17 +1,51 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, ScrollView, StyleSheet, FlatList, Text, ActivityIndicator, Image } from 'react-native';
 import AddPosts from '../components/AddPosts';
 import backendMock from '../mocks/backendMock';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import PostCard from '../components/PostCard';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
+import * as SecureStore from 'expo-secure-store'
+import formatMessageTime from "./timeFormat";
 
 const HomeView = () => {
 
-    const {imageUri, name, posts} = useProfileViewStore();
+    const { imageUri, name, posts, setPosts } = useProfileViewStore();
     const [userInfo, setUserInfo] = useState([]);  // Stores all user info
     const [loading, setLoading] = useState(true);   // Indicates if data is being fetched
     const [error, setError] = useState(null);
+    const [token, setToken] = useState(null);
+    const [friendPosts, setFriendPosts] = useState([])
+
+    useFocusEffect(
+        useCallback(() => {
+          const getFriendPosts = async () => {
+            try {
+              const result = await SecureStore.getItemAsync("JWT");
+              if (!result) {
+                console.log("No token found.");
+                return;
+              }
+              setToken(result)
+              console.log(token)
+              const response = await fetch(`http://localhost:8000/posts/getFriendsPost/`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token: result }),
+              });
+              const data = await response.json();
+              console.log(data)
+              setFriendPosts(data)
+            } catch (err) {
+              console.error("Error fetching friend posts:", err);
+            }
+          };
+      
+          getFriendPosts();
+        }, [])
+      );
+
 
     useEffect(() => {
         const getAllUserInfo = async () => {
@@ -52,45 +86,45 @@ const HomeView = () => {
 
     return (
         <SafeAreaView>
-        <ScrollView style={styles.container}>
+            <ScrollView style={styles.container}>
 
-            <View style={styles.header}>
-                {imageUri && <Image source={{ uri: imageUri }} style={styles.headerPicture} />}
-                <Text style={{fontSize: 18}}>{name}</Text>
-                <AddPosts></AddPosts>
-            </View>
+                <View style={styles.header}>
+                    {imageUri && <Image source={{ uri: imageUri }} style={styles.headerPicture} />}
+                    <Text style={{ fontSize: 18 }}>{name}</Text>
+                    <AddPosts></AddPosts>
+                </View>
 
-            {/* TODO: REPLACE CODE BELOW TO SHOW POSTS FROM FRIENDS NOT OWN POSTS */}
-            <FlatList
-                style={{paddingTop: 10}}
-                scrollEnabled={false}
-                data={posts}
-                keyExtractor={(item, index) => index.toString()}
-                renderItem={({ item, index }) => (
-                    <View key={index}>
-                        <PostCard
-                            user={{
-                                username: name,
-                                profilePic: imageUri,
-                            }}
-                            timestamp={item.timestamp}
-                            image={item.image}
-                            caption={item.caption}
-                            likes={item.likes}
-                            comments={item.comments}
-                        />
-                    </View>
-                )}
-            />
-            
-        </ScrollView>
+                {/* TODO: REPLACE CODE BELOW TO SHOW POSTS FROM FRIENDS NOT OWN POSTS */}
+                <FlatList
+                    style={{ paddingTop: 10 }}
+                    scrollEnabled={false}
+                    data={friendPosts}
+                    keyExtractor={(item, index) => index.toString()}
+                    renderItem={({ item, index }) => (
+                        <View key={index}>
+                            <PostCard
+                                user={{
+                                    username: item.username,
+                                    profilePic: imageUri,
+                                }}
+                                timestamp={formatMessageTime(item.created_at)}
+                                image={"https://picsum.photos/500/300"}
+                                caption={item.content}
+                                likes={item.likes}
+                                comments={item.comments}
+                            />
+                        </View>
+                    )}
+                />
+
+            </ScrollView>
         </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        marginTop: 20, 
+        marginTop: 20,
     },
     header: {
         alignItems: 'center',

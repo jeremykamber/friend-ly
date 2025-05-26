@@ -6,7 +6,6 @@ import appColors from "../common/app-colors";
 import ChatConversationCard from "../components/ChatConversationCard";
 import MinimalPlusButton from "../components/MinimalPlusButton";
 import PlusButton from "../components/PlusButton";
-import PrimaryButton from "../components/PrimaryButton";
 import * as SecureStore from 'expo-secure-store'
 import {createNewConversation} from '../mocks/backendMock';
 import formatMessageTime from "./timeFormat";

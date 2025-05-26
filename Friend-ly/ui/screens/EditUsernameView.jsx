@@ -93,7 +93,7 @@ const EditUsernameView = ({ navigation }) => {
             text="Save Changes"
             onPress={handleSave}
             disabled={!isValid}
-            style={[!isValid && styles.buttonDisabled]}
+            //style={[!isValid && styles.buttonDisabled]}
           />
         </View>
       </View>
