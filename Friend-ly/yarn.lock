@@ -1149,6 +1149,12 @@
   version "0.2.50"
   resolved "https://registry.npmjs.org/@firebase/app-compat/-/app-compat-0.2.50.tgz"
   integrity sha512-7yD362icKgjoNvFxwth420TNZgqCfuTJ28yQCdpyjC2fXyaZHhAbxVKnHEXGTAaUKSHWxsIy46lBKGi/x/Mflw==
+=======
+"@firebase/app-compat@0.2.47":
+  version "0.2.47"
+  resolved "https://registry.npmjs.org/@firebase/app-compat/-/app-compat-0.2.47.tgz"
+  integrity sha512-TdEWGDp6kSwuO1mxiM2Fe39eLWygfyzqTZcoU3aPV0viqqphPCbBBnVjPbFJErZ4+yaS7uCWXEbFEP9m5/COKA==
+>>>>>>> b20179ef9c9f913df9eb6ff2910403a35906a8a2
   dependencies:
     "@firebase/app" "0.11.1"
     "@firebase/component" "0.6.12"
