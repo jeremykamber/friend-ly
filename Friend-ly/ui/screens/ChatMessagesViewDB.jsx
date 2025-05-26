@@ -51,15 +51,15 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
         to the database.
     */
     const messageToDB = async (messageText) => {
-        body = {
+        let messageBody = {
             token: token,
             messageText: messageText
         }
         try {
-            const response = await fetch(`http://10.18.75.225:8000/users/${chatId}/newMessage`, {
+            const response = await fetch(`http://localhost:8000/users/${chatId}/newMessage`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body)
+                body: JSON.stringify(messageBody)
             })
             return response.ok
         } catch (err) {
@@ -72,7 +72,7 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
     */
     const getChatUsers = async () => {
         try {
-            const response = await fetch(`http://10.18.75.225:8000/chats/${chatId}/users`, {
+            const response = await fetch(`http://localhost:8000/chats/${chatId}/users`, {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             })
@@ -85,7 +85,7 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
 
     const getUsernames = async () => {
         try {
-            const response = await fetch(`http://10.18.75.225:8000/chats/usernames/${chatId}`, {
+            const response = await fetch(`http://localhost:8000/chats/usernames/${chatId}`, {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             })
@@ -101,7 +101,7 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
     */
     const getChatHistory = async () => {
         try {
-            const response = await fetch(`http://10.18.75.225:8000/chats/${chatId}`, {
+            const response = await fetch(`http://localhost:8000/chats/${chatId}`, {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             })
@@ -111,6 +111,31 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
             throw (err)
         }
     }
+
+    // Fetch messages and mark them as seen
+    const fetchMessages = async () => {
+        const fetchedMessages = await getChatHistory();
+        setMessages(fetchedMessages);
+
+        // Mark messages as seen
+        for (const message of fetchedMessages) {
+            if (message.sender_id !== userId && !message.seen_by?.includes(userId)) {
+                await updateMessageSeen(true, message.id, userId, chatId);
+            }
+        }
+    };
+
+    useEffect(() => {
+        getToken()
+        fetchMessages();
+        getChatUsers().then(setUsers);
+        getUsernames()
+
+        // Set up polling for new messages and status updates
+        const intervalId = setInterval(fetchMessages, 5000);
+
+        return () => clearInterval(intervalId);
+    }, [chatId]);
 
     // Fetch initial data
     useEffect(() => {

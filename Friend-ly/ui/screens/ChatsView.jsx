@@ -49,7 +49,7 @@ const ChatsView = ({ navigation }) => {
                         return
                     }
                     setToken(result)
-                    const response = await fetch("http://10.18.75.225:8000/users/getUserID", {
+                    const response = await fetch("http://localhost:8000/users/getUserID", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ token: result })
