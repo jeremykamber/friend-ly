@@ -56,7 +56,7 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
             messageText: messageText
         }
         try {
-            const response = await fetch(`http://localhost:8000/users/${chatId}/newMessage`, {
+            const response = await fetch(`http://10.18.75.225:8000/users/${chatId}/newMessage`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body)
@@ -72,7 +72,7 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
     */
     const getChatUsers = async () => {
         try {
-            const response = await fetch(`http://localhost:8000/chats/${chatId}/users`, {
+            const response = await fetch(`http://10.18.75.225:8000/chats/${chatId}/users`, {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             })
@@ -85,7 +85,7 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
 
     const getUsernames = async () => {
         try {
-            const response = await fetch(`http://localhost:8000/chats/usernames/${chatId}`, {
+            const response = await fetch(`http://10.18.75.225:8000/chats/usernames/${chatId}`, {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             })
@@ -101,7 +101,7 @@ const ChatMessagesViewDB = ({ route, navigation }) => {
     */
     const getChatHistory = async () => {
         try {
-            const response = await fetch(`http://localhost:8000/chats/${chatId}`, {
+            const response = await fetch(`http://10.18.75.225:8000/chats/${chatId}`, {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             })
