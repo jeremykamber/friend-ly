@@ -7,32 +7,41 @@ import ChatConversationCard from "../components/ChatConversationCard";
 import MinimalPlusButton from "../components/MinimalPlusButton";
 import PlusButton from "../components/PlusButton";
 import * as SecureStore from 'expo-secure-store'
-import {createNewConversation} from '../mocks/backendMock';
+import { createNewConversation } from '../mocks/backendMock';
 import formatMessageTime from "./timeFormat";
+import { useSyncService } from "../common/hooks/useSyncService";
 
 
-const ChatsView = ({navigation}) => {
-
+const ChatsView = ({ navigation }) => {
 
     const [lastMessages, setLastMessages] = useState([])
     const [token, setToken] = useState(null)
     const [userID, setUserID] = useState(null)
     const dateFormat = new Intl.DateTimeFormat('en-US', {
-                            timeZone: 'America/Los_Angeles',
-                            dateStyle: 'full',
-                            timeStyle: 'long',
-                        })
-    
+        timeZone: 'America/Los_Angeles',
+        dateStyle: 'full',
+        timeStyle: 'long',
+    })
+
+    // Use the sync service hook to get chat updates
+    const { data: chatUpdates, performSync } = useSyncService('chats', {
+        onUpdate: (newData) => {
+            if (newData && Array.isArray(newData)) {
+                setLastMessages(newData);
+            }
+        }
+    });
+
     /*
         This useFocusEffect runs upon load up of chat.
         This loads in the token from secure storage
         and sets the useState token variable to the result
         of the token, or keeps it as null. It additionally 
-        gets the user id and the messages from each chat. 
+        gets the user id.
     */
     useFocusEffect(
         useCallback(() => {
-            const getInfo = async() => {
+            const getInfo = async () => {
                 try {
                     const result = await SecureStore.getItemAsync("JWT") // jwt token
                     if (!result) {
@@ -40,10 +49,10 @@ const ChatsView = ({navigation}) => {
                         return
                     }
                     setToken(result)
-                    const response = await fetch("http://localhost:8000/users/getUserID", {
+                    const response = await fetch("http://10.18.75.225:8000/users/getUserID", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ token: result})
+                        body: JSON.stringify({ token: result })
                     })
                     if (!response.ok) {
                         console.log("Getting User ID failed. ")
@@ -62,12 +71,14 @@ const ChatsView = ({navigation}) => {
                     }
                     const messageData = await messages.json()
                     setLastMessages(messageData)
+                    // Initial sync - after this, the hook will handle updates
+                    performSync();
                 } catch (err) {
                     throw err
                 }
             }
             getInfo()
-        }, [])
+        }, [performSync])
     )
 
     let addConversation = async () => {
@@ -80,9 +91,9 @@ const ChatsView = ({navigation}) => {
     */
     if (token === null) {
         return (
-        <SafeAreaView style={styles.container}>
-            <Text>Loading...</Text>
-        </SafeAreaView>
+            <SafeAreaView style={styles.container}>
+                <Text>Loading...</Text>
+            </SafeAreaView>
         );
     }
     return (
@@ -102,13 +113,15 @@ const ChatsView = ({navigation}) => {
             <ScrollView contentContainerStyle={styles.scrollContainer}>
                 {lastMessages.map((message, index) => {
                     return (
-                        <ChatConversationCard 
+                        <ChatConversationCard
                             key={index}
                             senderName={message.chat_name}
                             lastMessage={message.sender_name + ": " + message.message_text}
                             timestamp={formatMessageTime(message.sent_at)}
-                            onPress={() => navigation.navigate('ChatMessagesViewDB', { chatId: message.chat_id, 
-                                                                                    userId: userID, chatName: message.chat_name })}
+                            onPress={() => navigation.navigate('ChatMessagesViewDB', {
+                                chatId: message.chat_id,
+                                userId: userID, chatName: message.chat_name
+                            })}
                         />
                     )
                 })}

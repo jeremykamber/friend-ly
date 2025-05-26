@@ -28,6 +28,8 @@ POST http://localhost:8000/users/verifyEmailCode
 Content-Type: application/json
 
 {
+    "messageText": "Today's game day!",
+    "token": "add a tokens string here."
     "email": "rarun1@uw.edu",
     "code": "566107"
 }

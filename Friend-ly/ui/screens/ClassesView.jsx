@@ -7,7 +7,7 @@ import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import { useNavigation } from '@react-navigation/native';
 
 const ClassInput = () => {
-    const {currentClasses, setCurrentClasses, hasPreviousScreen} = useProfileViewStore();
+    const { currentClasses, setCurrentClasses, hasPreviousScreen } = useProfileViewStore();
     const navigation = useNavigation();
 
     const [classes, setClasses] = useState(currentClasses);
@@ -113,7 +113,7 @@ const ClassInput = () => {
             </Modal>
 
             <View styles={styles.doneButtonContainer}>
-                <InterestSubmitButton text='Done!' onPress={handleSubmit}/>
+                <InterestSubmitButton text='Done!' onPress={handleSubmit} />
             </View>
         </View>
     );
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: appColors.White,
         marginTop: 30,
     },
     classItem: {

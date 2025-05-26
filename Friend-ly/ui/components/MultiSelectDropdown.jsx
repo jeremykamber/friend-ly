@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Alert} from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
 import allInterests from '../common/allInterests';  // import the interests list
 import appColors from '../common/app-colors';
 
@@ -52,12 +52,12 @@ const MultiSelectDropdown = ({ onSelectionChange, selectedInterests, setSelected
                     {showPicker && (
                         <ScrollView style={styles.dropdown}>
                             {filteredInterests.map((interest, index) => (
-                                <TouchableOpacity 
-                                    key={index} 
+                                <TouchableOpacity
+                                    key={index}
                                     onPress={() => handleSelection(interest)}
                                 >
                                     <Text style={[
-                                        styles.dropdownItems, 
+                                        styles.dropdownItems,
                                         selectedInterests.includes(interest) && styles.selectedItem,
                                     ]}>
                                         {interest}
@@ -75,15 +75,15 @@ const MultiSelectDropdown = ({ onSelectionChange, selectedInterests, setSelected
 // Styles for button, slider, text, and interests
 const styles = StyleSheet.create({
     input: {
-      width: 350,
-      height: 50,
-      borderWidth: 0,
-      borderRadius: 10,
-      paddingLeft: 20,
-      backgroundColor: appColors.Grey_100,
-      fontSize: 15,
-      marginBottom: 10,
-      borderWidth: 1,
+        width: 350,
+        height: 50,
+        borderWidth: 0,
+        borderRadius: 10,
+        paddingLeft: 20,
+        backgroundColor: appColors.White,
+        fontSize: 15,
+        marginBottom: 10,
+        borderWidth: 1,
     },
     broadContainer: {
         flex: 1,
@@ -113,6 +113,6 @@ const styles = StyleSheet.create({
     selectedItem: {
         backgroundColor: '#e6e6fa',
     },
-  });
+});
 
 export default MultiSelectDropdown;

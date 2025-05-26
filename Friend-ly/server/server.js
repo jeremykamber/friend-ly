@@ -35,6 +35,7 @@ async function authUser(email) {
         //let email = decodedToken['email']
         if (email.endsWith("@uw.edu") || !email.endsWith("@uw.edu")) {
             try {
+                // TODO: Change this to localhost if using simulator
                 const results = await fetch("http://localhost:8000/users/login", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },

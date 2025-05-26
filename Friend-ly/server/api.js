@@ -48,7 +48,7 @@ app.use(multer().none());
 // use cors
 app.use(cors())
 
-const {sendEmailVerificationEmail} = require('./functions/sendEmailVerificationEmail')
+const { sendEmailVerificationEmail } = require('./functions/sendEmailVerificationEmail')
 
 
 // Importing the fs module for file reading and writing (Probably gonna use it)
@@ -71,10 +71,29 @@ let database;
 // End of the API
 
 // Helper functions:
-/* Establishes a database connection to the database and returns the database object.
-* Any errors that occur should be caught in the function that calls this one.
-* @returns {SQL Database} - The database object for the connection.
-*/
+
+/**
+ * Helper function to log in a user by email. If the user does not exist, creates the user.
+ * Returns an object: { user_id, new_user }
+ * @param {string} email
+ * @param {object} database
+ * @returns {Promise<{user_id: any, new_user: boolean}>}
+ */
+async function loginUserByEmail(email, database) {
+  let newUser = false;
+  const findUserQuery = "SELECT * FROM users WHERE email = ?";
+  const results = await database.execute(findUserQuery, [email]);
+  if (results[0].length == 0) {
+    // add the user
+    newUser = true;
+    const profile_picture = null;
+    const addUserQuery = "INSERT INTO users (bio, email, profile_picture, username) VALUES (?, ?, ?, ?)";
+    await database.execute(addUserQuery, ["Hi, I am " + email, email, profile_picture, email]);
+  }
+  const getIDQuery = "SELECT user_id FROM users WHERE email = ?";
+  const result = await database.execute(getIDQuery, [email]);
+  return { user_id: result[0], new_user: newUser };
+}
 
 /**
  * Establishes a server connection and returns an instance of it.
@@ -129,6 +148,13 @@ async function queryDatabase(database, query) {
   const [results, fields] = await database.execute(query);
   return results;
 }
+
+/**
+ * Checks the health of the server
+ */
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
 
 /**
  * Returns back all chat history for a single chat
@@ -350,7 +376,7 @@ app.post('/users/getLastMessageHistory', authMiddleware, async (req, res) => {
 */
 app.get('/users/:chat_id', async (req, res) => {
   const chat_id = req.params.chat_id;
-  const query = "SELECT m.message_text FROM message AS m WHERE m.chat_id = ? AND m.sent_at = ( SELECT MAX(m2.sent_at) FROM message AS m2 WHERE m2.chat_id = ?);"
+  const query = "SELECT m.message_text FROM messages AS m WHERE m.chat_id = ? AND m.sent_at = ( SELECT MAX(m2.sent_at) FROM messages AS m2 WHERE m2.chat_id = ?);"
   const [results, fields] = await database.execute(query, [chat_id, chat_id]);
   res.json(results);
 })
@@ -432,8 +458,8 @@ app.post('/friends/get_friends', authMiddleware, async (req, res) => {
   let friends = []
   for (let i = 0; i < results.length; i++) {
     let curr_rel = results[i];
-    let other_id = curr_rel["user_id1"] != user_id ? curr_rel["user_id1"] : 
-                                                      curr_rel["user_id2"]
+    let other_id = curr_rel["user_id1"] != user_id ? curr_rel["user_id1"] :
+      curr_rel["user_id2"]
     let user_query = "SELECT * FROM users WHERE user_id = ?";
     const [friend_data, fields] = await database.execute(user_query, [other_id])
     friends.push(friend_data[0])
@@ -874,7 +900,7 @@ app.post('/similar-users', authMiddleware, async (req, res) => {
         };
       })
       .sort((a, b) => b.score - a.score)
-    
+
     for (let i = 0; i < results.length; i++) {
       const uid = results[i]['user_id']
       const [getUsername] = await database.execute(
@@ -901,25 +927,13 @@ in the database. If not, adds user to database.
 @return: Returns the id of the user
 */
 app.post('/users/login', async (req, res) => {
-  const email = req.body.email
-  let newUser = false
-
+  const email = req.body.email;
   try {
-    const findUserQuery = "SELECT * FROM users WHERE email = ?"
-    const results = await database.execute(findUserQuery, [email])
-    if (results[0].length == 0) {
-      // add the user
-      newUser = true
-      const profile_picture = null
-      const addUserQuery = "INSERT INTO users (bio, email, profile_picture, username) VALUES (?, ?, ?, ?)"
-      await database.execute(addUserQuery, ["Hi, I am " + email, email, profile_picture, email])
-    }
-    const getIDQuery = "SELECT user_id FROM users WHERE email = ?"
-    const result = await database.execute(getIDQuery, [email])
-    console.log(result)
-    res.type("text").status(200).send({ "user_id": result[0], "new_user": newUser })
+    const loginResult = await loginUserByEmail(email, database);
+    res.type("text").status(200).send(loginResult);
   } catch (err) {
-    throw (err)
+    console.error('Error in /users/login:', err);
+    res.type("text").status(SERVER_ERROR_CODE).send("Login failed.");
   }
 });
 
@@ -984,6 +998,56 @@ app.post('/users/sendVerificationEmail', async function (req, res) {
 });
 
 /**
+ * Endpoint to resend a verification email with a new code
+ * Required body parameters:
+ * - email: The recipient's email address
+ */
+app.post('/users/resendVerificationEmail', async function (req, res) {
+  try {
+    const email = req.body.email;
+
+    if (!email) {
+      return res.type("text").status(USER_ERROR_CODE).send("Email address is required");
+    }
+
+    // Generate a new random 6-digit code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000);
+
+    // Store the verification code and expiration time in the database
+    const expiryMinutes = 15; // Code valid for 15 minutes
+    const expiresAt = new Date(Date.now() + expiryMinutes * 60000);
+    try {
+      // Remove any existing verification codes for this email
+      await database.execute(
+        'DELETE FROM verification_codes WHERE email = ?',
+        [email]
+      );
+
+      // Insert the new verification code
+      await database.execute(
+        'INSERT INTO verification_codes (email, code, expires_at) VALUES (?, ?, ?)',
+        [email, verificationCode, expiresAt]
+      );
+    } catch (dbError) {
+      console.error('Database error storing verification code:', dbError);
+      return res.type("text").status(SERVER_ERROR_CODE)
+        .send("Failed to store verification code");
+    }
+
+    // Send the email with the verification code
+    await sendEmailVerificationEmail(verificationCode, email);
+
+    res.type("text").status(SUCCESS_CODE)
+      .send("Verification email resent successfully");
+
+  } catch (error) {
+    console.error('Error resending verification email:', error);
+    res.type("text").status(SERVER_ERROR_CODE)
+      .send("Failed to resend verification email");
+  }
+});
+
+/**
  * Endpoint to verify an email verification code
  * Required body parameters:
  * - email: The email address to verify
@@ -1004,7 +1068,7 @@ app.post('/users/verifyEmailCode', async function (req, res) {
 
     console.log("Checking if the code exists and is valid for email:", email);
 
-        // Log the codes for verification
+    // Log the codes for verification
     console.log("Code from request:", code);
 
     // Check if the code exists and is valid
@@ -1012,8 +1076,6 @@ app.post('/users/verifyEmailCode', async function (req, res) {
       'SELECT * FROM verification_codes WHERE email = ? AND code = ?',
       [email, code]
     );
-
-    console.log("Code from database:", rows[0].code);
 
     if (rows.length === 0) {
       console.log("Invalid or expired verification code for email:", email);
@@ -1036,8 +1098,9 @@ app.post('/users/verifyEmailCode', async function (req, res) {
 
     console.log("Successfully removed verification code for email:", email);
 
-    res.type("text").status(SUCCESS_CODE)
-      .send("Email verified successfully");
+    // No need to log in the user here; this is handled in /api/auth (authUser)
+    // Just return a success response
+    return res.type("text").status(200).send({ success: true, message: "Email verified." });
 
   } catch (error) {
     console.error('Error verifying email code:', error);
@@ -1046,6 +1109,62 @@ app.post('/users/verifyEmailCode', async function (req, res) {
   }
 });
 
+// Get updates since a specific timestamp for a user
+// Returns minimal info about what's changed so client knows what to refresh
+app.get('/users/updates', authMiddleware, async function (req, res) {
+  const userId = req.user_id;
+  const lastSynced = req.query.lastSynced;
+
+  try {
+    // Get updates relevant to this user since lastSynced
+    const [results] = await database.execute(
+      `SELECT entity_type, entity_id, chat_id, updated_at, action_type 
+       FROM updates 
+       WHERE (user_id = ? OR user_id IS NULL) 
+         AND updated_at > ? 
+       ORDER BY updated_at ASC`,
+      [userId, lastSynced]
+    );
+
+    // Group updates by entity type for easier client-side processing
+    const groupedUpdates = {
+      messages: [],
+      chats: [],
+      friends: [],
+      users: [],
+      // TODO: Add other types as needed
+    };
+
+    // add all the updates to the groupedUpdates object
+    results.forEach(update => {
+      if (groupedUpdates[update.entity_type + 's']) {
+        groupedUpdates[update.entity_type + 's'].push({
+          id: update.entity_id,
+          chatId: update.chat_id,
+          action: update.action_type,
+          timestamp: update.updated_at
+        });
+      }
+    });
+
+    res.json({
+      updates: groupedUpdates,
+      serverTime: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error("Error fetching updates:", error);
+    // Always send a valid response structure on error
+    res.status(500).json({
+      updates: {
+        messages: [],
+        chats: [],
+        friends: [],
+        users: []
+      },
+      serverTime: new Date().toISOString()
+    });
+  }
+});
 
 // Allows us to change the port easily by setting an environment
 // variable. If no environment variable is set, the port will default to 8000

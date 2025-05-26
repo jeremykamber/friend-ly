@@ -7,18 +7,18 @@ import moment from 'moment';
 import appColors from '../common/app-colors';
 import * as SecureStore from 'expo-secure-store'
 
-const AddPosts = () => {
+const AddPosts = ({ visible, onClose }) => {
 
     const { posts, setPosts } = useProfileViewStore();
 
-    const [modalVisible, setModalVisible] = useState(false);
+    // modalVisible and setModalVisible are now controlled by parent (FAB)
     const [caption, setCaption] = useState('');
     const [photo, setPhoto] = useState(null);
     const [token, setToken] = useState(null);
 
     useFocusEffect(
         useCallback(() => {
-            const getInfo = async() => {
+            const getInfo = async () => {
                 try {
                     const result = await SecureStore.getItemAsync("JWT") // jwt token
                     if (!result) {
@@ -33,14 +33,14 @@ const AddPosts = () => {
             getInfo()
         }, [])
     )
-    
+
 
     const handleAddPost = async () => {
-        console.log({ token: token, caption: caption})
+        console.log({ token: token, caption: caption })
         const response = await fetch("http://localhost:8000/posts/newPost", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ token: token, caption: caption})
+            body: JSON.stringify({ token: token, caption: caption })
         })
         if (!response.ok) {
             console.log("Making new post failed. ")
@@ -79,78 +79,41 @@ const AddPosts = () => {
         }
     };
 
+    if (!visible) return null;
     return (
-        <View style={styles.container}>
-            <TouchableOpacity
-                style={styles.addButton}
-                onPress={() => setModalVisible(true)}
-            >
-                <Text style={styles.addButtonText}>Add Post</Text>
-            </TouchableOpacity>
-
-            {/*
-            <FlatList
-                data={posts}
-                keyExtractor={(item, index) => index.toString()}
-                renderItem={({ item, index }) => (
-                    <View key={index} style={styles.postContainer}>
-                        <PostCard
-                            user={{
-                                username: name,
-                                profilePic: imageUri,
-                            }}
-                            timestamp={item.timestamp}
-                            image={item.image}
-                            caption={item.caption}
-                            likes={item.likes}
-                            comments={item.comments}
-                        />
-                    </View>
-                )}
-            />
-            */}
-
-            <Modal
-                visible={modalVisible}
-                transparent={true}
-                animationType="slide"
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Create New Post</Text>
-                        <TouchableOpacity
-                            style={styles.photoButton}
-                            onPress={handleSelectPhoto}
-                        >
-                            <Text style={styles.photoButtonText}>Select Photo</Text>
-                        </TouchableOpacity>
-                        {photo && <Image source={{ uri: photo }} style={styles.selectedPhoto} />}
-                        {!photo && <Text>No photo selected</Text>}
-                        <TextInput
-                            style={styles.captionInput}
-                            placeholder="Enter caption"
-                            value={caption}
-                            onChangeText={setCaption}
-                            multiline
-                        />
-                        <View style={styles.buttonRow}>
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.cancelButton]}
-                                onPress={() => setModalVisible(false)}
-                            >
-                                <Text style={styles.buttonText}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.submitButton]}
-                                onPress={handleAddPost}
-                            >
-                                <Text style={styles.buttonText}>Post</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
+        <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Create New Post</Text>
+                <TouchableOpacity
+                    style={styles.photoButton}
+                    onPress={handleSelectPhoto}
+                >
+                    <Text style={styles.photoButtonText}>Select Photo</Text>
+                </TouchableOpacity>
+                {photo && <Image source={{ uri: photo }} style={styles.selectedPhoto} />}
+                {!photo && <Text>No photo selected</Text>}
+                <TextInput
+                    style={styles.captionInput}
+                    placeholder="Enter caption"
+                    value={caption}
+                    onChangeText={setCaption}
+                    multiline
+                />
+                <View style={styles.buttonRow}>
+                    <TouchableOpacity
+                        style={[styles.modalButton, styles.cancelButton]}
+                        onPress={onClose}
+                    >
+                        <Text style={styles.buttonText}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.modalButton, styles.submitButton]}
+                        onPress={handleAddPost}
+                    >
+                        <Text style={styles.buttonText}>Post</Text>
+                    </TouchableOpacity>
                 </View>
-            </Modal>
+            </View>
         </View>
     );
 };

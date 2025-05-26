@@ -1,188 +1,477 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView} from 'react-native';
+import React, { useRef, useState, useEffect } from 'react';
+import {
+    View,
+    Text,
+    StyleSheet,
+    ScrollView,
+    TouchableOpacity,
+    Animated,
+    StatusBar
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import ProfileButton from '../components/ProfileButton';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import { useNavigation } from '@react-navigation/native';
 import DisplayProfilePhoto from '../components/DisplayProfilePhoto';
-import PostCard from '../components/PostCard';
-import formatMessageTime from "./timeFormat";
-
+import PostItem from '../components/PostItem';
+import { Ionicons } from '@expo/vector-icons';
+import appColors from '../common/app-colors';
+import Card from '../components/Card';
 
 const ProfileView = () => {
-    // VARIABLES BELOW SHOULD STORE INFO OF USER WHO'S PROFILE IT IS (NOT USER WHO'S LOGGED IN)
-    const {imageUri, name, majorAndYear, aboutMe, interests, currentClasses, posts} = useProfileViewStore();
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const scaleAnim = useRef(new Animated.Value(0.95)).current;
+    const [followStatus, setFollowStatus] = useState('Follow'); // 'Follow', 'Following', 'Requested'
 
+    // In a real app, this data would come from the API based on the profile being viewed
+    const { imageUri, name, majorAndYear, aboutMe, interests, currentClasses, posts } = useProfileViewStore();
     const navigation = useNavigation();
-    const {test} = useParams();
+
+    useEffect(() => {
+        // Animate content in when component mounts
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 400,
+                useNativeDriver: true,
+            }),
+            Animated.spring(scaleAnim, {
+                toValue: 1,
+                friction: 8,
+                useNativeDriver: true,
+            })
+        ]).start();
+    }, [fadeAnim, scaleAnim]);
 
     const handleFollow = () => {
-        navigation.navigate('ProfileViewEditMode'); // ADD FOLLOW FUNCTIONALITY
+        // Toggle follow status in a cycle: Follow -> Requested -> Following -> Follow
+        if (followStatus === 'Follow') {
+            setFollowStatus('Requested');
+        } else if (followStatus === 'Requested') {
+            setFollowStatus('Following');
+        } else {
+            setFollowStatus('Follow');
+        }
     };
 
     const handleMessage = () => {
-        navigation.navigate('ChatsView'); // CHANGE THIS TO GO TO DM IF YOU ARE FOLLOWING PERSON
+        // Only navigate to chat if following
+        if (followStatus === 'Following') {
+            navigation.navigate('ChatsView');
+        }
     };
 
+    const handleBack = () => {
+        navigation.goBack();
+    };
+
+    // Determine if message button should be enabled
+    const isMessageEnabled = followStatus === 'Following';
+
     return (
-        <ScrollView style={styles.container}>
-
-            <View style={styles.profilePictureHeader}>
-                <View style={styles.profilePictureEdit}>
-                    <DisplayProfilePhoto imageUri={imageUri} />
-                </View>
+        <SafeAreaView style={styles.safeArea}>
+            <StatusBar barStyle="dark-content" backgroundColor={appColors.White} />
+            <View style={styles.header}>
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={handleBack}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                    <Ionicons name="arrow-back" size={24} color={appColors.Dark_Grey} />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Profile</Text>
+                <View style={{ width: 24 }} /> {/* Empty view for balance */}
             </View>
 
-            <View style={styles.profileInfoHeader}>
-                <Text style={styles.name}>{name}</Text>
-                <Text style={styles.major}>{majorAndYear}</Text>
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={styles.contentContainer}
+                showsVerticalScrollIndicator={false}
+            >
+                <Animated.View
+                    style={[
+                        styles.content,
+                        {
+                            opacity: fadeAnim,
+                            transform: [{ scale: scaleAnim }]
+                        }
+                    ]}
+                >
+                    {/* Profile Header Section */}
+                    <Card variant="shadow" style={styles.profileCard}>
+                        <View style={styles.profileHeaderContent}>
+                            <View style={styles.profilePictureContainer}>
+                                <DisplayProfilePhoto imageUri={imageUri} />
+                            </View>
 
-                <View style={styles.buttonContainer}>
-                    {/* CHANGE THE CODE BELOW TO SAY FOLLOW, UNFOLLOW, OR REQUESTED DEPENDING ON CIRCUMSTANCE */}
-                    <ProfileButton text="Follow" onPress={handleFollow}></ProfileButton>
-                    {/* MESSAGE SHOULD BE GREYED OUT IF THE USER ISN'T FOLLOWING THEM YET */}
-                    <ProfileButton text="Message" onPress={handleMessage}></ProfileButton>
-                </View>
-            </View>
+                            <View style={styles.profileInfoContainer}>
+                                <Text style={styles.nameText}>{name}</Text>
+                                <Text style={styles.majorText}>{majorAndYear}</Text>
 
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>About Me</Text>
-                <View style={styles.aboutMeBox}>
-                <Text style={styles.aboutMe}>{aboutMe}</Text>
-                </View>
-            </View>
+                                <View style={styles.actionButtonsContainer}>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.followButton,
+                                            followStatus === 'Following' && styles.followingButton,
+                                            followStatus === 'Requested' && styles.requestedButton
+                                        ]}
+                                        onPress={handleFollow}
+                                        activeOpacity={0.8}
+                                    >
+                                        {followStatus === 'Following' && (
+                                            <Ionicons name="checkmark" size={16} color={appColors.White} style={styles.buttonIcon} />
+                                        )}
+                                        <Text style={styles.followButtonText}>{followStatus}</Text>
+                                    </TouchableOpacity>
 
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Interests</Text>
-                <View style={styles.interestsContainer}>
-                {interests.map((interest, index) => (
-                    <View key={index} style={styles.interestBox}>
-                    <Text style={styles.interestText}>{interest}</Text>
-                    </View>
-                ))}
-                </View>
-            </View>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.messageButton,
+                                            !isMessageEnabled && styles.disabledButton
+                                        ]}
+                                        onPress={handleMessage}
+                                        disabled={!isMessageEnabled}
+                                        activeOpacity={0.8}
+                                    >
+                                        <Ionicons
+                                            name="chatbubble-outline"
+                                            size={16}
+                                            color={isMessageEnabled ? appColors.Dark_Grey : appColors.Grey_600}
+                                            style={styles.buttonIcon}
+                                        />
+                                        <Text
+                                            style={[
+                                                styles.messageButtonText,
+                                                !isMessageEnabled && styles.disabledButtonText
+                                            ]}
+                                        >
+                                            Message
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </View>
+                    </Card>
 
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Current Classes</Text>
-                <View style={styles.list}>
-                {currentClasses.map((classItem, index) => (
-                    <View key={index} style={styles.classItem}>
-                        <Text key={index} style={styles.listItem}>{classItem.code} - {classItem.name}</Text>
-                        {index !== currentClasses.length - 1 && <View style={styles.divider} />}
-                    </View>
-                ))}
-                </View>
-            </View>
+                    {/* About Me Section */}
+                    <Card variant="default" style={styles.sectionCard}>
+                        <Card.Header>
+                            <Card.Title>About Me</Card.Title>
+                        </Card.Header>
+                        <Card.Content>
+                            <Text style={styles.aboutMeText}>{aboutMe || "No bio added yet."}</Text>
+                        </Card.Content>
+                    </Card>
 
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Posts</Text>
-                { posts.map((item, index) => (
-                    <View key={index}>
-                    <PostCard
-                        user={{
-                            username: name,
-                            profilePic: imageUri,
-                        }}
-                        timestamp={(item.timestamp)}
-                        image={item.image}
-                        caption={item.caption}
-                        likes={item.likes}
-                        comments={item.comments}
-                    />
-                    </View>
-                ))}
-                
-            </View>
-        </ScrollView>
+                    {/* Interests Section */}
+                    <Card variant="default" style={styles.sectionCard}>
+                        <Card.Header>
+                            <Card.Title>Interests</Card.Title>
+                        </Card.Header>
+                        <Card.Content>
+                            {interests && interests.length > 0 ? (
+                                <View style={styles.interestsContainer}>
+                                    {interests.map((interest, index) => (
+                                        <View key={index} style={styles.interestChip}>
+                                            <Text style={styles.interestText}>{interest}</Text>
+                                        </View>
+                                    ))}
+                                </View>
+                            ) : (
+                                <Text style={styles.emptyStateText}>No interests added yet.</Text>
+                            )}
+                        </Card.Content>
+                    </Card>
+
+                    {/* Current Classes Section */}
+                    <Card variant="default" style={styles.sectionCard}>
+                        <Card.Header>
+                            <Card.Title>Current Classes</Card.Title>
+                        </Card.Header>
+                        <Card.Content>
+                            {currentClasses && currentClasses.length > 0 ? (
+                                <View style={styles.classesList}>
+                                    {currentClasses.map((classItem, index) => (
+                                        <View key={index} style={styles.classItem}>
+                                            <Text style={styles.classCode}>{classItem.code}</Text>
+                                            <Text style={styles.className}>{classItem.name}</Text>
+                                        </View>
+                                    ))}
+                                </View>
+                            ) : (
+                                <Text style={styles.emptyStateText}>No classes added yet.</Text>
+                            )}
+                        </Card.Content>
+                    </Card>
+
+                    {/* Posts Section - Only show if following or public profile */}
+                    {followStatus === 'Following' && (
+                        <Card variant="default" style={styles.postsCard}>
+                            <Card.Header>
+                                <Card.Title>Posts</Card.Title>
+                            </Card.Header>
+                            <Card.Content style={styles.postsContent}>
+                                {posts && posts.length > 0 ? (
+                                    posts.map((item, index) => (
+                                        <Card key={index} variant="default" style={styles.postContainer}>
+                                            <Card.Content>
+                                                <PostItem
+                                                    user={{
+                                                        username: name,
+                                                        profilePic: imageUri,
+                                                    }}
+                                                    timestamp={item.timestamp}
+                                                    image={item.image}
+                                                    caption={item.caption}
+                                                    likes={item.likes}
+                                                    comments={item.comments}
+                                                />
+                                            </Card.Content>
+                                        </Card>
+                                    ))
+                                ) : (
+                                    <Card variant="glass" style={styles.emptyPostCard}>
+                                        <Card.Content style={styles.emptyPostsContainer}>
+                                            <Ionicons name="images-outline" size={48} color={appColors.Grey_600} />
+                                            <Text style={styles.emptyStateText}>No posts yet.</Text>
+                                        </Card.Content>
+                                    </Card>
+                                )}
+                            </Card.Content>
+                        </Card>
+                    )}
+
+                    {/* Not following message */}
+                    {followStatus !== 'Following' && (
+                        <Card variant="glass" style={styles.privateCard}>
+                            <Card.Content style={styles.privateContentContainer}>
+                                <Ionicons name="lock-closed" size={48} color={appColors.Grey_600} />
+                                <Text style={styles.privateContentTitle}>Private Profile</Text>
+                                <Text style={styles.privateContentText}>
+                                    Follow this user to see their posts and more information.
+                                </Text>
+                            </Card.Content>
+                        </Card>
+                    )}
+                </Animated.View>
+            </ScrollView>
+        </SafeAreaView>
     );
 };
 
+// Using an 8-point spacing system for consistency
+const spacing = {
+    xs: 4,
+    s: 8,
+    m: 16,
+    l: 24,
+    xl: 32,
+    xxl: 48,
+};
+
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: appColors.White,
+    },
+    header: {
+        paddingHorizontal: spacing.m,
+        paddingVertical: spacing.s,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderBottomWidth: 1,
+        borderBottomColor: appColors.Grey_100,
+    },
+    backButton: {
+        padding: spacing.xs,
+    },
+    headerTitle: {
+        fontSize: 17,
+        fontWeight: '600',
+        color: appColors.Dark_Grey,
+    },
     container: {
         flex: 1,
-        backgroundColor: '#f9f9f9',
-        padding: 16,
+        backgroundColor: '#F7F7F7', // Slightly off-white for contrast with cards
     },
-    profilePictureHeader: {
+    contentContainer: {
+        paddingBottom: spacing.xl,
+    },
+    content: {
+        padding: spacing.m,
+    },
+    profileCard: {
+        marginBottom: spacing.m,
+    },
+    profileHeaderContent: {
+        flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 0,
     },
-    profilePictureEdit: {
-        position: 'relative',
+    profilePictureContainer: {
+        marginRight: spacing.m,
     },
-    profileInfoHeader: {
-        alignItems: 'center',
-        marginBottom: 30,
+    profileInfoContainer: {
+        flex: 1,
+        justifyContent: 'center',
     },
-    name: {
+    nameText: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#333',
+        color: appColors.Dark_Grey,
+        marginBottom: spacing.xs,
     },
-    major: {
-        fontSize: 18,
-        color: '#7f7f7f',
-        marginBottom: 4,
+    majorText: {
+        fontSize: 16,
+        color: appColors.Grey_600,
+        marginBottom: spacing.m,
     },
-    buttonContainer: {
+    actionButtonsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        width: '80%',
-        marginTop: 16,
     },
-    section: {
-        marginBottom: 24,
+    followButton: {
+        backgroundColor: appColors.UW_Purple,
+        paddingVertical: spacing.s,
+        paddingHorizontal: spacing.m,
+        borderRadius: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flex: 1,
+        marginRight: spacing.s,
     },
-    sectionTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 8,
+    followingButton: {
+        backgroundColor: '#38A169', // Green for "Following" state
     },
-    aboutMeBox: {
-        backgroundColor: '#DEDEDE',
-        borderRadius: 8,
-        padding: 16,
-        marginTop: 8,
+    requestedButton: {
+        backgroundColor: '#718096', // Slate for "Requested" state
     },
-    aboutMe: {
+    buttonIcon: {
+        marginRight: 4,
+    },
+    followButtonText: {
+        color: appColors.White,
+        fontWeight: '600',
+        fontSize: 14,
+    },
+    messageButton: {
+        backgroundColor: '#F2F0F7', // Light purple background
+        paddingVertical: spacing.s,
+        paddingHorizontal: spacing.m,
+        borderRadius: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flex: 1,
+        marginLeft: spacing.s,
+    },
+    disabledButton: {
+        backgroundColor: '#F5F5F5', // Lighter background for disabled state
+    },
+    messageButtonText: {
+        color: appColors.Dark_Grey,
+        fontWeight: '600',
+        fontSize: 14,
+    },
+    disabledButtonText: {
+        color: appColors.Grey_600,
+    },
+    sectionCard: {
+        marginBottom: spacing.m,
+    },
+    aboutMeText: {
         fontSize: 16,
-        color: '#555',
         lineHeight: 24,
+        color: appColors.Grey_600,
     },
     interestsContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 8,
-        marginTop: 8,
+        marginHorizontal: -spacing.xs,
     },
-    interestBox: {
-        backgroundColor: '#E6E6FA',
-        borderRadius: 8,
-        paddingHorizontal: 12,
-        paddingVertical: 5,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderColor: '#635687',
+    interestChip: {
+        backgroundColor: '#EAE5F7',
+        paddingHorizontal: spacing.m,
+        paddingVertical: spacing.xs,
+        borderRadius: 20,
+        margin: spacing.xs,
         borderWidth: 1,
+        borderColor: '#D5CCEB',
     },
     interestText: {
         fontSize: 14,
-        color: '#635687',
+        color: appColors.UW_Purple,
+        fontWeight: '500',
     },
-    list: {
-        marginTop: 8,
+    classesList: {
+        marginTop: spacing.xs,
     },
-    listItem: {
-        fontSize: 16,
-        color: '#444',
-        marginBottom: 4,
-    },
-    divider: {
+    classItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: spacing.s,
         borderBottomWidth: 1,
-        borderBottomColor: '#DEDEDE',
-        marginTop: 5,
-        marginBottom: 8,
+        borderBottomColor: appColors.Grey_100,
+    },
+    classCode: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: appColors.UW_Purple,
+        marginRight: spacing.s,
+        minWidth: 70,
+    },
+    className: {
+        fontSize: 15,
+        color: appColors.Dark_Grey,
+        flex: 1,
+    },
+    postsCard: {
+        marginBottom: spacing.m,
+    },
+    postsContent: {
+        padding: 0,
+    },
+    postContainer: {
+        marginBottom: spacing.m,
+        padding: 0,
+        overflow: 'hidden',
+    },
+    emptyPostCard: {
+        marginTop: spacing.m,
+    },
+    emptyPostsContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: spacing.xl,
+    },
+    privateCard: {
+        marginBottom: spacing.m,
+    },
+    privateContentContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: spacing.xl,
+    },
+    privateContentTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: appColors.Dark_Grey,
+        marginTop: spacing.m,
+        marginBottom: spacing.s,
+    },
+    privateContentText: {
+        fontSize: 16,
+        color: appColors.Grey_600,
+        textAlign: 'center',
+        lineHeight: 24,
+    },
+    emptyStateText: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: appColors.Grey_600,
+        marginTop: spacing.s,
+        textAlign: 'center',
     },
 });
 

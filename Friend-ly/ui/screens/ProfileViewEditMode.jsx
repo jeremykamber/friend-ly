@@ -5,7 +5,7 @@ import InputProfilePhotoButton from '../components/InputProfilePhotoButton';
 import EditInterestsButton from '../components/EditInterestsButton';
 import EditClassesButton from '../components/EditClassesButton';
 import DisplayProfilePhoto from '../components/DisplayProfilePhoto';
-import PostCard from '../components/PostCard';
+import PostItem from '../components/PostItem';
 import { useNavigation } from '@react-navigation/native';
 import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import appColors from '../common/app-colors';
@@ -175,7 +175,7 @@ const ProfileViewEditMode = () => {
                 <Text style={styles.sectionTitle}>Posts</Text>
                 { tempPosts.map((item, index) => (
                     <View key={index} style={styles.postsContainer}>
-                      <PostCard
+                      <PostItem
                           user={{
                               username: name,
                               profilePic: imageUri,

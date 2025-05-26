@@ -1,4 +1,4 @@
-// App.js
+// Example App.js integration with AppSyncProvider
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from '@react-navigation/stack';
@@ -6,7 +6,7 @@ import TabNavigator from "./ui/navigation/TabNavigator";
 import InterestSelectionView from './ui/screens/InterestSelectionView';
 import ClassesView from './ui/screens/ClassesView';
 import LoginView from './ui/screens/LoginView';
-import AddChatView from './ui/screens/AddChatView'; // Import the AddChatView
+import AddChatView from './ui/screens/AddChatView';
 import ProfilePictureView from './ui/screens/ProfilePictureView';
 import BioInformationView from './ui/screens/BioInformationView';
 import { AppSyncProvider } from './ui/common/providers/AppSyncProvider';
@@ -32,33 +32,3 @@ const App = () => {
 };
 
 export default App;
-
-/*
-// App.js
-import React from "react";
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import InterestSelectionView from './ui/screens/InterestSelectionView';
-import ProfileViewEditMode from './ui/screens/ProfileViewEditMode';
-import SelfProfileView from './ui/screens/SelfProfileView';
-import ClassesView from './ui/screens/ClassesView';
-import HomeView from './ui/components/AddPosts';
-
-const Stack = createStackNavigator();
-
-const App = () => {
-    return (
-        <NavigationContainer>
-            <Stack.Navigator initialRouteName="HomeView">
-                <Stack.Screen name="HomeView" component={HomeView} />
-                <Stack.Screen name="ClassesView" component={ClassesView} />
-                <Stack.Screen name="InterestSelectionView" component={InterestSelectionView} />
-                <Stack.Screen name="ProfileViewEditMode" component={ProfileViewEditMode} />
-                <Stack.Screen name="SelfProfileView" component={SelfProfileView} />
-            </Stack.Navigator>
-        </NavigationContainer>
-    );
-};
-
-export default App;
-*/
