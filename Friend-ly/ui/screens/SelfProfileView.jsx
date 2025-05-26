@@ -160,6 +160,7 @@ const SelfProfileView = () => {
                 posts.map((item, index) => (
 
                   <PostItem
+                    key={item.id || index}
                     user={{
                       username: name,
                       profilePic: imageUri,

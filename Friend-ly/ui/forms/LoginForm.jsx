@@ -32,7 +32,7 @@ const LoginForm = ({ onLoginSuccess }) => {
         try {
             // TODO: Make sure to change to localhost if using simulator
             console.log("[LoginForm] Sending verification email to:", email);
-            const response = await fetch("http://10.18.75.225:8000/users/sendVerificationEmail", {
+            const response = await fetch("http://localhost:8000/users/sendVerificationEmail", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -69,7 +69,7 @@ const LoginForm = ({ onLoginSuccess }) => {
         try {
             // Step 1: Verify the code
             console.log("[LoginForm] Verifying code for email:", email);
-            const verifyResponse = await fetch("http://10.18.75.225:8000/users/verifyEmailCode", {
+            const verifyResponse = await fetch("http://localhost:8000/users/verifyEmailCode", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: email, code: verificationCode }),
@@ -86,7 +86,7 @@ const LoginForm = ({ onLoginSuccess }) => {
 
             // Step 2: Get JWT token from /api/auth
             console.log("[LoginForm] Requesting JWT token from /api/auth for email:", email);
-            const authResponse = await fetch("http://10.18.75.225:6262/api/auth", {
+            const authResponse = await fetch("http://localhost:6262/api/auth", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email }),
@@ -153,7 +153,7 @@ const LoginForm = ({ onLoginSuccess }) => {
                             console.log("[LoginForm] Resend code button pressed for email:", email);
                             setResending(true);
                             try {
-                                const response = await fetch("http://10.18.75.225:8000/users/resendVerificationEmail", {
+                                const response = await fetch("http://localhost:8000/users/resendVerificationEmail", {
                                     method: "POST",
                                     headers: { "Content-Type": "application/json" },
                                     body: JSON.stringify({ email }),

@@ -25,7 +25,7 @@ function createActualSyncService() {
 
     // Check network connectivity (simplified version)
     function checkConnectivity() {
-        return fetch('http://10.18.75.225:8000/health', { method: 'GET' })
+        return fetch('http://localhost:8000/health', { method: 'GET' })
             .then(() => {
                 if (!isOnline) {
                     console.log('Connection restored');
@@ -92,7 +92,7 @@ function createActualSyncService() {
             }
 
             // Fetch updates since last sync
-            const response = await fetch(`http://10.18.75.225:8000/users/updates?lastSynced=${lastSyncedTimestamp}`, {
+            const response = await fetch(`http://localhost:8000/users/updates?lastSynced=${lastSyncedTimestamp}`, {
                 method: "GET",
                 headers: {
                     "Authorization": `Bearer ${token}`,
@@ -242,7 +242,7 @@ function createActualSyncService() {
     // Helper methods to fetch specific data
     async function fetchChatMessages(chatId) {
         const token = await SecureStore.getItemAsync("JWT");
-        const response = await fetch(`http://10.18.75.225:8000/chats/${chatId}`, {
+        const response = await fetch(`http://localhost:8000/chats/${chatId}`, {
             method: "GET",
             headers: {
                 "Authorization": `Bearer ${token}`,
@@ -256,7 +256,7 @@ function createActualSyncService() {
 
     async function fetchChatList() {
         const token = await SecureStore.getItemAsync("JWT");
-        const response = await fetch("http://10.18.75.225:8000/users/getLastMessageHistory", {
+        const response = await fetch("http://localhost:8000/users/getLastMessageHistory", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -270,7 +270,7 @@ function createActualSyncService() {
     
     async function fetchFriendList() {
         const token = await SecureStore.getItemAsync("JWT");
-        const response = await fetch("http://10.18.75.225:8000/friends/get_friends", {
+        const response = await fetch("http://localhost:8000/friends/get_friends", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ token: token })

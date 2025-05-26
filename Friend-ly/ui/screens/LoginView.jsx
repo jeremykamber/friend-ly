@@ -20,7 +20,7 @@ const LoginView = ({ navigation }) => {
     const authLogin = async (email) => {
         try {
             // TODO: Make sure to change to localhost if using simulator
-            const response = await fetch(`http://10.18.75.225:6262/api/auth`, {
+            const response = await fetch(`http://locahost:6262/api/auth`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: email }),
@@ -38,15 +38,15 @@ const LoginView = ({ navigation }) => {
     useEffect(() => {
         const checkStoredEmail = async () => {
             try {
-                await clearEmail()
-                /*const email = await getEmailIfValid();
+                //await clearEmail()
+                const email = await getEmailIfValid();
                 if (email) {
                     // Reset email in storage
                     await storeEmail(email)
                     // User already verified, skip to the next screen
                     let res = authLogin(email);
                     navigation.navigate("TabNavigator")
-                }*/
+                }
             } catch (error) {
                 console.error("Error checking stored email:", error);
             } finally {

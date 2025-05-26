@@ -49,10 +49,10 @@ const ChatsView = ({ navigation }) => {
                         return
                     }
                     setToken(result)
-                    const response = await fetch("http://10.18.75.225:8000/users/getUserID", {
+                    const response = await fetch("http://localhost:8000/users/getUserID", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ token: result })
+                        body: JSON.stringify({ token: result})
                     })
                     if (!response.ok) {
                         console.log("Getting User ID failed. ")
@@ -60,7 +60,17 @@ const ChatsView = ({ navigation }) => {
                     }
                     const user_id = await response.json()
                     setUserID(user_id)
-
+                    const messages = await fetch("http://localhost:8000/users/getLastMessageHistory", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ token: result })
+                    })
+                    if (!messages.ok) {
+                        console.log("Getting messages failed.")
+                        return
+                    }
+                    const messageData = await messages.json()
+                    setLastMessages(messageData)
                     // Initial sync - after this, the hook will handle updates
                     performSync();
                 } catch (err) {
