@@ -5,6 +5,7 @@ import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import { useNavigation } from '@react-navigation/native';
 import DisplayProfilePhoto from '../components/DisplayProfilePhoto';
 import PostCard from '../components/PostCard';
+import formatMessageTime from "./timeFormat";
 
 
 const ProfileView = () => {
@@ -82,7 +83,7 @@ const ProfileView = () => {
                             username: name,
                             profilePic: imageUri,
                         }}
-                        timestamp={item.timestamp}
+                        timestamp={(item.timestamp)}
                         image={item.image}
                         caption={item.caption}
                         likes={item.likes}
