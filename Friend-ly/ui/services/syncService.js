@@ -112,10 +112,10 @@ function createActualSyncService() {
             const serverTime = parsed && parsed.serverTime ? parsed.serverTime : new Date().toISOString();
 
             // Log sync success and what changed
-            console.log('[SyncService] Sync successful at', serverTime);
+            //console.log('[SyncService] Sync successful at', serverTime);
             const changedTypes = Object.keys(updates).filter(type => Array.isArray(updates[type]) && updates[type].length > 0);
             if (changedTypes.length === 0) {
-                console.log('[SyncService] No changes detected.');
+                //console.log('[SyncService] No changes detected.');
             } else {
                 changedTypes.forEach(type => {
                     const items = updates[type];

@@ -51,7 +51,7 @@ const AddChatView = ({ navigation }) => {
 				const getFriends = await fetch("http://localhost:8000/friends/get_friends", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ token: result })
+					body: JSON.stringify({ token: result, added: 1 })
 				})
 				if (getFriends.ok) {
 					const friends = await getFriends.json()

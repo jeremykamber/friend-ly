@@ -5,6 +5,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import RecommendationView from "../screens/RecommendationView";
 import FriendsConnection from "./FriendsConnection";
 import appColors from "../common/app-colors";
+import ProfileView from "../screens/ProfileView";
+import RecommendationNavigator from "./RecommendationNavigator";
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -22,7 +24,7 @@ function PeopleNavigator() {
             >
                 <Tab.Screen
                     name="Recommendations"
-                    component={RecommendationView}
+                    component={RecommendationNavigator}
                     options={{ tabBarLabel: "Recommendations" }}
                 />
                 <Tab.Screen

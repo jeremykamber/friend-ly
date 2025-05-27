@@ -94,7 +94,7 @@ const HomeView = () => {
                     <View style={styles.header}>
                         {imageUri && <Image source={{ uri: imageUri }} style={styles.headerPicture} />}
                         <Text style={{ fontSize: 18 }}>{name}</Text>
-                        <AddPosts></AddPosts>
+                        
                     </View>
 
                     {/* TODO: REPLACE CODE BELOW TO SHOW POSTS FROM FRIENDS NOT OWN POSTS */}
@@ -111,7 +111,7 @@ const HomeView = () => {
                                         profilePic: imageUri,
                                     }}
                                     timestamp={formatMessageTime(item.created_at)}
-                                    image={"https://picsum.photos/500/300"}
+                                    image={`https://picsum.photos/id/${index + 72}/600/300`}
                                     caption={item.content}
                                     likes={item.likes}
                                     comments={item.comments}

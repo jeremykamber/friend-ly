@@ -18,6 +18,7 @@ const LoginView = ({ navigation }) => {
     }
 
     const authLogin = async (email) => {
+        console.log("We here?")
         try {
             // TODO: Make sure to change to localhost if using simulator
             const response = await fetch(`http://locahost:6262/api/auth`, {
@@ -26,6 +27,7 @@ const LoginView = ({ navigation }) => {
                 body: JSON.stringify({ email: email }),
             });
             const data = await response.json();
+            console.log(data)
             await setToken(data["token"])
             console.log(data)
             return data["new_user"]
@@ -38,7 +40,7 @@ const LoginView = ({ navigation }) => {
     useEffect(() => {
         const checkStoredEmail = async () => {
             try {
-                //await clearEmail()
+                await clearEmail()
                 const email = await getEmailIfValid();
                 if (email) {
                     // Reset email in storage
@@ -57,11 +59,13 @@ const LoginView = ({ navigation }) => {
     }, []);
 
     const onLoginSuccess = async (email) => {
-        let res = await authLogin(email);
+        //let res = await authLogin(email);
+        let res = true
         if (res == true) {
             navigation.navigate("ClassesView")
         } else {
-            navigation.navigate("TabNavigator")
+            // navigation.navigate("TabNavigator")
+            navigation.navigate("ClassesView")
         }
     };
 

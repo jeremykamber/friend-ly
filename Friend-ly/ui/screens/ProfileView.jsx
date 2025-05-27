@@ -18,7 +18,8 @@ import { Ionicons } from '@expo/vector-icons';
 import appColors from '../common/app-colors';
 import Card from '../components/Card';
 
-const ProfileView = () => {
+const ProfileView = ({ route }) => {
+    const { profileContent } = route.params || {};
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const scaleAnim = useRef(new Animated.Value(0.95)).current;
     const [followStatus, setFollowStatus] = useState('Follow'); // 'Follow', 'Following', 'Requested'
@@ -69,7 +70,7 @@ const ProfileView = () => {
     const isMessageEnabled = followStatus === 'Following';
 
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <ScrollView style={styles.safeArea}>
             <StatusBar barStyle="dark-content" backgroundColor={appColors.White} />
             <View style={styles.header}>
                 <TouchableOpacity
@@ -105,7 +106,7 @@ const ProfileView = () => {
                             </View>
 
                             <View style={styles.profileInfoContainer}>
-                                <Text style={styles.nameText}>{name}</Text>
+                                <Text style={styles.nameText}>{profileContent?.data?.username ? profileContent.data.username : "No username."}</Text>
                                 <Text style={styles.majorText}>{majorAndYear}</Text>
 
                                 <View style={styles.actionButtonsContainer}>
@@ -159,27 +160,29 @@ const ProfileView = () => {
                             <Card.Title>About Me</Card.Title>
                         </Card.Header>
                         <Card.Content>
-                            <Text style={styles.aboutMeText}>{aboutMe || "No bio added yet."}</Text>
+                        <Text style={styles.aboutMeText}>
+                            {profileContent?.data?.username ? `Hi, I'm ${profileContent.data.username}!` : 'No bio added yet.'}
+                        </Text>
                         </Card.Content>
                     </Card>
 
                     {/* Interests Section */}
                     <Card variant="default" style={styles.sectionCard}>
                         <Card.Header>
-                            <Card.Title>Interests</Card.Title>
+                            <Card.Title>Shared Interests</Card.Title>
                         </Card.Header>
                         <Card.Content>
-                            {interests && interests.length > 0 ? (
+                            {profileContent?.data?.common_interests ? (profileContent.data.common_interests.length > 0 ? (
                                 <View style={styles.interestsContainer}>
-                                    {interests.map((interest, index) => (
+                                    {profileContent.data.common_interests.map((interest, index) => (
                                         <View key={index} style={styles.interestChip}>
                                             <Text style={styles.interestText}>{interest}</Text>
                                         </View>
                                     ))}
                                 </View>
                             ) : (
-                                <Text style={styles.emptyStateText}>No interests added yet.</Text>
-                            )}
+                                <Text style={styles.emptyStateText}>No shared interests.</Text>
+                            )) : <Text style={styles.emptyStateText}>No shared interests.</Text>}
                         </Card.Content>
                     </Card>
 
@@ -255,7 +258,7 @@ const ProfileView = () => {
                     )}
                 </Animated.View>
             </ScrollView>
-        </SafeAreaView>
+        </ScrollView>
     );
 };
 

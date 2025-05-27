@@ -439,6 +439,7 @@ async function addUser(chat_id, user_ids) {
  */
 app.post('/friends/get_friends', authMiddleware, async (req, res) => {
   const user_id = req.user_id;
+  const reqsOrAdded = req.body.added // value 1 if looking for added friends, 0 for requested friends
   const query = `
     SELECT 
         CASE 
@@ -451,10 +452,10 @@ app.post('/friends/get_friends', authMiddleware, async (req, res) => {
         END AS user_id2,
         created_at
     FROM friends
-    WHERE user_id1 = ? OR user_id2 = ?
+    WHERE (added = ?) AND (user_id1 = ? OR user_id2 = ?)
     ORDER BY created_at ASC;
   `;
-  const [results, fields] = await database.execute(query, [user_id, user_id]);
+  const [results, fields] = await database.execute(query, [reqsOrAdded, user_id, user_id]);
   let friends = []
   for (let i = 0; i < results.length; i++) {
     let curr_rel = results[i];
@@ -534,11 +535,11 @@ app.post('/friends/acceptFriendRequest', async (req, res) => {
  * Remove from friends list
  * Delete the row of the 2 users
  */
-app.post('/friends/deleteFriend', async (req, res) => {
+app.post('/friends/deleteFriend', authMiddleware, async (req, res) => {
   // the person that sends the friend request
   const user_id1 = req.body.user_id1;
   // the person that accepts the friend request
-  const user_id2 = req.body.user_id2;
+  const user_id2 = req.user_id
 
   try {
     const query = `
@@ -743,11 +744,19 @@ app.post('/similar-users', authMiddleware, async (req, res) => {
     }
 
     const [userInterestRows] = await database.execute(
-      'SELECT ui.user_id, i.interest_name, c.category_name ' +
-      'FROM userinterest ui ' +
-      'JOIN interestdetails i ON ui.interest_id = i.interest_id ' +
-      'JOIN interestcategory c ON i.interest_category_id = c.interest_category_id'
-    );
+      `SELECT ui.user_id, i.interest_name, c.category_name
+        FROM userinterest ui
+        JOIN interestdetails i ON ui.interest_id = i.interest_id
+        JOIN interestcategory c ON i.interest_category_id = c.interest_category_id
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM friends f
+            WHERE (f.user_id1 = ? AND f.user_id2 = ui.user_id)
+            OR (f.user_id2 = ? AND f.user_id1 = ui.user_id))`,
+      [targetUserId, targetUserId]);
+    
+    userInterestRows.forEach(value => console.log(value))
+    console.log(targetUserId)
 
     const userInterests = {};
     const interestToCategory = {};
@@ -853,12 +862,14 @@ app.post('/similar-users', authMiddleware, async (req, res) => {
     for (let b = 0; b < bands; b++) {
       const band = userSigs[targetUserId].slice(b * rowsPerBand, (b + 1) * rowsPerBand).join("-");
       const key = `${b}:${band}`;
+      
       (buckets[key] || []).forEach(u => {
         if (u !== targetUserId && userInterests[u] && userInterests[u].length > 0) {
           candidates.add(u);
         }
       });
     }
+    candidates.forEach(value => console.log(value))
 
     if (candidates.size <= 6) {
       console.log(`LSH returned only ${candidates.size} users. Adding 10 unique random users.`);
@@ -929,7 +940,9 @@ in the database. If not, adds user to database.
 app.post('/users/login', async (req, res) => {
   const email = req.body.email;
   try {
+    console.log("Surrounded top")
     const loginResult = await loginUserByEmail(email, database);
+    console.log("Surrounded bottom")
     res.type("text").status(200).send(loginResult);
   } catch (err) {
     console.error('Error in /users/login:', err);

@@ -13,11 +13,11 @@ function TabNavigator() {
     return (
         <Tab.Navigator>
             <Tab.Screen
-                name="People"
-                component={PeopleNavigator}
+                name="Profile"
+                component={ProfileNavigator}
                 options={{
                     tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="people" size={size} color={color} />
+                        <Ionicons name="person" size={size} color={color} />
                     ),
                     headerShown: false,
                 }}
@@ -42,6 +42,18 @@ function TabNavigator() {
                     headerShown: false,
                 }}
             />
+            <Tab.Screen
+                name="People"
+                component={PeopleNavigator}
+                options={{
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="people" size={size} color={color} />
+                    ),
+                    headerShown: false,
+                }}
+            />
+            
+            
             {/*
             <Tab.Screen
                 name="Login"
@@ -54,16 +66,7 @@ function TabNavigator() {
                 }}
             />
             */}
-            <Tab.Screen
-                name="Profile"
-                component={ProfileNavigator}
-                options={{
-                    tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="person" size={size} color={color} />
-                    ),
-                    headerShown: false,
-                }}
-            />
+            
             <Tab.Screen
                 name="Settings"
                 component={SettingsNavigator}

@@ -6,19 +6,20 @@ import useProfileViewStore from '../common/zustand_stores/ProfileViewStore';
 import moment from 'moment';
 import appColors from '../common/app-colors';
 import * as SecureStore from 'expo-secure-store'
+import { Ionicons } from '@expo/vector-icons';
 
-const AddPosts = ({ visible, onClose }) => {
+const AddPosts = () => {
 
     const { posts, setPosts } = useProfileViewStore();
 
-    // modalVisible and setModalVisible are now controlled by parent (FAB)
+    const [modalVisible, setModalVisible] = useState(false);
     const [caption, setCaption] = useState('');
     const [photo, setPhoto] = useState(null);
     const [token, setToken] = useState(null);
 
     useFocusEffect(
         useCallback(() => {
-            const getInfo = async () => {
+            const getInfo = async() => {
                 try {
                     const result = await SecureStore.getItemAsync("JWT") // jwt token
                     if (!result) {
@@ -33,14 +34,14 @@ const AddPosts = ({ visible, onClose }) => {
             getInfo()
         }, [])
     )
-
+    
 
     const handleAddPost = async () => {
-        console.log({ token: token, caption: caption })
+        console.log({ token: token, caption: caption})
         const response = await fetch("http://localhost:8000/posts/newPost", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ token: token, caption: caption })
+            body: JSON.stringify({ token: token, caption: caption})
         })
         if (!response.ok) {
             console.log("Making new post failed. ")
@@ -79,44 +80,89 @@ const AddPosts = ({ visible, onClose }) => {
         }
     };
 
-    if (!visible) return null;
     return (
-        <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Create New Post</Text>
-                <TouchableOpacity
-                    style={styles.photoButton}
-                    onPress={handleSelectPhoto}
-                >
-                    <Text style={styles.photoButtonText}>Select Photo</Text>
-                </TouchableOpacity>
-                {photo && <Image source={{ uri: photo }} style={styles.selectedPhoto} />}
-                {!photo && <Text>No photo selected</Text>}
-                <TextInput
-                    style={styles.captionInput}
-                    placeholder="Enter caption"
-                    value={caption}
-                    onChangeText={setCaption}
-                    multiline
-                />
-                <View style={styles.buttonRow}>
-                    <TouchableOpacity
-                        style={[styles.modalButton, styles.cancelButton]}
-                        onPress={onClose}
-                    >
-                        <Text style={styles.buttonText}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.modalButton, styles.submitButton]}
-                        onPress={handleAddPost}
-                    >
-                        <Text style={styles.buttonText}>Post</Text>
-                    </TouchableOpacity>
+        <View style={styles.container}>
+            <TouchableOpacity style={styles.addPostButton} onPress={() => setModalVisible(true)}>
+                <Ionicons name="add-circle-outline" size={22} color={appColors.UW_Purple} />
+                <Text style={styles.addPostText}>New Post</Text>
+              </TouchableOpacity>
+
+            {/*
+            <FlatList
+                data={posts}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item, index }) => (
+                    <View key={index} style={styles.postContainer}>
+                        <PostCard
+                            user={{
+                                username: name,
+                                profilePic: imageUri,
+                            }}
+                            timestamp={item.timestamp}
+                            image={item.image}
+                            caption={item.caption}
+                            likes={item.likes}
+                            comments={item.comments}
+                        />
+                    </View>
+                )}
+            />
+            */}
+
+            <Modal
+                visible={modalVisible}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setModalVisible(false)}
+            >
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Create New Post</Text>
+                        <TouchableOpacity
+                            style={styles.photoButton}
+                            onPress={handleSelectPhoto}
+                        >
+                            <Text style={styles.photoButtonText}>Select Photo</Text>
+                        </TouchableOpacity>
+                        {photo && <Image source={{ uri: photo }} style={styles.selectedPhoto} />}
+                        {!photo && <Text>No photo selected</Text>}
+                        <TextInput
+                            style={styles.captionInput}
+                            placeholder="Enter caption"
+                            value={caption}
+                            onChangeText={setCaption}
+                            multiline
+                        />
+                        <View style={styles.buttonRow}>
+                            <TouchableOpacity
+                                style={[styles.modalButton, styles.cancelButton]}
+                                onPress={() => setModalVisible(false)}
+                            >
+                                <Text style={styles.buttonText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.modalButton, styles.submitButton]}
+                                onPress={handleAddPost}
+                            >
+                                <Text style={styles.buttonText}>Post</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
                 </View>
-            </View>
+            </Modal>
         </View>
     );
 };
+
+// Using an 8-point spacing system for consistency
+const spacing = {
+    xs: 4,
+    s: 8,
+    m: 16,
+    l: 24,
+    xl: 32,
+    xxl: 48,
+  };
 
 const styles = StyleSheet.create({
     container: {
@@ -127,6 +173,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'flex-end',
     },
+    addPostButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: spacing.s,
+      },
     addButton: {
         padding: 10,
         width: 100,

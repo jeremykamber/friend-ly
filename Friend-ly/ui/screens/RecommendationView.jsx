@@ -46,6 +46,10 @@ const RecommendationView = ({ navigation }) => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ token: result })
           })
+          if (!response.ok) {
+            console.log(response)
+            return
+          }
           const data = await response.json();
           console.log(data)
           setSimilarUsers(data);
@@ -64,7 +68,7 @@ const RecommendationView = ({ navigation }) => {
   useEffect(() => {
     navigation.setOptions({
       title: "Recommendations",
-      headerShown: true,
+      headerShown: false,
       headerStyle: {
         backgroundColor: appColors.White,
         shadowColor: 'transparent',
@@ -145,7 +149,7 @@ const RecommendationView = ({ navigation }) => {
       const { username, score } = item.data;
       return (
         <TouchableOpacity
-          onPress={() => navigation.navigate('ProfileView', { username })}
+          onPress={() => navigation.navigate('ProfileView', { profileContent: item})}
           activeOpacity={0.7}
         >
           <Card variant="default" style={styles.userCard}>
@@ -186,7 +190,7 @@ const RecommendationView = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'right', 'left', 'bottom']}>
+    <SafeAreaView style={styles.container} edges={['right', 'left', 'bottom']}>
       <View style={styles.searchWrapper}>
         <View style={styles.searchBarContainer}>
           <SearchBar

@@ -181,7 +181,7 @@ const ProfileViewEditMode = () => {
                               profilePic: imageUri,
                           }}
                           timestamp={(item.timestamp)}
-                          image={item.image}
+                          image={"https://picsum.photos/500/300"}
                           caption={item.caption}
                           likes={item.likes}
                           comments={item.comments}

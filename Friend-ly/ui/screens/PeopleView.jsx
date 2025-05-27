@@ -25,6 +25,7 @@ const PeopleView = () => {
     const navigation = useNavigation();
     const { friends, setFriends } = useProfileViewStore();
     const [userInfo, setUserInfo] = useState([]);
+    const [pendingRequests, setPendingRequests] = useState([])
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [token, setToken] = useState(null)
@@ -55,6 +56,21 @@ const PeopleView = () => {
     //         )
     //     );
     // };
+
+    const getFriendData = async (token, added) => {
+        const getRequestedData = await fetch("http://localhost:8000/friends/get_friends", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: token, added: added})
+        })
+        if (!getRequestedData.ok) {
+            console.log("Fetching requested data failed.")
+            return
+        }
+        const requestedData = await getRequestedData.json()
+        return requestedData
+
+    }
 
     const acceptRequest = async (id) => {
         try {
@@ -96,17 +112,13 @@ const PeopleView = () => {
                 },
                 body: JSON.stringify({
                     user_id1: id,
-                    user_id2: result,
+                    token: result
                 }),
             });
 
             if (!response.ok) throw new Error('Failed to delete friend request');
 
-            setFriends((prevFriends) =>
-                prevFriends.map((req) =>
-                    req.id === id ? { ...req, theyRequestedMe: 'Not Following' } : req
-                )
-            );
+            setPendingRequests(await getFriendData(token, 0))
         } catch (err) {
             console.error(err.message);
         }
@@ -150,6 +162,11 @@ const PeopleView = () => {
                         return
                     }
                     setToken(result)
+                    // will get all current friends (value 1 means already added)
+                    setUserInfo(await getFriendData(result, 1))
+                    // will get all requests (value 0 means friend is requested)
+                    setPendingRequests(await getFriendData(result, 0))
+
                     const response = await fetch("http://localhost:8000/users/getUserID", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -168,7 +185,7 @@ const PeopleView = () => {
                     });
 
                     const allUserInfo = await Promise.all(userPromises);
-                    setUserInfo(allUserInfo);  // Update state with all user info
+                    // setUserInfo(allUserInfo);  // Update state with all user info
                 } catch (err) {
                     setError(err.message);  // Handle errors
                 } finally {
@@ -179,7 +196,7 @@ const PeopleView = () => {
             getAllUserInfo();
         }, [])  // Empty dependency array ensures this runs once when the component mounts
     )
-    const pendingRequests = friends.filter(friend => friend.theyRequestedMe === 'Requested');
+    //const pendingRequests = friends.filter(friend => friend.theyRequestedMe === 'Requested');
 
     // Accept a follow request
     /*const acceptRequest = (id) => {
@@ -289,22 +306,39 @@ const PeopleView = () => {
                     style={styles.requestUserInfo}
                     onPress={() => handleProfilePress(item.id)}
                 >
-                    <Image source={{ uri: item.avatar }} style={styles.avatar} />
-                    <Text style={styles.userName}>{item.name}</Text>
+                    <View style={styles.friendAvatarContainer}>
+                        {item.profile_picture ? (
+                            <Image source={{ uri: item.profile_picture }} style={styles.friendAvatar} />
+                        ) : (
+                            <View style={[styles.friendAvatar, styles.placeholderAvatar]}>
+                                <Text style={styles.avatarInitial}>
+                                    {item.username.charAt(0).toUpperCase()}
+                                </Text>
+                            </View>
+                        )}
+                    </View>
+                    <Text style={styles.userName}>{item.username}</Text>
                 </TouchableOpacity>
-
                 <View style={styles.requestActions}>
-                    {getPrimaryAction(item)}
+                    <AppButton
+                        variant="default"
+                        size="sm"
+                        onPress={() => acceptRequest(item.id)}
+                    >
+                        Accept
+                    </AppButton>
 
-                    {item.theyRequestedMe === 'Requested' && (
+                    {(
                         <TouchableOpacity
                             style={styles.closeButton}
-                            onPress={() => deleteRequest(item.id)}
+                            onPress={() => deleteRequest(item.user_id)}
                         >
                             <Ionicons name="close" size={18} color={appColors.Dark_Grey} />
                         </TouchableOpacity>
                     )}
                 </View>
+
+                
             </View>
         </Card>
     );
@@ -312,7 +346,8 @@ const PeopleView = () => {
     // Render friend grid item
     const renderFriendItem = ({ item }) => {
         if (!item) return null;
-        const userData = item[0];
+        const userData = item;
+        //const userData = item[0];
 
         return (
             <TouchableOpacity
@@ -390,7 +425,7 @@ const PeopleView = () => {
                         <FlatList
                             data={pendingRequests}
                             renderItem={renderRequestItem}
-                            keyExtractor={(item) => item.id.toString()}
+                            keyExtractor={(item) => item.id}
                             scrollEnabled={false}
                             ItemSeparatorComponent={() => <View style={styles.requestSeparator} />}
                             contentContainerStyle={styles.requestsList}

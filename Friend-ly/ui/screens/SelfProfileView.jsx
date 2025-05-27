@@ -18,6 +18,7 @@ import PostItem from '../components/PostItem';
 import { Ionicons } from '@expo/vector-icons';
 import appColors from '../common/app-colors';
 import Card from '../components/Card';
+import AddPosts from '../components/AddPosts';
 
 const SelfProfileView = () => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -150,10 +151,7 @@ const SelfProfileView = () => {
           <Card variant="default" style={styles.postsCard}>
             <Card.Header style={styles.postsHeader}>
               <Card.Title>Posts</Card.Title>
-              <TouchableOpacity style={styles.addPostButton}>
-                <Ionicons name="add-circle-outline" size={22} color={appColors.UW_Purple} />
-                <Text style={styles.addPostText}>New Post</Text>
-              </TouchableOpacity>
+              <AddPosts></AddPosts>
             </Card.Header>
             <Card.Content style={styles.postsContent}>
               {posts && posts.length > 0 ? (

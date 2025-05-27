@@ -31,7 +31,7 @@ const useProfileViewStore = create((set) => ({
                 const posts = await getPosts.json()
                 for (let i = 0; i < posts.length; i++) {
                     formattedPosts.push({timestamp: formatMessageTime(posts[i].created_at), 
-                                        image: "https://picsum.photos/600/300", 
+                                        image: `https://picsum.photos/id/${i + 72}/600/300`, 
                                         caption: posts[i].content, likes: 0, comments: 0, post_id: posts[i].id})
                 }
             }
@@ -47,7 +47,7 @@ const useProfileViewStore = create((set) => ({
     name: 'John Doe',
     setName: (userName) => set({ name: userName }),
 
-    majorAndYear: 'Computer Science \'24',
+    majorAndYear: 'Add your major and graduation year!',
     setMajorAndYear: (mAy) => set({ majorAndYear: mAy }),
 
     aboutMe: "Short description here.",

@@ -10,6 +10,9 @@ import AddChatView from './ui/screens/AddChatView'; // Import the AddChatView
 import ProfilePictureView from './ui/screens/ProfilePictureView';
 import BioInformationView from './ui/screens/BioInformationView';
 import { AppSyncProvider } from './ui/common/providers/AppSyncProvider';
+import { LogBox } from 'react-native';
+
+LogBox.ignoreAllLogs();//Ignore all log notifications
 
 const Stack = createStackNavigator();
 
